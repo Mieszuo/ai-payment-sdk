@@ -4,6 +4,7 @@ import { LedgerService } from "./ledger.service";
 import { ModelProvider } from "../adapters/model-provider";
 import { ActionRunService } from "./run.service";
 import { SlidingWindowRateLimiter } from "./rate-limiter";
+import { DeveloperService } from "./developer.service";
 
 export interface ActionExecutionParams {
   actionName: string;
@@ -22,17 +23,23 @@ export interface ActionExecutionResult {
 
 export class ActionExecutionService {
   private actionMap = new Map<string, ActionVersion>();
+  private devService?: DeveloperService;
   private runService?: ActionRunService;
   private rateLimiter?: SlidingWindowRateLimiter;
 
   constructor(
     private ledger: LedgerService,
     private modelProvider: ModelProvider,
-    actions: ActionVersion[],
+    actions: ActionVersion[] | DeveloperService,
     runServiceOrLimiter?: ActionRunService | SlidingWindowRateLimiter,
     rateLimiter?: SlidingWindowRateLimiter
   ) {
-    actions.forEach((a) => this.actionMap.set(`${a.projectId}:${a.actionName}`, a));
+    if (Array.isArray(actions)) {
+      actions.forEach((a) => this.actionMap.set(`${a.projectId}:${a.actionName}`, a));
+    } else if (actions) {
+      this.devService = actions;
+    }
+
     if (runServiceOrLimiter instanceof SlidingWindowRateLimiter || (runServiceOrLimiter && "checkLimit" in runServiceOrLimiter)) {
       this.rateLimiter = runServiceOrLimiter as SlidingWindowRateLimiter;
       this.runService = undefined;
@@ -42,8 +49,16 @@ export class ActionExecutionService {
     }
   }
 
+  registerAction(action: ActionVersion): void {
+    this.actionMap.set(`${action.projectId}:${action.actionName}`, action);
+  }
+
   async execute(params: ActionExecutionParams): Promise<ActionExecutionResult> {
-    const action = this.actionMap.get(`${params.projectId}:${params.actionName}`);
+    const action =
+      this.actionMap.get(`${params.projectId}:${params.actionName}`) ||
+      this.devService?.getLatestAction(params.projectId, params.actionName) ||
+      undefined;
+
     if (!action) {
       throw new PlatformError(
         PlatformErrorCodes.ACTION_NOT_FOUND,
