@@ -1,8 +1,16 @@
 import React, { useState } from "react";
-import { Zap, ExternalLink, LayoutDashboard, BookOpen, Menu, X } from "lucide-react";
+import { Zap, ExternalLink, LayoutDashboard, BookOpen, Menu, X, Palette } from "lucide-react";
 import { getEcosystemUrls } from "@platform/shared";
 
-export const LandingHeader: React.FC = () => {
+export interface LandingHeaderProps {
+  activeView?: "landing" | "studio";
+  onSelectView?: (view: "landing" | "studio") => void;
+}
+
+export const LandingHeader: React.FC<LandingHeaderProps> = ({
+  activeView = "landing",
+  onSelectView
+}) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const urls = getEcosystemUrls();
 
@@ -17,15 +25,37 @@ export const LandingHeader: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-4">
           {/* Logo */}
-          <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => onSelectView?.("landing")}
+            className="flex items-center gap-2.5 bg-transparent border-none p-0 cursor-pointer text-left"
+          >
             <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
               <Zap className="w-4 h-4 fill-white" />
             </div>
             <span className="text-sm font-bold tracking-tight text-white">AI Payment Platform</span>
-          </div>
+          </button>
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-6 text-xs font-medium text-zinc-400">
+            <button
+              onClick={() => onSelectView?.("landing")}
+              className={`transition-colors cursor-pointer ${
+                activeView === "landing" ? "text-white font-semibold" : "hover:text-white"
+              }`}
+            >
+              Overview
+            </button>
+            <button
+              onClick={() => onSelectView?.("studio")}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                activeView === "studio"
+                  ? "bg-blue-600/20 text-blue-300 border border-blue-500/30 font-semibold"
+                  : "text-zinc-300 hover:text-white hover:bg-zinc-900"
+              }`}
+            >
+              <Palette className="w-3.5 h-3.5 text-blue-400" />
+              Component Studio
+            </button>
             {navLinks.map((l) => (
               <a key={l.href} href={l.href} className="hover:text-white transition-colors">{l.label}</a>
             ))}
@@ -56,6 +86,18 @@ export const LandingHeader: React.FC = () => {
       {/* Mobile Nav */}
       {mobileOpen && (
         <div className="md:hidden border-t border-zinc-800 bg-black/95 px-4 py-4 space-y-2">
+          <button
+            onClick={() => { onSelectView?.("landing"); setMobileOpen(false); }}
+            className="block w-full text-left text-sm text-zinc-300 py-2 hover:text-white"
+          >
+            Overview
+          </button>
+          <button
+            onClick={() => { onSelectView?.("studio"); setMobileOpen(false); }}
+            className="block w-full text-left text-sm text-blue-400 font-semibold py-2"
+          >
+            Component Studio
+          </button>
           {navLinks.map((l) => (
             <a key={l.href} href={l.href} onClick={() => setMobileOpen(false)}
               className="block text-sm text-zinc-300 py-2 hover:text-white">{l.label}</a>

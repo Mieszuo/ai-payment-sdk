@@ -105,10 +105,10 @@ export const AppHeader: React.FC = () => {
               target="_blank"
               rel="noreferrer"
               className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-xs text-zinc-300 font-medium transition-colors"
-              title="Open Developer Portal & Documentation"
+              title="Documentation (http://localhost:5175)"
             >
               <BookOpen className="w-3.5 h-3.5 text-blue-400" />
-              <span>Docs</span>
+              <span>Documentation</span>
               <ExternalLink className="w-3 h-3 text-zinc-500 ml-0.5" />
             </a>
 

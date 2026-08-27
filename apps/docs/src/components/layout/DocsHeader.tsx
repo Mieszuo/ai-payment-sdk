@@ -58,7 +58,7 @@ export const DocsHeader: React.FC = () => {
               className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-xs font-medium text-zinc-300 transition-colors"
             >
               <LayoutDashboard className="w-3.5 h-3.5 text-zinc-400" />
-              <span>Console</span>
+              <span>Dashboard</span>
               <ExternalLink className="w-3 h-3 text-zinc-500 ml-0.5" />
             </a>
 
