@@ -2,6 +2,7 @@ import { ActionVersion, PlatformError, PlatformErrorCodes } from "@platform/shar
 import { renderPromptTemplate, parseUntrustedOutput, verifyMarginGuard } from "@platform/core";
 import { LedgerService } from "./ledger.service";
 import { ModelProvider } from "../adapters/model-provider";
+import { ActionRunService } from "./run.service";
 
 export interface ActionExecutionParams {
   actionName: string;
@@ -15,6 +16,7 @@ export interface ActionExecutionResult {
   output: unknown;
   creditsUsed: number;
   remainingBalance: number;
+  runId?: string;
 }
 
 export class ActionExecutionService {
@@ -23,7 +25,8 @@ export class ActionExecutionService {
   constructor(
     private ledger: LedgerService,
     private modelProvider: ModelProvider,
-    actions: ActionVersion[]
+    actions: ActionVersion[],
+    private runService?: ActionRunService
   ) {
     actions.forEach((a) => this.actionMap.set(`${a.projectId}:${a.actionName}`, a));
   }
@@ -49,6 +52,20 @@ export class ActionExecutionService {
     );
 
     try {
+      await this.runService?.recordRunReservation({
+        runId,
+        projectId: params.projectId,
+        userId: params.userId,
+        actionName: action.actionName,
+        actionVersion: action.version,
+        model: action.model,
+        priceCredits: action.priceCredits,
+        systemPrompt: action.systemPrompt,
+        userPrompt: action.userPromptTemplate,
+        inputs: params.inputs || {},
+        idempotencyKey
+      });
+
       // 2. Validate input against required fields if specified
       if (action.inputSchema && typeof action.inputSchema === "object") {
         const schemaObj = action.inputSchema as Record<string, unknown>;
@@ -65,9 +82,10 @@ export class ActionExecutionService {
       }
 
       // 3. Build prompt from template
-      const prompt = renderPromptTemplate(action.userPromptTemplate, params.inputs);
+      const prompt = renderPromptTemplate(action.userPromptTemplate, params.inputs || {});
 
       // 4. Call model provider
+      await this.runService?.markRunning(runId);
       const result = await this.modelProvider.generate({
         model: action.model,
         systemPrompt: action.systemPrompt,
@@ -96,14 +114,21 @@ export class ActionExecutionService {
         result.costCents
       );
 
+      await this.runService?.markSucceeded(runId, {
+        consumedCredits: action.priceCredits,
+        costCents: result.costCents
+      });
+
       const wallet = await this.ledger.getWallet(params.userId);
 
       return {
         output,
         creditsUsed: action.priceCredits,
-        remainingBalance: wallet.availableCredits
+        remainingBalance: wallet.availableCredits,
+        runId
       };
     } catch (err) {
+      await this.runService?.markFailed(runId);
       // On failure, release reservation completely
       await this.ledger.releaseReservation(
         params.userId,

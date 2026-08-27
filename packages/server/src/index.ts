@@ -10,4 +10,5 @@ export * from "./routes/stripe.routes";
 export * from "./routes/wallet.routes";
 export * from "./services/developer.service";
 export * from "./routes/developer.routes";
+export * from "./services/run.service";
 export * from "./observability";
