@@ -48,10 +48,11 @@ export class AuthService {
     }
 
     let welcomeBonusGranted = false;
-    let wallet = this.db.wallets.get(entry.userId);
+    const wallet = this.db.wallets.get(entry.userId);
     if (!wallet) {
-      // First time user: seed wallet with 20 credits
-      this.db.seedWallet(entry.userId, 20);
+      // First time user: grant the 20-credit welcome bonus via a balanced
+      // ledger transaction (idempotent per user via the bonus_${userId} key).
+      await this.db.applyCredit(entry.userId, 20, "BONUS", `bonus_${entry.userId}`, "welcome");
       welcomeBonusGranted = true;
     }
 

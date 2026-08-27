@@ -28,11 +28,24 @@ export interface LedgerDatabase {
 
   seedWallet(userId: string, credits: number): void;
 
-  /** Serialize a unit of work; Postgres adapter commits a snapshot afterwards. */
+  /** Serialize a unit of work; the Postgres adapter executes it as a single SQL transaction. */
   runInTransaction<T>(fn: () => Promise<T>): Promise<T>;
 
   executeLedgerTransaction(tx: LedgerTransaction): Promise<void>;
 
   /** Row-level lock; no-op while the process-local mutex is the only writer. */
   lockWalletRow(userId: string): Promise<() => void>;
+
+  getWallet(userId: string): Promise<WalletRecord>;
+  reserveCredits(userId: string, amount: number, idempotencyKey: string, runId: string): Promise<void>;
+  settleReservation(userId: string, amount: number, idempotencyKey: string, runId: string, providerCostCents: number): Promise<void>;
+  releaseReservation(userId: string, amount: number, idempotencyKey: string, runId: string): Promise<void>;
+  applyCredit(
+    userId: string,
+    amount: number,
+    transactionType: "TOPUP" | "BONUS" | "REFUND",
+    idempotencyKey: string,
+    referenceId: string,
+    metadata?: Record<string, unknown>
+  ): Promise<void>;
 }

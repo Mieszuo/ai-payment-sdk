@@ -1,5 +1,4 @@
 import crypto from "node:crypto";
-import { formatAccountIdentifier, LedgerTransaction } from "@platform/shared";
 import { LedgerDatabase } from "../adapters/database";
 
 export const TOPUP_PACKAGES = {
@@ -116,37 +115,12 @@ export class StripeBillingService {
       const pack = TOPUP_PACKAGES[packId];
       const idempotencyKey = `stripe_${session.id}`;
 
-      await this.db.runInTransaction(async () => {
-        // If already processed, exit early (idempotent replay)
-        if (this.db.processedIdempotencyKeys.has(idempotencyKey)) {
-          return;
-        }
-
-        const tx: LedgerTransaction = {
-          idempotencyKey,
-          transactionType: "TOPUP",
-          referenceId: session.id,
-          entries: [
-            {
-              accountIdentifier: formatAccountIdentifier("PLATFORM_CLEARING"),
-              amountCredits: -pack.credits
-            },
-            {
-              accountIdentifier: formatAccountIdentifier("USER_WALLET", userId),
-              amountCredits: pack.credits
-            }
-          ],
-          metadata: { sessionId: session.id, amountCents: pack.priceCents }
-        };
-
-        await this.db.executeLedgerTransaction(tx);
-
-        const wallet = this.db.wallets.get(userId);
-        if (wallet) {
-          wallet.availableCredits += pack.credits;
-        } else {
-          this.db.seedWallet(userId, pack.credits);
-        }
+      // Top-up credits the wallet via a balanced ledger transaction; the
+      // adapter derives the sign from the transaction type and is idempotent
+      // on webhook replays.
+      await this.db.applyCredit(userId, pack.credits, "TOPUP", idempotencyKey, session.id, {
+        sessionId: session.id,
+        amountCents: pack.priceCents
       });
       return;
     }
@@ -163,34 +137,11 @@ export class StripeBillingService {
       const pack = TOPUP_PACKAGES[packId];
       const idempotencyKey = `stripe_refund_${charge.id}`;
 
-      await this.db.runInTransaction(async () => {
-        if (this.db.processedIdempotencyKeys.has(idempotencyKey)) {
-          return;
-        }
-
-        const tx: LedgerTransaction = {
-          idempotencyKey,
-          transactionType: "REFUND",
-          referenceId: charge.id,
-          entries: [
-            {
-              accountIdentifier: formatAccountIdentifier("USER_WALLET", userId),
-              amountCredits: -pack.credits
-            },
-            {
-              accountIdentifier: formatAccountIdentifier("PLATFORM_CLEARING"),
-              amountCredits: pack.credits
-            }
-          ],
-          metadata: { chargeId: charge.id, amountCents: pack.priceCents }
-        };
-
-        await this.db.executeLedgerTransaction(tx);
-
-        const wallet = this.db.wallets.get(userId);
-        if (wallet) {
-          wallet.availableCredits -= pack.credits;
-        }
+      // Refund debits the wallet via a balanced REFUND transaction (positive
+      // pack credits — the adapter derives the negative delta).
+      await this.db.applyCredit(userId, pack.credits, "REFUND", idempotencyKey, charge.id, {
+        chargeId: charge.id,
+        amountCents: pack.priceCents
       });
       return;
     }
