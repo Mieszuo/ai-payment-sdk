@@ -420,4 +420,79 @@ describe("Developer Action Registry Management", () => {
       }
     });
   });
+
+  it("lists all latest actions for the authenticated project", async () => {
+    // Publish two distinct actions
+    await app.request("/v1/developer/actions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer sk_live_secret_456"
+      },
+      body: JSON.stringify({
+        actionName: "act-1",
+        model: "openai/gpt-4o-mini",
+        priceCredits: 10
+      })
+    });
+
+    await app.request("/v1/developer/actions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer sk_live_secret_456"
+      },
+      body: JSON.stringify({
+        actionName: "act-2",
+        model: "openai/gpt-4o",
+        priceCredits: 20
+      })
+    });
+
+    const res = await app.request("/v1/developer/actions", {
+      method: "GET",
+      headers: {
+        "Authorization": "Bearer sk_live_secret_456"
+      }
+    });
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.actions).toHaveLength(2);
+    const names = body.actions.map((a: any) => a.actionName);
+    expect(names).toContain("act-1");
+    expect(names).toContain("act-2");
+  });
+
+  it("rotates developer secret key successfully and invalidates old key", async () => {
+    const res = await app.request("/v1/developer/keys/rotate", {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer sk_live_secret_456"
+      }
+    });
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.newSecretKey).toStartWith("sk_live_");
+    expect(body.masked).toBe("sk_live_••••••••••••••••••••");
+
+    // Old key is now invalid (401)
+    const oldRes = await app.request("/v1/developer/actions", {
+      method: "GET",
+      headers: {
+        "Authorization": "Bearer sk_live_secret_456"
+      }
+    });
+    expect(oldRes.status).toBe(401);
+
+    // New key works (200)
+    const newRes = await app.request("/v1/developer/actions", {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${body.newSecretKey}`
+      }
+    });
+    expect(newRes.status).toBe(200);
+  });
 });

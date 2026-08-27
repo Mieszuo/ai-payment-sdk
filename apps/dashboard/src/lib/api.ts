@@ -35,7 +35,7 @@ export class DashboardApiClient {
 
   constructor(options: ApiClientOptions = {}) {
     this.gatewayUrl = (options.gatewayUrl || "http://localhost:3000").replace(/\/+$/, "");
-    this.mode = options.mode || "DEMO_MODE";
+    this.mode = options.mode || "PRODUCTION_MODE";
     this.secretKey = options.secretKey || "sk_live_demo_secret_456";
     this.seedDemoData();
   }
@@ -54,90 +54,36 @@ export class DashboardApiClient {
     const actions: ActionItem[] = [
       {
         actionName: "optimize-resume",
-        version: 3,
+        version: 1,
         projectId: "proj_demo",
         model: "gpt-4o-mini",
         priceCredits: 15,
         maxProviderCostCents: 5,
         maxOutputTokens: 800,
         outputFormat: "json",
-        systemPrompt: "You are an elite executive recruiter and hiring manager. Evaluate candidate CV and return JSON metrics.",
-        userPromptTemplate: "Candidate CV:\n{{cvText}}\nTarget Role:\n{{targetRole}}",
+        systemPrompt: "You are an elite executive recruiter. Evaluate candidate CV and return JSON metrics.",
+        userPromptTemplate: "Candidate CV:\n{{cvText}}",
         rateLimit: { maxRequests: 10, windowSeconds: 60 },
         status: "Active",
-        createdAt: new Date(Date.now() - 3600000 * 24).toISOString()
-      },
-      {
-        actionName: "generate-cover-letter",
-        version: 1,
-        projectId: "proj_demo",
-        model: "gemini-1.5-flash",
-        priceCredits: 10,
-        maxProviderCostCents: 3,
-        maxOutputTokens: 600,
-        outputFormat: "text",
-        systemPrompt: "You are a professional career coach. Draft a compelling cover letter.",
-        userPromptTemplate: "Candidate experience: {{cvText}}\nCompany: {{companyName}}",
-        rateLimit: { maxRequests: 5, windowSeconds: 60 },
-        status: "Active",
-        createdAt: new Date(Date.now() - 3600000 * 48).toISOString()
+        createdAt: new Date().toISOString()
       }
     ];
     this.demoActions.set(proj.projectId, actions);
 
     this.demoLogs = [
       {
-        id: "run_9a81f3",
-        timestamp: new Date(Date.now() - 1000 * 45).toISOString(),
+        id: "run_init_1",
+        timestamp: new Date().toISOString(),
         status: "SUCCEEDED",
         actionName: "optimize-resume",
-        version: 3,
-        promptHash: "db1b957f0e7f9a22417819e954aa301b442b0833a61b8f8872b21c43b003a981",
-        inputHash: "1cfd8acc9c6008548d2aba5ff6008d7411624b55e81d77a06f4c39832a688b50",
-        latencyMs: 842,
-        userId: "usr_alice",
-        costCents: 0.31,
-        reservedCredits: 15
-      },
-      {
-        id: "run_7f2aff",
-        timestamp: new Date(Date.now() - 1000 * 120).toISOString(),
-        status: "SUCCEEDED",
-        actionName: "optimize-resume",
-        version: 3,
-        promptHash: "db1b957f0e7f9a22417819e954aa301b442b0833a61b8f8872b21c43b003a981",
-        inputHash: "4429f5f08819abef2188432a101e4a38210167ba8372481098481237a892b112",
-        latencyMs: 791,
-        userId: "usr_bob",
-        costCents: 0.28,
-        reservedCredits: 15
-      },
-      {
-        id: "req_rt_limit",
-        timestamp: new Date(Date.now() - 1000 * 180).toISOString(),
-        status: "RATE_LIMITED",
-        actionName: "optimize-resume",
-        version: 3,
-        promptHash: "db1b957f0e7f9a22417819e954aa301b442b0833a61b8f8872b21c43b003a981",
-        inputHash: "4429f5f08819abef2188432a101e4a38210167ba8372481098481237a892b112",
-        latencyMs: 12,
-        userId: "usr_bob",
-        costCents: 0,
-        reservedCredits: 0,
-        errorMessage: "Rate limit exceeded (10 requests / 60s)"
-      },
-      {
-        id: "run_6b242d",
-        timestamp: new Date(Date.now() - 1000 * 300).toISOString(),
-        status: "SUCCEEDED",
-        actionName: "generate-cover-letter",
         version: 1,
-        promptHash: "8c772a819b183610992384716248a87b10294871928471928374918237498172",
-        inputHash: "9283749182374918237491827391823791823791823791823791823791823791",
-        latencyMs: 512,
-        userId: "usr_charlie",
-        costCents: 0.15,
-        reservedCredits: 10
+        promptHash: "8a7c2b3d",
+        inputHash: "4e5f6a7b",
+        latencyMs: 340,
+        userId: "dev_playground",
+        costCents: 0.31,
+        reservedCredits: 15,
+        consumedCredits: 15
       }
     ];
   }
@@ -172,7 +118,21 @@ export class DashboardApiClient {
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to fetch actions`);
         const data = await res.json();
-        return data.actions || [];
+        return (data.actions || []).map((a: any) => ({
+          actionName: a.actionName,
+          version: a.version,
+          projectId: a.projectId,
+          model: a.model,
+          priceCredits: a.priceCredits,
+          maxProviderCostCents: a.maxProviderCostCents,
+          maxOutputTokens: a.maxOutputTokens || 800,
+          outputFormat: a.outputFormat || "json",
+          systemPrompt: a.systemPrompt,
+          userPromptTemplate: a.userPromptTemplate,
+          rateLimit: a.rateLimit || { maxRequests: 10, windowSeconds: 60 },
+          status: "Active",
+          createdAt: a.createdAt || new Date().toISOString()
+        }));
       } catch (err: any) {
         throw new Error(`Gateway unreachable: ${err.message || String(err)}`);
       }
@@ -200,7 +160,6 @@ export class DashboardApiClient {
       }
     }
 
-    // Demo Mode in-memory publish
     const currentActions = this.demoActions.get(projectId) || [];
     const existing = currentActions.find((a) => a.actionName === payload.actionName);
     const version = existing ? existing.version + 1 : 1;
@@ -228,15 +187,28 @@ export class DashboardApiClient {
   }
 
   async rotateSecretKey(projectId: string): Promise<{ newSecretKey: string; masked: string }> {
-    const rawNewKey = `sk_live_${Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, "0")).join("")}`;
-    const masked = "sk_live_••••••••••••••••••••";
-
-    const proj = this.demoProjects.get(projectId);
-    if (proj) {
-      proj.secretKeyMasked = masked;
-      this.secretKey = rawNewKey;
+    if (this.mode === "PRODUCTION_MODE") {
+      try {
+        const res = await fetch(`${this.gatewayUrl}/v1/developer/keys/rotate`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${this.secretKey}` }
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to rotate key`);
+        const data = await res.json();
+        this.secretKey = data.newSecretKey;
+        const proj = this.demoProjects.get(projectId);
+        if (proj) proj.secretKeyMasked = data.masked;
+        return { newSecretKey: data.newSecretKey, masked: data.masked };
+      } catch (err: any) {
+        throw new Error(`Gateway unreachable: ${err.message || String(err)}`);
+      }
     }
 
+    const rawNewKey = `sk_live_${Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, "0")).join("")}`;
+    const masked = "sk_live_••••••••••••••••••••";
+    const proj = this.demoProjects.get(projectId);
+    if (proj) proj.secretKeyMasked = masked;
+    this.secretKey = rawNewKey;
     return { newSecretKey: rawNewKey, masked };
   }
 
@@ -248,15 +220,15 @@ export class DashboardApiClient {
       computeSha256(JSON.stringify(params.inputs))
     ]);
 
-    if (params.mode === "Live" && this.mode === "PRODUCTION_MODE") {
+    if (this.mode === "PRODUCTION_MODE" && params.mode === "Live") {
       try {
-        const res = await fetch(`${this.gatewayUrl}/v1/actions/${params.actionName}/execute`, {
+        const res = await fetch(`${this.gatewayUrl}/v1/developer/actions/${params.actionName}/test`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${params.userSessionToken || this.secretKey}`
+            Authorization: `Bearer ${this.secretKey}`
           },
-          body: JSON.stringify({ inputs: params.inputs, projectId: params.projectId })
+          body: JSON.stringify({ inputs: params.inputs })
         });
         const durationMs = Date.now() - startTime;
         const data = await res.json();
@@ -286,26 +258,20 @@ export class DashboardApiClient {
       }
     }
 
-    // Mock Execution (instant, zero cost)
+    // Mock Execution (instant, zero provider cost)
     const durationMs = Math.floor(Math.random() * 150) + 50;
-    const mockOutput =
-      params.actionName === "optimize-resume"
-        ? {
-            rating: 9.4,
-            strengths: [
-              "Clear quantifiable achievements in distributed systems",
-              "Demonstrated impact on platform availability and performance"
-            ],
-            recommendations: [
-              "Include specific throughput metrics in system design summary"
-            ],
-            optimizedSummary:
-              "Staff Distributed Systems Engineer with 8+ years experience scaling zero-trust financial platforms."
-          }
-        : {
-            message: `Mock execution output for ${params.actionName}`,
-            receivedInputs: params.inputs
-          };
+    const mockOutput = {
+      rating: 9.4,
+      strengths: [
+        "Clear quantifiable achievements in distributed systems",
+        "Demonstrated impact on platform availability and performance"
+      ],
+      recommendations: [
+        "Include specific throughput metrics in system design summary"
+      ],
+      optimizedSummary:
+        "Staff Distributed Systems Engineer with 8+ years experience scaling zero-trust financial platforms."
+    };
 
     const newLog: AuditLogEvent = {
       id: `run_${Date.now().toString(16).slice(-6)}`,
@@ -335,15 +301,61 @@ export class DashboardApiClient {
   }
 
   async getLogs(projectId: string): Promise<AuditLogEvent[]> {
+    if (this.mode === "PRODUCTION_MODE") {
+      try {
+        const res = await fetch(`${this.gatewayUrl}/v1/developer/runs`, {
+          headers: { Authorization: `Bearer ${this.secretKey}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.runs && Array.isArray(data.runs) && data.runs.length > 0) {
+            return data.runs.map((r: any) => ({
+              id: r.id || r.runId,
+              timestamp: r.createdAt,
+              status: r.status,
+              actionName: r.actionName,
+              version: r.actionVersion,
+              promptHash: r.promptHash,
+              inputHash: r.inputHash,
+              latencyMs: r.completedAt
+                ? Math.max(10, new Date(r.completedAt).getTime() - new Date(r.createdAt).getTime())
+                : 320,
+              userId: r.userId,
+              costCents: r.costCents || 0,
+              reservedCredits: r.reservedCredits || 0,
+              consumedCredits: r.consumedCredits || 0,
+              errorMessage: r.status === "FAILED" ? "Execution error" : undefined
+            }));
+          }
+        }
+      } catch (err: any) {
+        throw new Error(`Gateway unreachable: ${err.message || String(err)}`);
+      }
+    }
+
     return this.demoLogs;
   }
 
   async getTelemetry(projectId: string): Promise<FinancialTelemetry> {
+    if (this.mode === "PRODUCTION_MODE") {
+      try {
+        const res = await fetch(`${this.gatewayUrl}/v1/developer/telemetry`, {
+          headers: { Authorization: `Bearer ${this.secretKey}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.telemetry) {
+            return data.telemetry;
+          }
+        }
+      } catch (err: any) {
+        throw new Error(`Gateway unreachable: ${err.message || String(err)}`);
+      }
+    }
+
     const totalRuns = this.demoLogs.length;
-    const creditsConsumed = this.demoLogs.reduce((acc, l) => acc + l.reservedCredits, 0) + 450;
-    const providerSpendCents = 1243; // $12.43
-    // Revenue value: 450 credits @ $0.01 = $4.50 + base revenue $37.50 -> $42.00
-    // Margin: (Revenue - Provider Cost) / Revenue -> ~70%
+    const creditsConsumed = this.demoLogs.reduce((acc, l) => acc + (l.reservedCredits || 0), 0) + 450;
+    const providerSpendCents = 1243;
     return {
       totalRuns: 1420 + totalRuns,
       creditsConsumed: 18450 + creditsConsumed,

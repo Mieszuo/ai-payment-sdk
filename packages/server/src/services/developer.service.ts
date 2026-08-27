@@ -80,6 +80,34 @@ export class DeveloperService {
     return versions.length > 0 ? versions[versions.length - 1] : null;
   }
 
+  getAllLatestActions(projectId: string): ActionVersion[] {
+    const latestActions: ActionVersion[] = [];
+    const prefix = `${projectId}:`;
+    for (const [key, versions] of this.actionVersions.entries()) {
+      if (key.startsWith(prefix) && versions.length > 0) {
+        latestActions.push(versions[versions.length - 1]);
+      }
+    }
+    return latestActions;
+  }
+
+  rotateSecretKey(projectId: string): { newSecretKey: string; masked: string } {
+    const project = this.projectsById.get(projectId);
+    if (!project) {
+      throw new PlatformError(PlatformErrorCodes.ACTION_NOT_FOUND, "Project not found");
+    }
+
+    this.projectsBySecret.delete(project.secretKey);
+    const newSecretKey = `sk_live_${Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, "0")).join("")}`;
+    project.secretKey = newSecretKey;
+    this.projectsBySecret.set(newSecretKey, project);
+
+    return {
+      newSecretKey,
+      masked: "sk_live_••••••••••••••••••••"
+    };
+  }
+
   getProjectById(projectId: string): ProjectRecord | undefined {
     return this.projectsById.get(projectId);
   }

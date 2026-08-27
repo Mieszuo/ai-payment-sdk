@@ -46,6 +46,7 @@ export interface AuditLogEvent {
   userId: string;
   costCents: number;
   reservedCredits: number;
+  consumedCredits?: number;
   errorMessage?: string;
 }
 

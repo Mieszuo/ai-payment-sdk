@@ -74,6 +74,13 @@ export function createPlatformApp(options?: { forceMock?: boolean }) {
     rateLimit: { maxRequests: 5, windowSeconds: 60 }
   });
 
+  // Pre-seed dev_playground wallet for developer testing
+  db.wallets.set("dev_playground", {
+    userId: "dev_playground",
+    availableCredits: 1000,
+    reservedCredits: 0
+  });
+
   const actionExecutionService = new ActionExecutionService(
     ledger,
     modelProvider,
@@ -96,7 +103,7 @@ export function createPlatformApp(options?: { forceMock?: boolean }) {
   app.route("/v1/auth", createAuthRoutes(authService));
   app.route("/v1/actions", createActionRoutes(actionExecutionService, authService));
   app.route("/v1/wallet", createWalletRoutes(ledger, authService));
-  app.route("/v1/developer", createDeveloperRoutes(devService));
+  app.route("/v1/developer", createDeveloperRoutes(devService, runService, actionExecutionService));
   app.route("/v1/stripe", createStripeRoutes(stripeService));
 
   // Health check & info

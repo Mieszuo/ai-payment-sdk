@@ -70,9 +70,9 @@ const defaultActions: ActionItem[] = [
 const DashboardContext = createContext<DashboardContextValue | null>(null);
 
 export const DashboardProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [mode, setModeState] = useState<RuntimeMode>("DEMO_MODE");
-  const [api] = useState<DashboardApiClient>(() => createDashboardApiClient({ mode }));
-  const [gatewayStatus, setGatewayStatus] = useState<GatewayStatus>("demo");
+  const [mode, setModeState] = useState<RuntimeMode>("PRODUCTION_MODE");
+  const [api] = useState<DashboardApiClient>(() => createDashboardApiClient({ mode: "PRODUCTION_MODE" }));
+  const [gatewayStatus, setGatewayStatus] = useState<GatewayStatus>("connected");
   const [projects] = useState<ProjectConfig[]>([defaultProject]);
   const [activeProjectId, setActiveProjectId] = useState<string>("proj_demo");
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
