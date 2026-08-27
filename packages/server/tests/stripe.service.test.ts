@@ -216,3 +216,197 @@ describe("Stripe Top-Up & Idempotency", () => {
     expect(body.error).toBeDefined();
   });
 });
+
+describe("Stripe Production Signature & Refunds", () => {
+  it("verifies valid HMAC-SHA256 signature and rejects invalid signatures", async () => {
+    const db = new InMemoryDatabase();
+    const service = new StripeBillingService(db, "whsec_test_secret_123");
+
+    const payload = JSON.stringify({ id: "evt_1", type: "checkout.session.completed" });
+    expect(service.verifySignature(payload, "invalid_sig")).toBe(false);
+
+    // Compute expected signature
+    const cryptoKey = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode("whsec_test_secret_123"),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+    const signature = await crypto.subtle.sign("HMAC", cryptoKey, new TextEncoder().encode(payload));
+    const hexSig = Array.from(new Uint8Array(signature), (b) => b.toString(16).padStart(2, "0")).join("");
+
+    expect(service.verifySignature(payload, hexSig)).toBe(true);
+    expect(service.verifySignature(payload, `t=12345,v1=${hexSig}`)).toBe(true);
+  });
+
+  it("handles charge.refunded by deducting credited tokens via balanced REFUND transaction", async () => {
+    const db = new InMemoryDatabase();
+    db.seedWallet("usr_refund_1", 550);
+    const service = new StripeBillingService(db, "whsec_test_secret_123");
+
+    await service.handleWebhook({
+      id: "evt_refund_123",
+      type: "charge.refunded",
+      data: {
+        object: {
+          id: "ch_refund_1",
+          metadata: { userId: "usr_refund_1", packId: "popular" }
+        }
+      }
+    });
+
+    const wallet = db.wallets.get("usr_refund_1");
+    expect(wallet?.availableCredits).toBe(0); // 550 - 550 = 0
+
+    // Verify REFUND transaction was recorded in ledger
+    const tx = db.transactions.get("stripe_refund_ch_refund_1");
+    expect(tx).toBeDefined();
+    expect(tx?.transactionType).toBe("REFUND");
+    expect(tx?.referenceId).toBe("ch_refund_1");
+    expect(tx?.entries).toEqual([
+      {
+        accountIdentifier: formatAccountIdentifier("USER_WALLET", "usr_refund_1"),
+        amountCredits: -550
+      },
+      {
+        accountIdentifier: formatAccountIdentifier("PLATFORM_CLEARING"),
+        amountCredits: 550
+      }
+    ]);
+  });
+
+  it("ensures charge.refunded is idempotent and cannot deduct credits multiple times on replay", async () => {
+    const db = new InMemoryDatabase();
+    db.seedWallet("usr_refund_idempotent", 550);
+    const service = new StripeBillingService(db, "whsec_test_secret_123");
+
+    const refundEvent = {
+      id: "evt_refund_dup",
+      type: "charge.refunded",
+      data: {
+        object: {
+          id: "ch_refund_dup",
+          metadata: { userId: "usr_refund_idempotent", packId: "popular" }
+        }
+      }
+    };
+
+    await service.handleWebhook(refundEvent);
+    expect(db.wallets.get("usr_refund_idempotent")?.availableCredits).toBe(0);
+
+    // Replay same refund event
+    await service.handleWebhook(refundEvent);
+    expect(db.wallets.get("usr_refund_idempotent")?.availableCredits).toBe(0); // Still 0, not -550
+  });
+
+  it("records dispute audit when charge.dispute.created is received", async () => {
+    const db = new InMemoryDatabase();
+    const service = new StripeBillingService(db, "whsec_test_secret_123");
+
+    await service.handleWebhook({
+      id: "evt_disp_1",
+      type: "charge.dispute.created",
+      data: {
+        object: {
+          id: "dp_123",
+          charge: "ch_test_dispute",
+          amount: 500,
+          reason: "fraudulent",
+          status: "needs_response",
+          metadata: { userId: "usr_dispute_1" }
+        }
+      }
+    });
+
+    expect(service.disputes.length).toBe(1);
+    expect(service.disputes[0].disputeId).toBe("dp_123");
+    expect(service.disputes[0].chargeId).toBe("ch_test_dispute");
+    expect(service.disputes[0].amount).toBe(500);
+  });
+
+  it("enforces server-side pack validation strictly determined by server predefined packages", async () => {
+    const db = new InMemoryDatabase();
+    db.seedWallet("usr_pack_test", 0);
+    const service = new StripeBillingService(db, "whsec_test_secret_123");
+
+    // Client attempts to tamper with credits amount via metadata
+    await service.handleWebhook({
+      id: "evt_tamper",
+      type: "checkout.session.completed",
+      data: {
+        object: {
+          id: "cs_tamper",
+          metadata: { userId: "usr_pack_test", packId: "starter", credits: 999999 }
+        }
+      }
+    });
+
+    // Server should only credit exactly starter pack credits (300)
+    expect(db.wallets.get("usr_pack_test")?.availableCredits).toBe(300);
+  });
+
+  it("validates webhook signature in HTTP route and rejects invalid signatures with 400 INVALID_SIGNATURE", async () => {
+    const db = new InMemoryDatabase();
+    db.seedWallet("usr_http_test", 0);
+    const service = new StripeBillingService(db, "whsec_route_secret");
+
+    const app = new Hono();
+    app.route("/v1/stripe", createStripeRoutes(service));
+
+    const payload = JSON.stringify({
+      id: "evt_http_sig",
+      type: "checkout.session.completed",
+      data: {
+        object: {
+          id: "cs_http_sig",
+          metadata: { userId: "usr_http_test", packId: "popular" }
+        }
+      }
+    });
+
+    // Case 1: Missing signature header
+    const resNoSig = await app.request("/v1/stripe/webhook", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: payload
+    });
+    expect(resNoSig.status).toBe(400);
+    expect(await resNoSig.json()).toEqual({ error: "INVALID_SIGNATURE" });
+
+    // Case 2: Invalid signature header
+    const resBadSig = await app.request("/v1/stripe/webhook", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "stripe-signature": "t=123,v1=bad_signature"
+      },
+      body: payload
+    });
+    expect(resBadSig.status).toBe(400);
+    expect(await resBadSig.json()).toEqual({ error: "INVALID_SIGNATURE" });
+
+    // Case 3: Valid signature
+    const cryptoKey = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode("whsec_route_secret"),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+    const signature = await crypto.subtle.sign("HMAC", cryptoKey, new TextEncoder().encode(payload));
+    const hexSig = Array.from(new Uint8Array(signature), (b) => b.toString(16).padStart(2, "0")).join("");
+
+    const resValidSig = await app.request("/v1/stripe/webhook", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "stripe-signature": `t=12345,v1=${hexSig}`
+      },
+      body: payload
+    });
+    expect(resValidSig.status).toBe(200);
+    expect(await resValidSig.json()).toEqual({ received: true });
+    expect(db.wallets.get("usr_http_test")?.availableCredits).toBe(550);
+  });
+});

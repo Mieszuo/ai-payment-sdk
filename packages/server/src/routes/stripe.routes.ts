@@ -6,7 +6,16 @@ export function createStripeRoutes(billingService: StripeBillingService) {
 
   router.post("/webhook", async (c) => {
     try {
-      const event = await c.req.json();
+      const rawBody = await c.req.text();
+
+      if (billingService.hasWebhookSecret()) {
+        const sig = c.req.header("stripe-signature");
+        if (!sig || !billingService.verifySignature(rawBody, sig)) {
+          return c.json({ error: "INVALID_SIGNATURE" }, 400);
+        }
+      }
+
+      const event = JSON.parse(rawBody);
       await billingService.handleWebhook(event);
       return c.json({ received: true });
     } catch (err: any) {
