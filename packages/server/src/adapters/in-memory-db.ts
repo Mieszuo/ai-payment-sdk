@@ -7,9 +7,15 @@ export interface WalletRecord {
   reservedCredits: number;
 }
 
+export interface ReservationRecord {
+  userId: string;
+  amount: number;
+}
+
 export class InMemoryDatabase {
   public wallets = new Map<string, WalletRecord>();
   public transactions = new Map<string, LedgerTransaction>();
+  public reservations = new Map<string, ReservationRecord>();
   public processedIdempotencyKeys = new Set<string>();
   private mutex = Promise.resolve();
 

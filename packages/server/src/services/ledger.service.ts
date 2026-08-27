@@ -6,14 +6,7 @@ import {
 } from "@platform/core";
 import { InMemoryDatabase } from "../adapters/in-memory-db";
 
-interface ReservationRecord {
-  userId: string;
-  amount: number;
-}
-
 export class LedgerService {
-  private reservations = new Map<string, ReservationRecord>();
-
   constructor(private db: InMemoryDatabase) {}
 
   async getWallet(userId: string): Promise<{ userId: string; availableCredits: number; reservedCredits: number }> {
@@ -25,6 +18,10 @@ export class LedgerService {
   }
 
   async reserveCredits(userId: string, amount: number, idempotencyKey: string, runId: string): Promise<void> {
+    if (amount <= 0) {
+      throw new PlatformError(PlatformErrorCodes.INVALID_INPUT, "Reservation amount must be greater than zero");
+    }
+
     return this.db.runInTransaction(async () => {
       if (this.db.processedIdempotencyKeys.has(idempotencyKey)) {
         return; // Idempotent no-op
@@ -43,7 +40,7 @@ export class LedgerService {
 
       wallet.availableCredits -= amount;
       wallet.reservedCredits += amount;
-      this.reservations.set(runId, { userId, amount });
+      this.db.reservations.set(runId, { userId, amount });
     });
   }
 
@@ -56,33 +53,35 @@ export class LedgerService {
     runId?: string,
     costCents?: number
   ): Promise<void> {
-    let resolvedUserId: string;
-    let resolvedAmount: number;
-    let resolvedIdempotencyKey: string;
-    let resolvedRunId: string;
-    let resolvedCostCents: number;
-
-    if (idempotencyKey === undefined || runId === undefined || costCents === undefined) {
-      resolvedRunId = userIdOrRunId;
-      resolvedCostCents = amountOrCostCents;
-      const reservation = this.reservations.get(resolvedRunId);
-      if (!reservation) {
-        throw new PlatformError(PlatformErrorCodes.PROVIDER_ERROR, `Reservation not found for runId: ${resolvedRunId}`);
-      }
-      resolvedUserId = reservation.userId;
-      resolvedAmount = reservation.amount;
-      resolvedIdempotencyKey = `set_${resolvedRunId}`;
-    } else {
-      resolvedUserId = userIdOrRunId;
-      resolvedAmount = amountOrCostCents;
-      resolvedIdempotencyKey = idempotencyKey;
-      resolvedRunId = runId;
-      resolvedCostCents = costCents;
-    }
-
     return this.db.runInTransaction(async () => {
-      if (this.db.processedIdempotencyKeys.has(resolvedIdempotencyKey)) {
-        return; // Idempotent no-op
+      let resolvedUserId: string;
+      let resolvedAmount: number;
+      let resolvedIdempotencyKey: string;
+      let resolvedRunId: string;
+      let resolvedCostCents: number;
+
+      if (idempotencyKey === undefined || runId === undefined || costCents === undefined) {
+        resolvedRunId = userIdOrRunId;
+        resolvedCostCents = amountOrCostCents;
+        resolvedIdempotencyKey = `set_${resolvedRunId}`;
+        if (this.db.processedIdempotencyKeys.has(resolvedIdempotencyKey)) {
+          return; // Idempotent no-op on retry
+        }
+        const reservation = this.db.reservations.get(resolvedRunId);
+        if (!reservation) {
+          throw new PlatformError(PlatformErrorCodes.PROVIDER_ERROR, `Reservation not found for runId: ${resolvedRunId}`);
+        }
+        resolvedUserId = reservation.userId;
+        resolvedAmount = reservation.amount;
+      } else {
+        resolvedUserId = userIdOrRunId;
+        resolvedAmount = amountOrCostCents;
+        resolvedIdempotencyKey = idempotencyKey;
+        resolvedRunId = runId;
+        resolvedCostCents = costCents;
+        if (this.db.processedIdempotencyKeys.has(resolvedIdempotencyKey)) {
+          return; // Idempotent no-op on retry
+        }
       }
 
       const wallet = this.db.wallets.get(resolvedUserId);
@@ -100,7 +99,7 @@ export class LedgerService {
       await this.db.executeLedgerTransaction(tx);
 
       wallet.reservedCredits -= resolvedAmount;
-      this.reservations.delete(resolvedRunId);
+      this.db.reservations.delete(resolvedRunId);
     });
   }
 
@@ -112,30 +111,32 @@ export class LedgerService {
     idempotencyKey?: string,
     runId?: string
   ): Promise<void> {
-    let resolvedUserId: string;
-    let resolvedAmount: number;
-    let resolvedIdempotencyKey: string;
-    let resolvedRunId: string;
-
-    if (amount === undefined || idempotencyKey === undefined || runId === undefined) {
-      resolvedRunId = userIdOrRunId;
-      const reservation = this.reservations.get(resolvedRunId);
-      if (!reservation) {
-        return; // Nothing to release
-      }
-      resolvedUserId = reservation.userId;
-      resolvedAmount = reservation.amount;
-      resolvedIdempotencyKey = `rel_${resolvedRunId}`;
-    } else {
-      resolvedUserId = userIdOrRunId;
-      resolvedAmount = amount;
-      resolvedIdempotencyKey = idempotencyKey;
-      resolvedRunId = runId;
-    }
-
     return this.db.runInTransaction(async () => {
-      if (this.db.processedIdempotencyKeys.has(resolvedIdempotencyKey)) {
-        return; // Idempotent no-op
+      let resolvedUserId: string;
+      let resolvedAmount: number;
+      let resolvedIdempotencyKey: string;
+      let resolvedRunId: string;
+
+      if (amount === undefined || idempotencyKey === undefined || runId === undefined) {
+        resolvedRunId = userIdOrRunId;
+        resolvedIdempotencyKey = `rel_${resolvedRunId}`;
+        if (this.db.processedIdempotencyKeys.has(resolvedIdempotencyKey)) {
+          return; // Idempotent no-op on retry
+        }
+        const reservation = this.db.reservations.get(resolvedRunId);
+        if (!reservation) {
+          return; // Nothing to release
+        }
+        resolvedUserId = reservation.userId;
+        resolvedAmount = reservation.amount;
+      } else {
+        resolvedUserId = userIdOrRunId;
+        resolvedAmount = amount;
+        resolvedIdempotencyKey = idempotencyKey;
+        resolvedRunId = runId;
+        if (this.db.processedIdempotencyKeys.has(resolvedIdempotencyKey)) {
+          return; // Idempotent no-op on retry
+        }
       }
 
       const wallet = this.db.wallets.get(resolvedUserId);
@@ -153,7 +154,7 @@ export class LedgerService {
 
       wallet.reservedCredits -= resolvedAmount;
       wallet.availableCredits += resolvedAmount;
-      this.reservations.delete(resolvedRunId);
+      this.db.reservations.delete(resolvedRunId);
     });
   }
 }

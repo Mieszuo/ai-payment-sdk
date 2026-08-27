@@ -103,19 +103,58 @@ describe("LedgerService Concurrency & Reservation", () => {
     expect(walletAfterSettle.reservedCredits).toBe(0);
   });
 
-  it("supports shorthand settleReservation(runId, costCents)", async () => {
-    await ledger.reserveCredits("usr_1", 8, "res_short_s", "run_short_s");
-    await ledger.settleReservation("run_short_s", 3);
+  it("rejects non-positive reservation amounts with INVALID_INPUT", async () => {
+    // Zero credits
+    try {
+      await ledger.reserveCredits("usr_1", 0, "res_zero", "run_zero");
+      expect(true).toBe(false);
+    } catch (err: any) {
+      expect(err).toBeInstanceOf(PlatformError);
+      expect(err.code).toBe(PlatformErrorCodes.INVALID_INPUT);
+    }
+
+    // Negative credits
+    try {
+      await ledger.reserveCredits("usr_1", -10, "res_neg", "run_neg");
+      expect(true).toBe(false);
+    } catch (err: any) {
+      expect(err).toBeInstanceOf(PlatformError);
+      expect(err.code).toBe(PlatformErrorCodes.INVALID_INPUT);
+    }
+  });
+
+  it("handles idempotency on repeated shorthand settleReservation(runId, costCents) calls", async () => {
+    await ledger.reserveCredits("usr_1", 8, "res_idem_s", "run_idem_s");
+    await ledger.settleReservation("run_idem_s", 3);
+
+    // Repeated call must NOT throw Reservation not found, must be idempotent no-op
+    await expect(ledger.settleReservation("run_idem_s", 3)).resolves.toBeUndefined();
+
     const wallet = await ledger.getWallet("usr_1");
     expect(wallet.availableCredits).toBe(12);
     expect(wallet.reservedCredits).toBe(0);
   });
 
-  it("supports shorthand releaseReservation(runId)", async () => {
-    await ledger.reserveCredits("usr_1", 8, "res_short_r", "run_short_r");
-    await ledger.releaseReservation("run_short_r");
+  it("handles idempotency on repeated shorthand releaseReservation(runId) calls", async () => {
+    await ledger.reserveCredits("usr_1", 8, "res_idem_r", "run_idem_r");
+    await ledger.releaseReservation("run_idem_r");
+
+    // Repeated call must be idempotent no-op without double-crediting
+    await expect(ledger.releaseReservation("run_idem_r")).resolves.toBeUndefined();
+
     const wallet = await ledger.getWallet("usr_1");
     expect(wallet.availableCredits).toBe(20);
+    expect(wallet.reservedCredits).toBe(0);
+  });
+
+  it("shares reservations across multiple LedgerService instances on the same database", async () => {
+    const ledger2 = new LedgerService(db);
+    await ledger.reserveCredits("usr_1", 6, "res_inst", "run_inst");
+
+    // ledger2 can settle the reservation made by ledger
+    await ledger2.settleReservation("run_inst", 2);
+    const wallet = await ledger2.getWallet("usr_1");
+    expect(wallet.availableCredits).toBe(14);
     expect(wallet.reservedCredits).toBe(0);
   });
 });
