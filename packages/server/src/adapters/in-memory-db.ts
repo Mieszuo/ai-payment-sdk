@@ -17,6 +17,7 @@ export class InMemoryDatabase {
   public transactions = new Map<string, LedgerTransaction>();
   public reservations = new Map<string, ReservationRecord>();
   public processedIdempotencyKeys = new Set<string>();
+  public actionRuns = new Map<string, any>();
   private mutex = Promise.resolve();
 
   seedWallet(userId: string, credits: number) {

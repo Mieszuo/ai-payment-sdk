@@ -25,12 +25,12 @@ export class ActionRunService {
   private runs: Map<string, ActionRunRecord>;
 
   constructor(private db?: InMemoryDatabase) {
-    if (db && (db as any).actionRuns) {
-      this.runs = (db as any).actionRuns;
+    if (db && db.actionRuns) {
+      this.runs = db.actionRuns as Map<string, ActionRunRecord>;
     } else {
       this.runs = new Map<string, ActionRunRecord>();
       if (db) {
-        (db as any).actionRuns = this.runs;
+        db.actionRuns = this.runs;
       }
     }
   }

@@ -1,5 +1,7 @@
+export * from "./adapters";
 export * from "./adapters/in-memory-db";
 export * from "./adapters/model-provider";
+export * from "./adapters/postgres-db";
 export * from "./services/ledger.service";
 export * from "./services/auth.service";
 export * from "./services/action.service";
