@@ -1,5 +1,5 @@
 import * as jose from "jose";
-import { PlatformError, PlatformErrorCodes, UserSessionToken } from "@platform/shared";
+import { PlatformError, PlatformErrorCodes, UserSessionToken, UserSessionTokenSchema } from "@platform/shared";
 import { InMemoryDatabase } from "../adapters/in-memory-db";
 
 export class AuthService {
@@ -10,7 +10,18 @@ export class AuthService {
     this.secret = new TextEncoder().encode(secretString);
   }
 
+  private pruneExpiredCodes() {
+    const now = Date.now();
+    for (const [code, entry] of this.codes.entries()) {
+      if (entry.expiresAt < now) {
+        this.codes.delete(code);
+      }
+    }
+  }
+
   async issueAuthorizationCode(params: { userId: string; email: string; projectId: string; codeChallenge: string }): Promise<string> {
+    this.pruneExpiredCodes();
+
     const code = `code_${crypto.randomUUID()}`;
     this.codes.set(code, {
       ...params,
@@ -20,9 +31,19 @@ export class AuthService {
   }
 
   async exchangeCodeForSession(params: { projectId: string; code: string; codeVerifier: string }) {
+    this.pruneExpiredCodes();
+
     const entry = this.codes.get(params.code);
     if (!entry || entry.projectId !== params.projectId || entry.expiresAt < Date.now()) {
       throw new PlatformError(PlatformErrorCodes.UNAUTHORIZED, "Invalid or expired authorization code");
+    }
+
+    // Verify PKCE codeVerifier against codeChallenge (supports plain and S256)
+    const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(params.codeVerifier));
+    const s256Challenge = Buffer.from(hash).toString("base64url");
+    const matches = params.codeVerifier === entry.codeChallenge || s256Challenge === entry.codeChallenge;
+    if (!matches) {
+      throw new PlatformError(PlatformErrorCodes.UNAUTHORIZED, "Invalid code verifier");
     }
 
     this.codes.delete(params.code);
@@ -54,13 +75,18 @@ export class AuthService {
   async verifySessionToken(token: string): Promise<UserSessionToken> {
     try {
       const { payload } = await jose.jwtVerify(token, this.secret);
-      return {
-        userId: payload.userId as string,
-        email: payload.email as string,
-        projectId: payload.projectId as string,
-        exp: payload.exp as number
-      };
-    } catch {
+      const parsed = UserSessionTokenSchema.safeParse({
+        userId: payload.userId,
+        email: payload.email,
+        projectId: payload.projectId,
+        exp: payload.exp
+      });
+      if (!parsed.success) {
+        throw new PlatformError(PlatformErrorCodes.UNAUTHORIZED, "Invalid session token payload", parsed.error);
+      }
+      return parsed.data;
+    } catch (err) {
+      if (err instanceof PlatformError) throw err;
       throw new PlatformError(PlatformErrorCodes.UNAUTHORIZED, "Invalid or expired session token");
     }
   }

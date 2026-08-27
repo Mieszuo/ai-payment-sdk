@@ -4,6 +4,7 @@ import { AuthService } from "../src/services/auth.service";
 import { createAuthRoutes } from "../src/routes/auth.routes";
 import { InMemoryDatabase } from "../src/adapters/in-memory-db";
 import { PlatformError, PlatformErrorCodes } from "@platform/shared";
+import * as jose from "jose";
 
 describe("PKCE Auth Routes", () => {
   it("exchanges valid code and verifier for signed session token and grants 20 welcome credits", async () => {
@@ -42,10 +43,118 @@ describe("PKCE Auth Routes", () => {
     expect(wallet?.availableCredits).toBe(20);
   });
 
+  it("exchanges code with S256 hashed challenge and matching verifier", async () => {
+    const db = new InMemoryDatabase();
+    const authService = new AuthService(db, "test-secret-key-must-be-at-least-32-chars-long");
+    const app = new Hono();
+    app.route("/v1/auth", createAuthRoutes(authService));
+
+    // S256 challenge generation
+    const verifier = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk-s256";
+    const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier));
+    const s256Challenge = Buffer.from(hash).toString("base64url");
+
+    const code = await authService.issueAuthorizationCode({
+      userId: "00000000-0000-0000-0000-000000000002",
+      email: "s256@example.com",
+      projectId: "proj_s256",
+      codeChallenge: s256Challenge
+    });
+
+    const res = await app.request("/v1/auth/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        projectId: "proj_s256",
+        code,
+        codeVerifier: verifier
+      })
+    });
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.sessionToken).toBeDefined();
+    expect(body.user.email).toBe("s256@example.com");
+    expect(body.welcomeBonusGranted).toBe(true);
+  });
+
+  it("fails with UNAUTHORIZED on invalid codeVerifier (unit test and HTTP 401)", async () => {
+    const db = new InMemoryDatabase();
+    const authService = new AuthService(db, "test-secret-key-must-be-at-least-32-chars-long");
+    const app = new Hono();
+    app.route("/v1/auth", createAuthRoutes(authService));
+
+    const verifier = "valid-verifier-secret-must-be-at-least-32-chars-long";
+    const code = await authService.issueAuthorizationCode({
+      userId: "00000000-0000-0000-0000-000000000003",
+      email: "test@example.com",
+      projectId: "proj_123",
+      codeChallenge: verifier
+    });
+
+    // 1. Service unit test rejection
+    try {
+      await authService.exchangeCodeForSession({
+        projectId: "proj_123",
+        code,
+        codeVerifier: "wrong-verifier-must-be-at-least-32-chars-long!"
+      });
+      expect(true).toBe(false);
+    } catch (err: any) {
+      expect(err).toBeInstanceOf(PlatformError);
+      expect(err.code).toBe(PlatformErrorCodes.UNAUTHORIZED);
+      expect(err.message).toBe("Invalid code verifier");
+    }
+
+    // 2. HTTP route rejection returns 401
+    const code2 = await authService.issueAuthorizationCode({
+      userId: "00000000-0000-0000-0000-000000000003",
+      email: "test@example.com",
+      projectId: "proj_123",
+      codeChallenge: verifier
+    });
+
+    const res = await app.request("/v1/auth/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        projectId: "proj_123",
+        code: code2,
+        codeVerifier: "wrong-verifier-must-be-at-least-32-chars-long!"
+      })
+    });
+
+    expect(res.status).toBe(401);
+    const body = await res.json() as any;
+    expect(body.error).toBe("Invalid code verifier");
+    expect(body.code).toBe(PlatformErrorCodes.UNAUTHORIZED);
+  });
+
+  it("returns HTTP 400 when token exchange request has invalid or missing schema fields", async () => {
+    const db = new InMemoryDatabase();
+    const authService = new AuthService(db, "test-secret-key-must-be-at-least-32-chars-long");
+    const app = new Hono();
+    app.route("/v1/auth", createAuthRoutes(authService));
+
+    // Missing codeVerifier
+    const res = await app.request("/v1/auth/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        projectId: "proj_123",
+        code: "code_abc"
+      })
+    });
+
+    expect(res.status).toBe(400);
+    const body = await res.json() as any;
+    expect(body.error).toBe("Validation error");
+  });
+
   it("does not grant welcome bonus if wallet already exists for returning user", async () => {
     const db = new InMemoryDatabase();
     // Existing user wallet with 50 credits
-    db.seedWallet("00000000-0000-0000-0000-000000000002", 50);
+    db.seedWallet("00000000-0000-0000-0000-000000000004", 50);
 
     const authService = new AuthService(db, "test-secret-key-must-be-at-least-32-chars-long");
     const app = new Hono();
@@ -53,7 +162,7 @@ describe("PKCE Auth Routes", () => {
 
     const verifier = "abcdef1234567890abcdef1234567890abcdef1234567890";
     const code = await authService.issueAuthorizationCode({
-      userId: "00000000-0000-0000-0000-000000000002",
+      userId: "00000000-0000-0000-0000-000000000004",
       email: "returning@example.com",
       projectId: "proj_123",
       codeChallenge: verifier
@@ -73,7 +182,7 @@ describe("PKCE Auth Routes", () => {
     const body = await res.json() as any;
     expect(body.welcomeBonusGranted).toBe(false);
 
-    const wallet = db.wallets.get("00000000-0000-0000-0000-000000000002");
+    const wallet = db.wallets.get("00000000-0000-0000-0000-000000000004");
     expect(wallet?.availableCredits).toBe(50);
   });
 
@@ -83,7 +192,7 @@ describe("PKCE Auth Routes", () => {
 
     const verifier = "abcdef1234567890abcdef1234567890abcdef1234567890";
     const code = await authService.issueAuthorizationCode({
-      userId: "00000000-0000-0000-0000-000000000003",
+      userId: "00000000-0000-0000-0000-000000000005",
       email: "singleuse@example.com",
       projectId: "proj_123",
       codeChallenge: verifier
@@ -111,7 +220,7 @@ describe("PKCE Auth Routes", () => {
 
     const verifier = "abcdef1234567890abcdef1234567890abcdef1234567890";
     const code = await authService.issueAuthorizationCode({
-      userId: "00000000-0000-0000-0000-000000000004",
+      userId: "00000000-0000-0000-0000-000000000006",
       email: "wrongproject@example.com",
       projectId: "proj_correct",
       codeChallenge: verifier
@@ -136,7 +245,7 @@ describe("PKCE Auth Routes", () => {
 
     const verifier = "abcdef1234567890abcdef1234567890abcdef1234567890";
     const code = await authService.issueAuthorizationCode({
-      userId: "00000000-0000-0000-0000-000000000005",
+      userId: "00000000-0000-0000-0000-000000000007",
       email: "expired@example.com",
       projectId: "proj_123",
       codeChallenge: verifier
@@ -162,13 +271,44 @@ describe("PKCE Auth Routes", () => {
     }
   });
 
-  it("verifies valid session token and rejects tampered/invalid token", async () => {
+  it("prunes expired codes when issuing new codes", async () => {
     const db = new InMemoryDatabase();
     const authService = new AuthService(db, "test-secret-key-must-be-at-least-32-chars-long");
 
     const verifier = "abcdef1234567890abcdef1234567890abcdef1234567890";
+    const oldCode = await authService.issueAuthorizationCode({
+      userId: "usr_old",
+      email: "old@example.com",
+      projectId: "proj_123",
+      codeChallenge: verifier
+    });
+
+    const internalCodes = (authService as any).codes;
+    expect(internalCodes.has(oldCode)).toBe(true);
+
+    // Manually expire old code
+    internalCodes.get(oldCode)!.expiresAt = Date.now() - 5000;
+
+    // Issue new code triggers pruning
+    const newCode = await authService.issueAuthorizationCode({
+      userId: "usr_new",
+      email: "new@example.com",
+      projectId: "proj_123",
+      codeChallenge: verifier
+    });
+
+    expect(internalCodes.has(oldCode)).toBe(false);
+    expect(internalCodes.has(newCode)).toBe(true);
+  });
+
+  it("verifies valid session token with UserSessionTokenSchema and rejects tampered/invalid token", async () => {
+    const db = new InMemoryDatabase();
+    const secret = "test-secret-key-must-be-at-least-32-chars-long";
+    const authService = new AuthService(db, secret);
+
+    const verifier = "abcdef1234567890abcdef1234567890abcdef1234567890";
     const code = await authService.issueAuthorizationCode({
-      userId: "00000000-0000-0000-0000-000000000006",
+      userId: "00000000-0000-0000-0000-000000000008",
       email: "verify@example.com",
       projectId: "proj_verify",
       codeChallenge: verifier
@@ -181,17 +321,29 @@ describe("PKCE Auth Routes", () => {
     });
 
     const verified = await authService.verifySessionToken(session.sessionToken);
-    expect(verified.userId).toBe("00000000-0000-0000-0000-000000000006");
+    expect(verified.userId).toBe("00000000-0000-0000-0000-000000000008");
     expect(verified.email).toBe("verify@example.com");
     expect(verified.projectId).toBe("proj_verify");
     expect(typeof verified.exp).toBe("number");
 
-    // Tampered token fails
+    // Tampered signature fails
     const tampered = session.sessionToken.slice(0, -5) + "xxxxx";
     expect(authService.verifySessionToken(tampered)).rejects.toThrow(PlatformError);
 
     // Completely bogus token fails
     expect(authService.verifySessionToken("bogus.jwt.token")).rejects.toThrow(PlatformError);
+
+    // Signed token with malformed payload (invalid email) fails safeParse
+    const invalidPayloadToken = await new jose.SignJWT({
+      userId: "usr_123",
+      email: "not-an-email",
+      projectId: "proj_123"
+    })
+      .setProtectedHeader({ alg: "HS256" })
+      .setExpirationTime("1h")
+      .sign(new TextEncoder().encode(secret));
+
+    expect(authService.verifySessionToken(invalidPayloadToken)).rejects.toThrow(PlatformError);
   });
 
   it("handles /v1/auth/authorize route and returns authUrl and codeChallenge", async () => {

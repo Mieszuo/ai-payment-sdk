@@ -13,7 +13,7 @@ export const TokenExchangeRequestSchema = z.object({
 });
 
 export const UserSessionTokenSchema = z.object({
-  userId: z.string().uuid(),
+  userId: z.string().min(1),
   email: z.string().email(),
   projectId: z.string().min(1),
   exp: z.number().int()
