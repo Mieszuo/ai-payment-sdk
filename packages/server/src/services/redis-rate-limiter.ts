@@ -5,14 +5,17 @@
  * sliding window (the same semantics as `SlidingWindowRateLimiter`), so
  * tests and demo mode keep working without any infrastructure.
  *
- * Transport contract (Upstash REST):
- *   POST {url}/eval  with body ["EVAL", <script>, <numkeys>, <key>, <args...>]
+ * Transport contract (Upstash REST, matching @upstash/redis serialization):
+ *   POST {url}  (the BARE base URL — no /eval path)
+ *   Authorization: Bearer <token>
+ *   body ["EVAL", <script>, 1, <key>, <windowSeconds>]
  *   → { result: <server-side INCR count> }
  *
- * The request embeds a mirrored per-key counter as the final EVAL arg so the
- * transport can reflect the incremented count; the authoritative decision
- * still comes from the server-side INCR result, and any transport failure
- * fails OPEN (rate limiting is a throttle, not a payment gate).
+ * The server-side INCR result is authoritative. Any transport failure
+ * (non-2xx status, unparseable body, network error) is logged with
+ * console.warn and fails OPEN (rate limiting is a throttle, not a payment
+ * gate), so a misconfigured REDIS_URL/REDIS_TOKEN stays observable instead
+ * of silently disabling shared rate limiting.
  */
 const INCR_SCRIPT = `
 local current = redis.call('INCR', KEYS[1])
@@ -33,7 +36,6 @@ export class RedisRateLimiter {
   private token: string;
   private fetchImpl: (url: string, init?: any) => Promise<Response>;
   private local = new Map<string, number[]>();
-  private counts = new Map<string, number>();
 
   constructor(options: RedisRateLimiterOptions = {}) {
     this.url = options.url || process.env.REDIS_URL || "";
@@ -44,23 +46,29 @@ export class RedisRateLimiter {
   async checkLimit(key: string, maxRequests: number, windowSeconds: number): Promise<boolean> {
     if (!this.url) return this.checkLimitLocal(key, maxRequests, windowSeconds);
 
-    const count = this.counts.get(key) ?? 0;
-    this.counts.set(key, count + 1);
-    // Bound the mirror map: the server-side INCR result is authoritative in
-    // production, so a reset here only restarts the transport counter.
-    if (this.counts.size > 10_000) this.counts.clear();
-
-    const res = await this.fetchImpl(`${this.url}/eval`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.token}`
-      },
-      body: JSON.stringify(["EVAL", INCR_SCRIPT, 1, key, String(windowSeconds), String(count)])
-    });
-    if (!res.ok) return true; // fail-open on transport errors (rate limiting is not a payment gate)
-    const { result } = (await res.json()) as { result: number };
-    return result <= maxRequests;
+    try {
+      const res = await this.fetchImpl(this.url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.token}`
+        },
+        body: JSON.stringify(["EVAL", INCR_SCRIPT, 1, key, String(windowSeconds)])
+      });
+      if (!res.ok) {
+        console.warn(`[redis-rate-limiter] Upstash request failed with status ${res.status}; failing open`);
+        return true;
+      }
+      const body = (await res.json()) as { result?: number };
+      if (typeof body.result !== "number") {
+        console.warn("[redis-rate-limiter] Upstash response missing numeric `result`; failing open");
+        return true;
+      }
+      return body.result <= maxRequests;
+    } catch (err) {
+      console.warn("[redis-rate-limiter] Upstash transport error; failing open", err);
+      return true; // fail-open on transport errors (rate limiting is not a payment gate)
+    }
   }
 
   getResetSeconds(key: string, windowSeconds: number): number {
