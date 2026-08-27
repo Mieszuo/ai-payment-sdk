@@ -49,6 +49,24 @@ const defaultProject: ProjectConfig = {
   environment: "production"
 };
 
+const defaultActions: ActionItem[] = [
+  {
+    actionName: "optimize-resume",
+    version: 3,
+    projectId: "proj_demo",
+    model: "gpt-4o-mini",
+    priceCredits: 15,
+    maxProviderCostCents: 5,
+    maxOutputTokens: 800,
+    outputFormat: "json",
+    systemPrompt: "You are an elite executive recruiter. Evaluate CV and return JSON.",
+    userPromptTemplate: "Candidate CV:\n{{cvText}}\nTarget Role:\n{{targetRole}}",
+    rateLimit: { maxRequests: 10, windowSeconds: 60 },
+    status: "Active",
+    createdAt: new Date().toISOString()
+  }
+];
+
 const DashboardContext = createContext<DashboardContextValue | null>(null);
 
 export const DashboardProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -58,7 +76,7 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [projects] = useState<ProjectConfig[]>([defaultProject]);
   const [activeProjectId, setActiveProjectId] = useState<string>("proj_demo");
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
-  const [actions, setActions] = useState<ActionItem[]>([]);
+  const [actions, setActions] = useState<ActionItem[]>(defaultActions);
   const [logs, setLogs] = useState<AuditLogEvent[]>([]);
   const [telemetry, setTelemetry] = useState<FinancialTelemetry>(defaultTelemetry);
   const [isLoading, setIsLoading] = useState<boolean>(false);
