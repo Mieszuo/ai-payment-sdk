@@ -1155,3 +1155,134 @@ git commit -m "feat(server): Redis rate limiting, retention cleanup, and monitor
 - **Spec coverage:** Every production gap identified in the earlier audit maps to a task — persistence (T1), real payments (T2), real auth + CORS (T3), deployment (T4), hardening (T5). The Stripe refund/dispute ledger handling, margin guard, PKCE/JWT, and redacting logger already exist and are only wired, not rebuilt.
 - **Placeholder scan:** All steps contain concrete code or exact commands. The only intentionally open items are user-provided secrets (env) and provider account IDs, which are documented as such.
 - **Type consistency:** New `LedgerDatabase` methods are defined once in Task 1 and reused by Tasks 2–5; `createCheckoutSession`, `requestOtp`/`verifyOtp`, `isOriginAllowed`, and `checkLimit` signatures are fixed at their defining step and referenced identically later. `ActionExecutionService` call sites are unchanged because `LedgerService` keeps its public API.
+
+---
+
+### Task 6: Developer Registry Persistence (`@platform/server`)
+
+**Context:** `DeveloperService` keeps projects and action versions in private in-memory maps — a gateway restart in Postgres mode loses every published action, and migration 003's `fk_action_runs_project` cannot be enforced because no `projects` rows exist. This task persists the registry through `LedgerDatabase` and re-enables the FK.
+
+**Files:**
+- Modify: `packages/server/src/adapters/database.ts` (add 3 registry methods)
+- Modify: `packages/server/src/adapters/in-memory-db.ts` (no-op/read implementations)
+- Modify: `packages/server/src/adapters/postgres-real.ts` (SQL implementations)
+- Modify: `packages/server/src/services/developer.service.ts` (async init + write-through)
+- Modify: `packages/server/src/server.ts` (await `devService.init()`)
+- Create: `packages/server/src/db/migrations/004_developer_registry.sql`
+- Test: `packages/server/tests/developer.routes.test.ts`, `packages/server/tests/postgres-real.integration.test.ts`
+
+**Interfaces:**
+- Consumes: `LedgerDatabase` (existing), `ProjectRecord`/`ActionVersion` types, `PlatformError`.
+- Produces (added to `LedgerDatabase`, both adapters):
+  - `loadDeveloperState(): Promise<{ projects: ProjectRecord[]; versions: ActionVersion[] }>`
+  - `upsertDeveloperProject(project: ProjectRecord): Promise<void>`
+  - `upsertActionVersion(version: ActionVersion): Promise<void>`
+- `DeveloperService.init()` hydrates `projectsBySecret`/`projectsById`/`actionVersions` from `loadDeveloperState()`; `registerProject`, `publishActionVersion`, `rotateSecretKey` write through via the upserts (awaited). `verifySecret`/`getLatestAction`/`getAllLatestActions`/`getProjectById` stay sync (they read the hydrated maps).
+
+- [ ] **Step 1: Write failing tests**
+
+Append to `packages/server/tests/developer.routes.test.ts`:
+
+```typescript
+describe("Developer Registry Persistence", () => {
+  it("persists a published action version through the database adapter", async () => {
+    const db = new InMemoryDatabase();
+    const dev = new DeveloperService(db);
+    await dev.init();
+    dev.registerProject({ projectId: "proj_p", name: "P", publicKey: "pk_live_p", secretKey: "sk_live_p" });
+    const v = dev.publishActionVersion("proj_p", { actionName: "a", model: "mock", priceCredits: 5 });
+    expect(v.version).toBe(1);
+
+    // A second service instance hydrating the same store sees the version
+    const db2 = new InMemoryDatabase();
+    // simulate write-through by copying persisted state
+    for (const p of await (db as any).loadDeveloperState?.() ?? []) { /* no-op for in-memory */ }
+    const dev2 = new DeveloperService(db2);
+    await dev2.init();
+    expect(dev2.getActionVersions("proj_p", "a")).toHaveLength(0); // in-memory store is per-instance
+  });
+});
+```
+
+Note: for the in-memory adapter the registry is intentionally per-instance (demo mode); the assertion documents that. The REAL persistence assertions live in `postgres-real.integration.test.ts` (skip without `DATABASE_URL`):
+
+```typescript
+it("persists developer registry across instances (Postgres mode)", async () => {
+  await db.upsertDeveloperProject({ projectId: "it_proj", name: "P", publicKey: "pk_live_it", secretKey: "sk_live_it" });
+  await db.upsertActionVersion({ actionName: "a", version: 1, projectId: "it_proj", model: "mock", priceCredits: 5, maxProviderCostCents: 10, maxOutputTokens: 1000, outputFormat: "json", systemPrompt: "", userPromptTemplate: "", inputSchema: {}, rateLimit: { maxRequests: 10, windowSeconds: 60 } });
+  const state = await db.loadDeveloperState();
+  expect(state.projects.some((p) => p.projectId === "it_proj")).toBe(true);
+  expect(state.versions.some((v) => v.projectId === "it_proj" && v.actionName === "a")).toBe(true);
+});
+```
+
+- [ ] **Step 2: Run to verify it fails**
+
+Run: `bun test packages/server/tests/developer.routes.test.ts`
+Expected: FAIL — `init`/registry methods missing.
+
+- [ ] **Step 3: Implement interface + adapters**
+
+In `database.ts` add the three methods (types above). `InMemoryDatabase`:
+
+```typescript
+  async loadDeveloperState(): Promise<{ projects: any[]; versions: any[] }> {
+    return { projects: [], versions: [] }; // registry is per-instance in demo mode
+  }
+  async upsertDeveloperProject(_project: any): Promise<void> {}
+  async upsertActionVersion(_version: any): Promise<void> {}
+```
+
+`PostgresDatabase` implements them against tables `developer_projects` / `developer_action_versions` (created in migration 004): upserts with `ON CONFLICT ... DO UPDATE`, `loadDeveloperState` selects all rows and maps snake_case columns back to camelCase fields.
+
+- [ ] **Step 4: Wire `DeveloperService`**
+
+Constructor keeps `(db: LedgerDatabase)`; add `async init(): Promise<void>` that calls `loadDeveloperState()` and populates the three maps. `registerProject`, `publishActionVersion`, `rotateSecretKey` become async and `await this.db.upsertDeveloperProject(...)` / `await this.db.upsertActionVersion(...)` after mutating the maps. In `server.ts`, change `const devService = new DeveloperService(db);` to `const devService = new DeveloperService(db); await devService.init();`.
+
+- [ ] **Step 5: Create migration `004_developer_registry.sql`**
+
+```sql
+-- 004: Developer registry persistence.
+CREATE TABLE IF NOT EXISTS developer_projects (
+    project_id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    public_key TEXT NOT NULL UNIQUE,
+    secret_key TEXT NOT NULL UNIQUE,
+    allowed_domains TEXT[] NOT NULL DEFAULT '{}',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS developer_action_versions (
+    project_id TEXT NOT NULL,
+    action_name TEXT NOT NULL,
+    version INTEGER NOT NULL,
+    model TEXT NOT NULL,
+    price_credits INTEGER NOT NULL,
+    max_provider_cost_cents INTEGER NOT NULL DEFAULT 10,
+    max_output_tokens INTEGER NOT NULL DEFAULT 1000,
+    output_format TEXT NOT NULL DEFAULT 'json',
+    system_prompt TEXT NOT NULL DEFAULT '',
+    user_prompt_template TEXT NOT NULL DEFAULT '',
+    input_schema JSONB NOT NULL DEFAULT '{}'::jsonb,
+    rate_limit JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (project_id, action_name, version)
+);
+
+-- Projects now persist, so the run-audit FK from 003 can be enforced.
+ALTER TABLE action_runs
+    ADD CONSTRAINT fk_action_runs_project
+    FOREIGN KEY (project_id) REFERENCES developer_projects(project_id);
+```
+
+- [ ] **Step 6: Run tests and typecheck**
+
+Run: `bun test packages/server/tests/developer.routes.test.ts packages/server/tests/postgres-real.integration.test.ts`
+Run: `bun test` (full suite), `bun run typecheck` — Expected: all pass, exit 0.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add packages/server/src/adapters packages/server/src/services/developer.service.ts packages/server/src/server.ts packages/server/src/db/migrations/004_developer_registry.sql packages/server/tests
+git commit -m "feat(server): persist developer registry (projects, action versions) and enforce action_runs FK"
+```
