@@ -34,6 +34,13 @@ are never committed. See `.env.example` for the canonical list:
 production deployment should always set real values. `GET /` reports whether
 the database is `postgres` or `in-memory` — use it to confirm the wiring.
 
+**Fail-closed secrets:** when the gateway runs with `NODE_ENV=production` (or
+`SECRETS_STRICT=1`) it **fails to start** unless both `JWT_SECRET` and
+`STRIPE_WEBHOOK_SECRET` are set — the compiled-in demo secrets are for local
+development only and are never used in production. Deployments that omit
+either variable will crash-loop on boot instead of silently signing sessions
+or accepting webhooks with a known public secret.
+
 ---
 
 ## 2. Local smoke test (before deploying)
@@ -123,11 +130,18 @@ curl https://ai-payment-gateway.fly.dev/
 
 ### Migrations — one-shot vs `release_command`
 
+The migration runner (`scripts/migrate.ts`) is **tracking-based**: it records
+every applied file in a `schema_migrations` table (file primary key +
+`applied_at`) and applies only the files that are missing, in filename order.
+Re-running it is a no-op for already-applied files, so migrations no longer
+need to be individually re-runnable. In particular `004_developer_registry.sql`
+contains the non-idempotent statement `ALTER TABLE action_runs ADD CONSTRAINT
+fk_action_runs_project ...` — it now runs **exactly once** because the runner
+skips files already recorded in `schema_migrations`.
+
 - **One-shot (recommended today):** `fly ssh console -- 'bun run db:migrate:prod'`
-  after the first deploy. Simple, explicit, and safe because the current
-  migration files are **not all re-runnable** — `003_sql_first_align.sql`
-  adds a foreign key constraint without `IF NOT EXISTS`, so running it twice
-  fails.
+  after the first deploy. Simple and explicit; the runner applies only the
+  migrations the database has not seen.
 - **`release_command` (once CI is set up):** add to `fly.toml` and Fly runs it
   before the app starts on *every* deploy:
 
@@ -136,10 +150,8 @@ curl https://ai-payment-gateway.fly.dev/
     release_command = "bun run db:migrate:prod"
   ```
 
-  This is the preferable long-term path, but only once the migrations are made
-  idempotent (or a proper migration runner with a `schema_migrations` table is
-  introduced). Until then a second deploy would re-run `003` and fail, so keep
-  the one-shot approach.
+  This is now safe: a second deploy re-runs the runner but the `schema_migrations`
+  tracking means no migration (including 004's `ADD CONSTRAINT`) executes twice.
 
 ---
 
@@ -214,3 +226,22 @@ VITE_GATEWAY_URL=https://ai-payment-gateway.fly.dev bun run demo
   Postgres double-entry log. Enable Supabase's managed continuous backups so
   it can be recovered to any point in time, and periodically test a restore
   into a scratch project to prove the recovery path.
+
+---
+
+## 8. Security notes
+
+- **Developer secret keys are stored in plaintext.** `sk_live_*` keys are kept
+  in the `developer_projects` table as written by the developer dashboard —
+  they are **not hashed at rest**. Treat that table (and any database dump or
+  backup that contains it) with the same care as a credentials vault:
+  - Restrict `developer_projects` access to the gateway service role and
+    minimal-privilege operators only; never grant broad read access to DB
+    users, analytics tools, or CI jobs that do not need it.
+  - Guard database backups / point-in-time snapshots (they contain the table)
+    and use Supabase's restricted access settings for backup storage.
+  - Rotate a developer's secret key (dashboard "rotate key", backed by
+    `DeveloperService.rotateSecretKey`) immediately on any suspected
+    compromise — leaked key, breached backup, or departing access.
+  - Hashing secret keys at rest (and verifying via hash lookup) is a planned
+    follow-up; until then the mitigations above are the control.

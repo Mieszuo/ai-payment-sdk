@@ -152,9 +152,13 @@ describeDb("PostgresDatabase SQL-first persistence", () => {
 
   it("persists developer registry across instances (Postgres mode)", async () => {
     await db.upsertDeveloperProject({ projectId: "it_proj", name: "P", publicKey: "pk_live_it", secretKey: "sk_live_it" });
-    await db.upsertActionVersion({ actionName: "a", version: 1, projectId: "it_proj", model: "mock", priceCredits: 5, maxProviderCostCents: 10, maxOutputTokens: 1000, outputFormat: "json", systemPrompt: "", userPromptTemplate: "", inputSchema: {}, rateLimit: { maxRequests: 10, windowSeconds: 60 } });
+    await db.upsertActionVersion({ actionName: "a", version: 1, projectId: "it_proj", model: "mock", fallbackModel: "openai/gpt-4o-mini", priceCredits: 5, maxProviderCostCents: 10, maxOutputTokens: 1000, outputFormat: "json", systemPrompt: "", userPromptTemplate: "", inputSchema: {}, outputSchema: { type: "object", properties: { summary: { type: "string" } } }, rateLimit: { maxRequests: 10, windowSeconds: 60 } });
     const state = await db.loadDeveloperState();
     expect(state.projects.some((p) => p.projectId === "it_proj")).toBe(true);
-    expect(state.versions.some((v) => v.projectId === "it_proj" && v.actionName === "a")).toBe(true);
+    const version = state.versions.find((v) => v.projectId === "it_proj" && v.actionName === "a");
+    expect(version).toBeDefined();
+    // Migration 005 fields must round-trip through the Postgres adapter.
+    expect(version?.fallbackModel).toBe("openai/gpt-4o-mini");
+    expect(version?.outputSchema).toEqual({ type: "object", properties: { summary: { type: "string" } } });
   });
 });

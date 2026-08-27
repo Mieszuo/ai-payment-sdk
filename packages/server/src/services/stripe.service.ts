@@ -28,6 +28,15 @@ export class StripeBillingService {
 
   private stripeClient: Stripe | null | undefined;
 
+  /**
+   * Cumulative refunded credits per charge. Stripe emits one `charge.refunded`
+   * event per refund (and replays), so a partial refund must debit only the
+   * *additional* fraction: target = pack × (amount_refunded / amount_paid),
+   * delta = target − already debited. Keyed by charge id because the same
+   * charge can be refunded in multiple steps.
+   */
+  private refundedCreditsByCharge = new Map<string, number>();
+
   constructor(
     private db: LedgerDatabase,
     private webhookSecret?: string
@@ -155,47 +164,88 @@ export class StripeBillingService {
     return false;
   }
 
+  /**
+   * Credits the wallet for a paid Checkout Session. Shared by
+   * `checkout.session.completed` and `checkout.session.async_payment_succeeded`
+   * — both must observe `payment_status === "paid"` before any credit applies:
+   * async payment methods (bank debits, etc.) complete the session *unpaid*
+   * and settle later, and the completed-event must never credit an unpaid
+   * checkout. Idempotent on webhook replays via the `stripe_${session.id}` key.
+   */
+  private async creditPaidSession(session: any): Promise<void> {
+    if (session.payment_status !== "paid") {
+      return;
+    }
+    const userId = session.metadata?.userId;
+    const packId = session.metadata?.packId as TopupPackId;
+
+    if (!userId || !packId || !(packId in TOPUP_PACKAGES)) {
+      return;
+    }
+
+    const pack = TOPUP_PACKAGES[packId];
+    const idempotencyKey = `stripe_${session.id}`;
+
+    // Top-up credits the wallet via a balanced ledger transaction; the
+    // adapter derives the sign from the transaction type and is idempotent
+    // on webhook replays.
+    await this.db.applyCredit(userId, pack.credits, "TOPUP", idempotencyKey, session.id, {
+      sessionId: session.id,
+      amountCents: pack.priceCents
+    });
+  }
+
+  /**
+   * Debits the wallet in step with a (possibly partial) charge refund. The
+   * debit is scaled to the refunded fraction of the original payment:
+   *   target = round(pack.credits × amount_refunded / amount_paid)
+   * and only the *additional* delta over what previous `charge.refunded`
+   * events already debited is applied. `amount_paid` missing (legacy events)
+   * falls back to a full-pack debit. Idempotent replay (same event) yields
+   * delta ≤ 0 and is a no-op.
+   */
+  private async debitRefundedCharge(charge: any): Promise<void> {
+    const userId = charge.metadata?.userId;
+    const packId = charge.metadata?.packId as TopupPackId;
+
+    if (!userId || !packId || !(packId in TOPUP_PACKAGES)) {
+      return;
+    }
+
+    const pack = TOPUP_PACKAGES[packId];
+    const amountPaid = Number(charge.amount_paid);
+    const amountRefunded = Number(charge.amount_refunded);
+    const target = amountPaid > 0
+      ? Math.round(pack.credits * (amountRefunded / amountPaid))
+      : pack.credits;
+
+    const alreadyDebited = this.refundedCreditsByCharge.get(charge.id) ?? 0;
+    const delta = target - alreadyDebited;
+    if (delta <= 0) {
+      return; // idempotent replay or out-of-order event — nothing new to debit
+    }
+
+    // Key embeds the refunded amount so a replay of the same event maps to the
+    // same key (the DB-level idempotency guard stays intact across restarts).
+    const idempotencyKey = `stripe_refund_${charge.id}_${charge.amount_refunded}`;
+    await this.db.applyCredit(userId, delta, "REFUND", idempotencyKey, charge.id, {
+      chargeId: charge.id,
+      amountCents: pack.priceCents
+    });
+    this.refundedCreditsByCharge.set(charge.id, target);
+  }
+
   async handleWebhook(event: { id: string; type: string; data: { object: any } }) {
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object;
-      const userId = session.metadata?.userId;
-      const packId = session.metadata?.packId as TopupPackId;
-
-      if (!userId || !packId || !(packId in TOPUP_PACKAGES)) {
-        return;
-      }
-
-      const pack = TOPUP_PACKAGES[packId];
-      const idempotencyKey = `stripe_${session.id}`;
-
-      // Top-up credits the wallet via a balanced ledger transaction; the
-      // adapter derives the sign from the transaction type and is idempotent
-      // on webhook replays.
-      await this.db.applyCredit(userId, pack.credits, "TOPUP", idempotencyKey, session.id, {
-        sessionId: session.id,
-        amountCents: pack.priceCents
-      });
+    if (
+      event.type === "checkout.session.completed" ||
+      event.type === "checkout.session.async_payment_succeeded"
+    ) {
+      await this.creditPaidSession(event.data.object);
       return;
     }
 
     if (event.type === "charge.refunded") {
-      const charge = event.data.object;
-      const userId = charge.metadata?.userId;
-      const packId = charge.metadata?.packId as TopupPackId;
-
-      if (!userId || !packId || !(packId in TOPUP_PACKAGES)) {
-        return;
-      }
-
-      const pack = TOPUP_PACKAGES[packId];
-      const idempotencyKey = `stripe_refund_${charge.id}`;
-
-      // Refund debits the wallet via a balanced REFUND transaction (positive
-      // pack credits — the adapter derives the negative delta).
-      await this.db.applyCredit(userId, pack.credits, "REFUND", idempotencyKey, charge.id, {
-        chargeId: charge.id,
-        amountCents: pack.priceCents
-      });
+      await this.debitRefundedCharge(event.data.object);
       return;
     }
 

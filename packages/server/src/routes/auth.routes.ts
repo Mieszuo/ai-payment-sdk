@@ -8,6 +8,7 @@ import {
 } from "@platform/shared";
 import { AuthService } from "../services/auth.service";
 import { correlationMiddleware, getCorrelationContext } from "../observability/correlation";
+import type { RateLimiter } from "../services/action.service";
 
 function mapPlatformErrorToStatus(code: string): number {
   switch (code) {
@@ -37,7 +38,7 @@ function handleRouteError(err: unknown, c: Context) {
   return c.json({ error: (err as any)?.message || "Internal server error" }, 500);
 }
 
-export function createAuthRoutes(authService: AuthService) {
+export function createAuthRoutes(authService: AuthService, rateLimiter?: RateLimiter) {
   const router = new Hono();
   router.use("*", correlationMiddleware());
 
@@ -61,6 +62,19 @@ export function createAuthRoutes(authService: AuthService) {
 
   router.post("/otp/request", async (c) => {
     try {
+      // Per-IP throttle (final review I5b): 5 OTP requests per IP per 5 minutes,
+      // layered on top of the per-email 10-minute window in AuthService.
+      // This is optional — routes built without a rate limiter (tests, minimal
+      // setups) keep working unchanged.
+      if (rateLimiter) {
+        const ip =
+          c.req.header("x-forwarded-for")?.split(",")[0]?.trim() ||
+          c.req.header("x-real-ip") ||
+          "unknown";
+        if (!(await rateLimiter.checkLimit(`otp_ip_${ip}`, 5, 300))) {
+          throw new PlatformError(PlatformErrorCodes.RATE_LIMITED, "Too many OTP requests");
+        }
+      }
       const body = await c.req.json();
       const result = await authService.requestOtp({
         email: String(body.email),

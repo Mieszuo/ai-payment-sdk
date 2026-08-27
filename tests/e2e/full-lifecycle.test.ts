@@ -102,6 +102,7 @@ describe("E2E Full Platform Lifecycle", () => {
         data: {
           object: {
             id: "cs_e2e_123",
+            payment_status: "paid",
             metadata: { userId: "usr_e2e_1", packId: "popular" }
           }
         }
@@ -322,6 +323,7 @@ describe("E2E Full Platform Lifecycle", () => {
       data: {
         object: {
           id: "cs_hardened_session_1",
+          payment_status: "paid",
           metadata: {
             userId: "usr_hardened_alice",
             packId: "popular"
@@ -358,6 +360,8 @@ describe("E2E Full Platform Lifecycle", () => {
       data: {
         object: {
           id: "ch_hardened_charge_1",
+          amount_paid: 50000,
+          amount_refunded: 50000,
           metadata: {
             userId: "usr_hardened_alice",
             packId: "popular"
@@ -395,7 +399,7 @@ describe("E2E Full Platform Lifecycle", () => {
     const topupSum = topupTx!.entries.reduce((sum, e) => sum + e.amountCredits, 0);
     expect(topupSum).toBe(0); // Zero-sum balance
 
-    const refundTx = db.transactions.get("stripe_refund_ch_hardened_charge_1");
+    const refundTx = db.transactions.get("stripe_refund_ch_hardened_charge_1_50000");
     expect(refundTx).toBeDefined();
     expect(refundTx?.transactionType).toBe("REFUND");
     const refundSum = refundTx!.entries.reduce((sum, e) => sum + e.amountCredits, 0);

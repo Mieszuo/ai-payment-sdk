@@ -4,6 +4,7 @@ import { AuthService, MAX_OTP_ATTEMPTS } from "../src/services/auth.service";
 import { createAuthRoutes } from "../src/routes/auth.routes";
 import { InMemoryDatabase } from "../src/adapters/in-memory-db";
 import { ResendEmailTransport } from "../src/services/email-transport";
+import { SlidingWindowRateLimiter } from "../src/services/rate-limiter";
 import { PlatformError, PlatformErrorCodes } from "@platform/shared";
 import * as jose from "jose";
 
@@ -401,8 +402,8 @@ describe("Email OTP Authentication", () => {
     });
     expect(reqRes.status).toBe(200);
 
-    // The code was delivered via the (console) transport — grab it from the in-memory store
-    const otp = (auth as any).otps.get("alice@example.com:proj_demo").code;
+    // The code was delivered via the (console) transport — grab it from the OTP store
+    const otp = await (auth as any).otpStore.get("alice@example.com:proj_demo");
 
     // PKCE code challenge must satisfy the min(32) floor (same shape as a verifier)
     const pkceValue = "abcdef1234567890abcdef1234567890abcdef1234567890";
@@ -489,8 +490,7 @@ describe("Email OTP Authentication", () => {
       body: JSON.stringify({ email: "dave@example.com", projectId: "proj_demo" })
     });
 
-    const entry = (auth as any).otps.get("dave@example.com:proj_demo");
-    const correctCode = entry.code;
+    const correctCode = await (auth as any).otpStore.get("dave@example.com:proj_demo");
     const pkce = "abcdef1234567890abcdef1234567890abcdef1234567890";
 
     // MAX_OTP_ATTEMPTS wrong codes → each rejected with 401
@@ -509,7 +509,7 @@ describe("Email OTP Authentication", () => {
     }
 
     // Entry invalidated → even the correct code now fails
-    expect((auth as any).otps.has("dave@example.com:proj_demo")).toBe(false);
+    expect(await (auth as any).otpStore.get("dave@example.com:proj_demo")).toBeNull();
     const sixth = await app.request("/v1/auth/otp/verify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -557,7 +557,7 @@ describe("Email OTP Authentication", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: "frank@example.com", projectId: "proj_demo" })
     });
-    const code = (auth as any).otps.get("frank@example.com:proj_demo").code;
+    const code = await (auth as any).otpStore.get("frank@example.com:proj_demo");
     expect(code).toMatch(/^\d{6}$/);
   });
 
@@ -586,5 +586,87 @@ describe("Email OTP Authentication", () => {
     expect(joined).toContain("RESEND_API_KEY not set");
     expect(joined).not.toContain("987654");
     expect(joined).not.toContain("pii@example.com");
+  });
+});
+
+describe("OTP per-IP request throttle", () => {
+  const OTP_IP = "203.0.113.42";
+
+  it("allows 5 OTP requests from one IP and blocks the 6th with 429 (6 different emails)", async () => {
+    const db = new InMemoryDatabase();
+    const auth = new AuthService(db, "test-secret-key-32-chars-long-example!");
+    const limiter = new SlidingWindowRateLimiter();
+    const app = new Hono();
+    app.route("/v1/auth", createAuthRoutes(auth, limiter));
+
+    // Distinct emails per request isolate the IP limit from the per-email
+    // 10-minute throttle (one code per email:projectId).
+    for (let i = 0; i < 5; i++) {
+      const res = await app.request("/v1/auth/otp/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-forwarded-for": OTP_IP },
+        body: JSON.stringify({ email: `ipuser${i}@example.com`, projectId: "proj_demo" })
+      });
+      expect(res.status).toBe(200);
+    }
+
+    const sixth = await app.request("/v1/auth/otp/request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-forwarded-for": OTP_IP },
+      body: JSON.stringify({ email: "ipuser5@example.com", projectId: "proj_demo" })
+    });
+    expect(sixth.status).toBe(429);
+    const body = await sixth.json() as any;
+    expect(body.code).toBe(PlatformErrorCodes.RATE_LIMITED);
+    expect(body.error).toBe("Too many OTP requests");
+  });
+
+  it("does not throttle a different IP (limit is keyed per IP)", async () => {
+    const db = new InMemoryDatabase();
+    const auth = new AuthService(db, "test-secret-key-32-chars-long-example!");
+    const limiter = new SlidingWindowRateLimiter();
+    const app = new Hono();
+    app.route("/v1/auth", createAuthRoutes(auth, limiter));
+
+    for (let i = 0; i < 5; i++) {
+      const res = await app.request("/v1/auth/otp/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-forwarded-for": OTP_IP },
+        body: JSON.stringify({ email: `sameip${i}@example.com`, projectId: "proj_demo" })
+      });
+      expect(res.status).toBe(200);
+    }
+
+    // The window for OTP_IP is now exhausted (6th request from the same IP is 429).
+    const exhausted = await app.request("/v1/auth/otp/request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-forwarded-for": OTP_IP },
+      body: JSON.stringify({ email: "sameip5@example.com", projectId: "proj_demo" })
+    });
+    expect(exhausted.status).toBe(429);
+
+    // A request from a fresh IP is not affected by the exhausted counter.
+    const otherIp = await app.request("/v1/auth/otp/request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-forwarded-for": "198.51.100.9" },
+      body: JSON.stringify({ email: "otherip@example.com", projectId: "proj_demo" })
+    });
+    expect(otherIp.status).toBe(200);
+  });
+
+  it("still works without a rate limiter (optional second param)", async () => {
+    const db = new InMemoryDatabase();
+    const auth = new AuthService(db, "test-secret-key-32-chars-long-example!");
+    const app = new Hono();
+    app.route("/v1/auth", createAuthRoutes(auth));
+
+    for (let i = 0; i < 10; i++) {
+      const res = await app.request("/v1/auth/otp/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: `nolimit${i}@example.com`, projectId: "proj_demo" })
+      });
+      expect(res.status).toBe(200);
+    }
   });
 });

@@ -11,6 +11,7 @@ import { CorsPolicyService } from "./services/cors-policy";
 import { ActionRunService } from "./services/run.service";
 import { SlidingWindowRateLimiter } from "./services/rate-limiter";
 import { RedisRateLimiter } from "./services/redis-rate-limiter";
+import { RedisOtpStore } from "./services/redis-otp-store";
 import { ActionExecutionService } from "./services/action.service";
 import { StripeBillingService } from "./services/stripe.service";
 import { MockModelProvider } from "./adapters/model-provider";
@@ -74,6 +75,29 @@ function browserCorsGuard(policy: CorsPolicyService): MiddlewareHandler {
 }
 
 export async function createPlatformApp(options?: { forceMock?: boolean }) {
+  // Fail-closed secrets: in production (or when SECRETS_STRICT=1) the gateway
+  // refuses to boot without real JWT_SECRET / STRIPE_WEBHOOK_SECRET values.
+  // The compiled-in demo fallbacks below are for local development only and
+  // must never be used to sign sessions or verify webhooks in production.
+  const strictSecrets =
+    process.env.NODE_ENV === "production" || process.env.SECRETS_STRICT === "1";
+  if (strictSecrets) {
+    const missingSecrets: string[] = [];
+    if (!process.env.JWT_SECRET || process.env.JWT_SECRET.trim() === "") {
+      missingSecrets.push("JWT_SECRET");
+    }
+    if (!process.env.STRIPE_WEBHOOK_SECRET || process.env.STRIPE_WEBHOOK_SECRET.trim() === "") {
+      missingSecrets.push("STRIPE_WEBHOOK_SECRET");
+    }
+    if (missingSecrets.length > 0) {
+      throw new Error(
+        `Refusing to start: ${missingSecrets.join(" and ")} must be set via the environment ` +
+        `${process.env.NODE_ENV === "production" ? "in production" : "when SECRETS_STRICT=1"}. ` +
+        "The built-in demo secrets are for local development only and are never used here."
+      );
+    }
+  }
+
   // Database: PostgreSQL (Supabase) when DATABASE_URL is set, in-memory demo otherwise.
   const databaseUrl = process.env.DATABASE_URL;
   const db: LedgerDatabase = databaseUrl
@@ -85,7 +109,16 @@ export async function createPlatformApp(options?: { forceMock?: boolean }) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || DEMO_WEBHOOK_SECRET;
 
   const ledger = new LedgerService(db);
-  const authService = new AuthService(db, jwtSecret, new ResendEmailTransport());
+  // OTP codes: shared Redis (Upstash REST) store when REDIS_URL is set, so
+  // codes survive across gateway instances; in-memory otherwise (demo mode).
+  const authService = new AuthService(
+    db,
+    jwtSecret,
+    new ResendEmailTransport(),
+    process.env.REDIS_URL
+      ? new RedisOtpStore({ url: process.env.REDIS_URL, token: process.env.REDIS_TOKEN })
+      : undefined
+  );
   const devService = new DeveloperService(db);
   // Hydrate the developer registry BEFORE demo seeding: on Postgres this loads
   // persisted projects/action versions (published actions survive restarts); on
@@ -180,7 +213,7 @@ export async function createPlatformApp(options?: { forceMock?: boolean }) {
   app.use("*", correlationMiddleware());
 
   // Mount API routes
-  app.route("/v1/auth", createAuthRoutes(authService));
+  app.route("/v1/auth", createAuthRoutes(authService, rateLimiter));
   app.route("/v1/actions", createActionRoutes(actionExecutionService, authService));
   app.route("/v1/wallet", createWalletRoutes(ledger, authService));
   app.route("/v1/developer", createDeveloperRoutes(devService, runService, actionExecutionService));

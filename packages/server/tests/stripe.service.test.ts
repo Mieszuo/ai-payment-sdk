@@ -17,6 +17,7 @@ describe("Stripe Top-Up & Idempotency", () => {
       data: {
         object: {
           id: "cs_test_session_abc",
+          payment_status: "paid",
           metadata: { userId: "usr_stripe_1", packId: "popular" } // 550 credits
         }
       }
@@ -66,6 +67,7 @@ describe("Stripe Top-Up & Idempotency", () => {
       data: {
         object: {
           id: "cs_starter",
+          payment_status: "paid",
           metadata: { userId: "usr_starter", packId: "starter" }
         }
       }
@@ -79,6 +81,7 @@ describe("Stripe Top-Up & Idempotency", () => {
       data: {
         object: {
           id: "cs_power",
+          payment_status: "paid",
           metadata: { userId: "usr_power", packId: "power" }
         }
       }
@@ -96,6 +99,7 @@ describe("Stripe Top-Up & Idempotency", () => {
       data: {
         object: {
           id: "cs_new_user",
+          payment_status: "paid",
           metadata: { userId: "usr_brand_new", packId: "starter" }
         }
       }
@@ -129,6 +133,7 @@ describe("Stripe Top-Up & Idempotency", () => {
       data: {
         object: {
           id: "cs_no_user",
+          payment_status: "paid",
           metadata: { packId: "popular" }
         }
       }
@@ -142,6 +147,7 @@ describe("Stripe Top-Up & Idempotency", () => {
       data: {
         object: {
           id: "cs_bad_pack",
+          payment_status: "paid",
           metadata: { userId: "usr_ignore", packId: "nonexistent_pack" }
         }
       }
@@ -166,6 +172,7 @@ describe("Stripe Top-Up & Idempotency", () => {
         data: {
           object: {
             id: "cs_route_1",
+            payment_status: "paid",
             metadata: { userId: "usr_route", packId: "popular" }
           }
         }
@@ -187,6 +194,7 @@ describe("Stripe Top-Up & Idempotency", () => {
         data: {
           object: {
             id: "cs_route_1",
+            payment_status: "paid",
             metadata: { userId: "usr_route", packId: "popular" }
           }
         }
@@ -251,6 +259,8 @@ describe("Stripe Production Signature & Refunds", () => {
       data: {
         object: {
           id: "ch_refund_1",
+          amount_paid: 50000,
+          amount_refunded: 50000,
           metadata: { userId: "usr_refund_1", packId: "popular" }
         }
       }
@@ -260,7 +270,7 @@ describe("Stripe Production Signature & Refunds", () => {
     expect(wallet?.availableCredits).toBe(0); // 550 - 550 = 0
 
     // Verify REFUND transaction was recorded in ledger
-    const tx = db.transactions.get("stripe_refund_ch_refund_1");
+    const tx = db.transactions.get("stripe_refund_ch_refund_1_50000");
     expect(tx).toBeDefined();
     expect(tx?.transactionType).toBe("REFUND");
     expect(tx?.referenceId).toBe("ch_refund_1");
@@ -287,6 +297,8 @@ describe("Stripe Production Signature & Refunds", () => {
       data: {
         object: {
           id: "ch_refund_dup",
+          amount_paid: 50000,
+          amount_refunded: 50000,
           metadata: { userId: "usr_refund_idempotent", packId: "popular" }
         }
       }
@@ -354,6 +366,7 @@ describe("Stripe Production Signature & Refunds", () => {
       data: {
         object: {
           id: "cs_tamper",
+          payment_status: "paid",
           metadata: { userId: "usr_pack_test", packId: "starter", credits: 999999 }
         }
       }
@@ -377,6 +390,7 @@ describe("Stripe Production Signature & Refunds", () => {
       data: {
         object: {
           id: "cs_http_sig",
+          payment_status: "paid",
           metadata: { userId: "usr_http_test", packId: "popular" }
         }
       }
@@ -476,5 +490,218 @@ describe("Stripe Checkout Sessions", () => {
     })).rejects.toThrow();
 
     expect(() => service.getCheckoutClient()).toThrow();
+  });
+});
+
+describe("Stripe Webhook Payment Status Gate & Partial Refunds", () => {
+  it("does not credit a checkout.session.completed with payment_status unpaid", async () => {
+    const db = new InMemoryDatabase();
+    db.seedWallet("usr_unpaid", 100);
+    const service = new StripeBillingService(db, "whsec_test_secret_123");
+
+    await service.handleWebhook({
+      id: "evt_unpaid",
+      type: "checkout.session.completed",
+      data: {
+        object: {
+          id: "cs_unpaid",
+          payment_status: "unpaid",
+          metadata: { userId: "usr_unpaid", packId: "popular" }
+        }
+      }
+    });
+
+    expect(db.wallets.get("usr_unpaid")?.availableCredits).toBe(100);
+    expect(db.transactions.has("stripe_cs_unpaid")).toBe(false);
+  });
+
+  it("credits a checkout.session.completed with payment_status paid (existing behavior preserved)", async () => {
+    const db = new InMemoryDatabase();
+    db.seedWallet("usr_paid", 0);
+    const service = new StripeBillingService(db, "whsec_test_secret_123");
+
+    await service.handleWebhook({
+      id: "evt_paid",
+      type: "checkout.session.completed",
+      data: {
+        object: {
+          id: "cs_paid",
+          payment_status: "paid",
+          metadata: { userId: "usr_paid", packId: "popular" }
+        }
+      }
+    });
+
+    expect(db.wallets.get("usr_paid")?.availableCredits).toBe(550);
+  });
+
+  it("credits checkout.session.async_payment_succeeded when payment_status is paid", async () => {
+    const db = new InMemoryDatabase();
+    db.seedWallet("usr_async", 0);
+    const service = new StripeBillingService(db, "whsec_test_secret_123");
+
+    await service.handleWebhook({
+      id: "evt_async_ok",
+      type: "checkout.session.async_payment_succeeded",
+      data: {
+        object: {
+          id: "cs_async_ok",
+          payment_status: "paid",
+          metadata: { userId: "usr_async", packId: "starter" }
+        }
+      }
+    });
+
+    expect(db.wallets.get("usr_async")?.availableCredits).toBe(300);
+  });
+
+  it("ignores checkout.session.async_payment_succeeded while payment_status is unpaid", async () => {
+    const db = new InMemoryDatabase();
+    db.seedWallet("usr_async_unpaid", 50);
+    const service = new StripeBillingService(db, "whsec_test_secret_123");
+
+    await service.handleWebhook({
+      id: "evt_async_unpaid",
+      type: "checkout.session.async_payment_succeeded",
+      data: {
+        object: {
+          id: "cs_async_unpaid",
+          payment_status: "unpaid",
+          metadata: { userId: "usr_async_unpaid", packId: "starter" }
+        }
+      }
+    });
+
+    expect(db.wallets.get("usr_async_unpaid")?.availableCredits).toBe(50);
+    expect(db.transactions.has("stripe_cs_async_unpaid")).toBe(false);
+  });
+
+  it("full refund debits the full pack (scaled by amount_refunded / amount_paid)", async () => {
+    const db = new InMemoryDatabase();
+    db.seedWallet("usr_full_refund", 550);
+    const service = new StripeBillingService(db, "whsec_test_secret_123");
+
+    await service.handleWebhook({
+      id: "evt_full_refund",
+      type: "charge.refunded",
+      data: {
+        object: {
+          id: "ch_full_refund",
+          amount_paid: 50000,
+          amount_refunded: 50000,
+          metadata: { userId: "usr_full_refund", packId: "popular" }
+        }
+      }
+    });
+
+    expect(db.wallets.get("usr_full_refund")?.availableCredits).toBe(0);
+    const tx = db.transactions.get("stripe_refund_ch_full_refund_50000");
+    expect(tx).toBeDefined();
+    expect(tx?.transactionType).toBe("REFUND");
+  });
+
+  it("50% partial refund debits half the pack", async () => {
+    const db = new InMemoryDatabase();
+    db.seedWallet("usr_half_refund", 300);
+    const service = new StripeBillingService(db, "whsec_test_secret_123");
+
+    await service.handleWebhook({
+      id: "evt_half_refund",
+      type: "charge.refunded",
+      data: {
+        object: {
+          id: "ch_half_refund",
+          amount_paid: 30000,
+          amount_refunded: 15000,
+          metadata: { userId: "usr_half_refund", packId: "starter" }
+        }
+      }
+    });
+
+    expect(db.wallets.get("usr_half_refund")?.availableCredits).toBe(150);
+    expect(db.transactions.has("stripe_refund_ch_half_refund_15000")).toBe(true);
+  });
+
+  it("a second refund raising to 75% debits only the additional quarter", async () => {
+    const db = new InMemoryDatabase();
+    db.seedWallet("usr_step_refund", 300);
+    const service = new StripeBillingService(db, "whsec_test_secret_123");
+
+    const halfRefund = {
+      id: "evt_half",
+      type: "charge.refunded",
+      data: {
+        object: {
+          id: "ch_step_refund",
+          amount_paid: 30000,
+          amount_refunded: 15000,
+          metadata: { userId: "usr_step_refund", packId: "starter" }
+        }
+      }
+    };
+    const threeQuarterRefund = {
+      id: "evt_3q",
+      type: "charge.refunded",
+      data: {
+        object: {
+          id: "ch_step_refund",
+          amount_paid: 30000,
+          amount_refunded: 22500,
+          metadata: { userId: "usr_step_refund", packId: "starter" }
+        }
+      }
+    };
+
+    await service.handleWebhook(halfRefund);
+    expect(db.wallets.get("usr_step_refund")?.availableCredits).toBe(150);
+
+    // 75% of 300 = 225; the first event debited 150, so only 75 more.
+    await service.handleWebhook(threeQuarterRefund);
+    expect(db.wallets.get("usr_step_refund")?.availableCredits).toBe(75);
+    expect(db.transactions.has("stripe_refund_ch_step_refund_22500")).toBe(true);
+  });
+
+  it("replaying the same refund event does not double-debit", async () => {
+    const db = new InMemoryDatabase();
+    db.seedWallet("usr_replay_refund", 300);
+    const service = new StripeBillingService(db, "whsec_test_secret_123");
+
+    const refundEvent = {
+      id: "evt_replay",
+      type: "charge.refunded",
+      data: {
+        object: {
+          id: "ch_replay_refund",
+          amount_paid: 30000,
+          amount_refunded: 15000,
+          metadata: { userId: "usr_replay_refund", packId: "starter" }
+        }
+      }
+    };
+
+    await service.handleWebhook(refundEvent);
+    await service.handleWebhook(refundEvent);
+    await service.handleWebhook(refundEvent);
+    expect(db.wallets.get("usr_replay_refund")?.availableCredits).toBe(150);
+    expect(db.transactions.has("stripe_refund_ch_replay_refund_15000")).toBe(true);
+  });
+
+  it("falls back to a full-pack debit when amount_paid is missing", async () => {
+    const db = new InMemoryDatabase();
+    db.seedWallet("usr_legacy_refund", 550);
+    const service = new StripeBillingService(db, "whsec_test_secret_123");
+
+    await service.handleWebhook({
+      id: "evt_legacy_refund",
+      type: "charge.refunded",
+      data: {
+        object: {
+          id: "ch_legacy_refund",
+          metadata: { userId: "usr_legacy_refund", packId: "popular" }
+        }
+      }
+    });
+
+    expect(db.wallets.get("usr_legacy_refund")?.availableCredits).toBe(0);
   });
 });

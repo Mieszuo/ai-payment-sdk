@@ -1,5 +1,9 @@
--- 003: Align identifier types so foreign keys can be enforced, and add the
--- missing FK between action_runs and projects.
+-- 003: Align identifier types so foreign keys CAN be enforced.
+--   - Column type realignment only: id/developer_id/project_id/user_id → TEXT.
+--   - Adds fk_ledger_entries_transaction (the only FK this migration creates).
+-- The fk_action_runs_project foreign key between action_runs and projects is
+-- reintroduced in migration 004 (Developer Registry Persistence), once
+-- developer_projects rows persist.
 ALTER TABLE projects ALTER COLUMN id TYPE TEXT USING id::text;
 ALTER TABLE projects ALTER COLUMN developer_id TYPE TEXT USING developer_id::text;
 ALTER TABLE action_runs ALTER COLUMN project_id TYPE TEXT USING project_id::text;

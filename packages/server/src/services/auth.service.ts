@@ -3,19 +3,26 @@ import * as jose from "jose";
 import { PlatformError, PlatformErrorCodes, UserSessionToken, UserSessionTokenSchema } from "@platform/shared";
 import { LedgerDatabase } from "../adapters/database";
 import { ConsoleEmailTransport, type EmailTransport } from "./email-transport";
+import { InMemoryOtpStore, type OtpStore } from "./auth-otp-store";
 
 /** Max wrong OTP attempts before the code is invalidated (a new one is required). */
 export const MAX_OTP_ATTEMPTS = 5;
 
 export class AuthService {
   private codes = new Map<string, { userId: string; email: string; projectId: string; codeChallenge: string; expiresAt: number }>();
-  private otps = new Map<string, { code: string; expiresAt: number; attempts: number }>();
+  /**
+   * Wrong-attempt counter per OTP key (`email:projectId`). Lives here (not in
+   * the OtpStore) because the store only holds the code — attempts must survive
+   * across Redis reads, and are reset whenever a fresh code is issued.
+   */
+  private otpAttempts = new Map<string, number>();
   private secret: Uint8Array;
 
   constructor(
     private db: LedgerDatabase,
     secretString: string,
-    private emailTransport: EmailTransport = new ConsoleEmailTransport()
+    private emailTransport: EmailTransport = new ConsoleEmailTransport(),
+    private otpStore: OtpStore = new InMemoryOtpStore()
   ) {
     this.secret = new TextEncoder().encode(secretString);
   }
@@ -30,11 +37,11 @@ export class AuthService {
   }
 
   private pruneExpiredOtps() {
-    const now = Date.now();
-    for (const [key, entry] of this.otps.entries()) {
-      if (entry.expiresAt < now) {
-        this.otps.delete(key);
-      }
+    // Expiry is the store's job: the in-memory store prunes lazily on read and
+    // here; the Redis store relies on SETEX TTL, so this is a guarded no-op
+    // for anything that is not the in-memory implementation.
+    if (this.otpStore instanceof InMemoryOtpStore) {
+      this.otpStore.pruneExpired();
     }
   }
 
@@ -53,10 +60,11 @@ export class AuthService {
     this.pruneExpiredOtps();
 
     // Throttle: one unexpired code per email:projectId (10-minute window).
-    // A fresh code already in flight rejects the request instead of mailing again.
+    // The store returns null for missing OR expired keys, so a code still in
+    // flight rejects the request instead of mailing again.
     const key = `${params.email}:${params.projectId}`;
-    const existing = this.otps.get(key);
-    if (existing && existing.expiresAt >= Date.now()) {
+    const existing = await this.otpStore.get(key);
+    if (existing !== null) {
       throw new PlatformError(
         PlatformErrorCodes.RATE_LIMITED,
         "An OTP was already requested for this email — try again later"
@@ -64,11 +72,8 @@ export class AuthService {
     }
 
     const code = String(crypto.randomInt(100000, 1000000));
-    this.otps.set(key, {
-      code,
-      expiresAt: Date.now() + 10 * 60 * 1000,
-      attempts: 0
-    });
+    await this.otpStore.set(key, code, 600); // 10-minute TTL
+    this.otpAttempts.delete(key); // fresh code → fresh attempt budget
     await this.emailTransport.send({ to: params.email, code });
     return { expiresInSeconds: 600 };
   }
@@ -82,26 +87,29 @@ export class AuthService {
     this.pruneExpiredOtps();
 
     const key = `${params.email}:${params.projectId}`;
-    const entry = this.otps.get(key);
-    if (!entry || entry.expiresAt < Date.now()) {
+    const storedCode = await this.otpStore.get(key);
+    if (storedCode === null) {
       throw new PlatformError(PlatformErrorCodes.UNAUTHORIZED, "Invalid or expired OTP code");
     }
 
     // Constant-time comparison — never short-circuits on code content.
-    const expected = Buffer.from(entry.code);
+    const expected = Buffer.from(storedCode);
     const actual = Buffer.from(params.code);
     const matches = expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
 
     if (!matches) {
-      entry.attempts += 1;
-      if (entry.attempts >= MAX_OTP_ATTEMPTS) {
+      const attempts = (this.otpAttempts.get(key) ?? 0) + 1;
+      this.otpAttempts.set(key, attempts);
+      if (attempts >= MAX_OTP_ATTEMPTS) {
         // Too many wrong guesses — invalidate the entry, a new code is required.
-        this.otps.delete(key);
+        await this.otpStore.del(key);
+        this.otpAttempts.delete(key);
       }
       throw new PlatformError(PlatformErrorCodes.UNAUTHORIZED, "Invalid or expired OTP code");
     }
 
-    this.otps.delete(key);
+    await this.otpStore.del(key);
+    this.otpAttempts.delete(key);
     const authorizationCode = await this.issueAuthorizationCode({
       userId: `usr_${params.email.replace(/[^a-z0-9]/gi, "_").toLowerCase()}`,
       email: params.email,

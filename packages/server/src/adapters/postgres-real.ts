@@ -347,19 +347,22 @@ export class PostgresDatabase implements LedgerDatabase {
   async upsertActionVersion(version: ActionVersion): Promise<void> {
     await this.sql`
       INSERT INTO developer_action_versions (
-        project_id, action_name, version, model, price_credits,
+        project_id, action_name, version, model, fallback_model, price_credits,
         max_provider_cost_cents, max_output_tokens, output_format,
-        system_prompt, user_prompt_template, input_schema, rate_limit
+        system_prompt, user_prompt_template, input_schema, output_schema, rate_limit
       )
       VALUES (
-        ${version.projectId}, ${version.actionName}, ${version.version}, ${version.model}, ${version.priceCredits},
+        ${version.projectId}, ${version.actionName}, ${version.version}, ${version.model},
+        ${version.fallbackModel ?? null}, ${version.priceCredits},
         ${version.maxProviderCostCents}, ${version.maxOutputTokens}, ${version.outputFormat},
         ${version.systemPrompt}, ${version.userPromptTemplate},
         ${this.sql.json(toJsonbValue(version.inputSchema))},
+        ${this.sql.json(toJsonbValue(version.outputSchema))},
         ${this.sql.json(toJsonbValue(version.rateLimit))}
       )
       ON CONFLICT (project_id, action_name, version) DO UPDATE SET
         model = EXCLUDED.model,
+        fallback_model = EXCLUDED.fallback_model,
         price_credits = EXCLUDED.price_credits,
         max_provider_cost_cents = EXCLUDED.max_provider_cost_cents,
         max_output_tokens = EXCLUDED.max_output_tokens,
@@ -367,6 +370,7 @@ export class PostgresDatabase implements LedgerDatabase {
         system_prompt = EXCLUDED.system_prompt,
         user_prompt_template = EXCLUDED.user_prompt_template,
         input_schema = EXCLUDED.input_schema,
+        output_schema = EXCLUDED.output_schema,
         rate_limit = EXCLUDED.rate_limit
     `;
   }
@@ -378,9 +382,9 @@ export class PostgresDatabase implements LedgerDatabase {
       ORDER BY created_at ASC
     `;
     const versionRows = await this.sql`
-      SELECT project_id, action_name, version, model, price_credits,
+      SELECT project_id, action_name, version, model, fallback_model, price_credits,
              max_provider_cost_cents, max_output_tokens, output_format,
-             system_prompt, user_prompt_template, input_schema, rate_limit
+             system_prompt, user_prompt_template, input_schema, output_schema, rate_limit
       FROM developer_action_versions
       ORDER BY project_id, action_name, version ASC
     `;
@@ -398,6 +402,7 @@ export class PostgresDatabase implements LedgerDatabase {
       version: r.version,
       projectId: r.project_id,
       model: r.model,
+      fallbackModel: r.fallback_model ?? undefined,
       priceCredits: Number(r.price_credits),
       maxProviderCostCents: Number(r.max_provider_cost_cents),
       maxOutputTokens: Number(r.max_output_tokens),
@@ -405,6 +410,7 @@ export class PostgresDatabase implements LedgerDatabase {
       systemPrompt: r.system_prompt,
       userPromptTemplate: r.user_prompt_template,
       inputSchema: r.input_schema ?? {},
+      outputSchema: r.output_schema ?? undefined,
       rateLimit:
         r.rate_limit && Object.keys(r.rate_limit).length > 0
           ? r.rate_limit
