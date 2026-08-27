@@ -6,7 +6,7 @@ import { AuthService } from "../src/services/auth.service";
 import { MockModelProvider } from "../src/adapters/model-provider";
 import { ActionExecutionService } from "../src/services/action.service";
 import { createActionRoutes } from "../src/routes/actions.routes";
-import { ActionVersion } from "@platform/shared";
+import { ActionVersion } from "@ai-credits/shared";
 
 describe("Managed Actions Execution Endpoint", () => {
   const setupTestEnv = async (initialBalance = 50) => {

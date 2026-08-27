@@ -162,7 +162,7 @@ The demo app's client is created in `apps/demo/src/main.ts` with a hardcoded
 the URL from the environment instead of the constant:
 
 ```ts
-import { createAI } from "@platform/sdk";
+import { createAI } from "@ai-credits/sdk";
 
 const ai = createAI({
   project: "pk_live_demo123",

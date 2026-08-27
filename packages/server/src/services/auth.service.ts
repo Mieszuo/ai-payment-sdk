@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import * as jose from "jose";
-import { PlatformError, PlatformErrorCodes, UserSessionToken, UserSessionTokenSchema } from "@platform/shared";
+import { PlatformError, PlatformErrorCodes, UserSessionToken, UserSessionTokenSchema } from "@ai-credits/shared";
 import { LedgerDatabase } from "../adapters/database";
 import { ConsoleEmailTransport, type EmailTransport } from "./email-transport";
 import { InMemoryOtpStore, type OtpStore } from "./auth-otp-store";

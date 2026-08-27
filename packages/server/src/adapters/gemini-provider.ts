@@ -1,5 +1,5 @@
 import { ModelProvider, FetchClient } from "./model-provider";
-import { PlatformError, PlatformErrorCodes } from "@platform/shared";
+import { PlatformError, PlatformErrorCodes } from "@ai-credits/shared";
 
 export interface GeminiAdapterOptions {
   apiKey: string;

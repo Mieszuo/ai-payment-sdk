@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useContext } from "react";
-import { AIClient } from "@platform/sdk";
+import { AIClient } from "@ai-credits/sdk";
 import { AIContext } from "./context";
 
 export function useWallet(explicitClient?: AIClient) {

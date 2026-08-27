@@ -1,4 +1,4 @@
-import { ActionVersion, PlatformError, PlatformErrorCodes } from "@platform/shared";
+import { ActionVersion, PlatformError, PlatformErrorCodes } from "@ai-credits/shared";
 import { LedgerDatabase } from "../adapters/database";
 
 export interface ProjectRecord {

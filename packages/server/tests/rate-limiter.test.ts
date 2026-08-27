@@ -8,7 +8,7 @@ import { AuthService } from "../src/services/auth.service";
 import { InMemoryDatabase } from "../src/adapters/in-memory-db";
 import { MockModelProvider } from "../src/adapters/model-provider";
 import { createActionRoutes } from "../src/routes/actions.routes";
-import { ActionVersion, PlatformError, PlatformErrorCodes } from "@platform/shared";
+import { ActionVersion, PlatformError, PlatformErrorCodes } from "@ai-credits/shared";
 
 describe("Sliding Window Rate Limiter", () => {
   it("re-exports SlidingWindowRateLimiter from index", () => {

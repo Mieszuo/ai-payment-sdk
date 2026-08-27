@@ -1,4 +1,4 @@
-import { formatAccountIdentifier, LedgerTransaction } from "@platform/shared";
+import { formatAccountIdentifier, LedgerTransaction } from "@ai-credits/shared";
 
 export function createReservationTransaction(params: {
   userId: string;

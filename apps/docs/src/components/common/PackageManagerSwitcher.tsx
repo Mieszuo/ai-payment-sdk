@@ -16,7 +16,7 @@ export function getInstallCommand(pm: PackageManager, pkgName: string): string {
   }
 }
 
-export const PackageManagerSwitcher: React.FC<{ pkgName?: string }> = ({ pkgName = "@platform/sdk" }) => {
+export const PackageManagerSwitcher: React.FC<{ pkgName?: string }> = ({ pkgName = "@ai-credits/sdk" }) => {
   const { packageManager, setPackageManager } = useDocs();
   const [copied, setCopied] = useState(false);
 

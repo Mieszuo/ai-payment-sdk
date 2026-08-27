@@ -5,7 +5,7 @@ import { createAuthRoutes } from "../src/routes/auth.routes";
 import { InMemoryDatabase } from "../src/adapters/in-memory-db";
 import { ResendEmailTransport } from "../src/services/email-transport";
 import { SlidingWindowRateLimiter } from "../src/services/rate-limiter";
-import { PlatformError, PlatformErrorCodes } from "@platform/shared";
+import { PlatformError, PlatformErrorCodes } from "@ai-credits/shared";
 import * as jose from "jose";
 
 describe("PKCE Auth Routes", () => {

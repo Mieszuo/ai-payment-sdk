@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import Stripe from "stripe";
-import { PlatformError, PlatformErrorCodes } from "@platform/shared";
+import { PlatformError, PlatformErrorCodes } from "@ai-credits/shared";
 import { LedgerDatabase } from "../adapters/database";
 
 export const TOPUP_PACKAGES = {

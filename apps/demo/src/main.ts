@@ -1,4 +1,4 @@
-import { createAI } from "@platform/sdk";
+import { createAI } from "@ai-credits/sdk";
 
 // Initialize AI Client
 const ai = createAI({

@@ -10,7 +10,7 @@ import { ActionExecutionService } from "../src/services/action.service";
 import { createActionRoutes } from "../src/routes/actions.routes";
 import { createWalletRoutes } from "../src/routes/wallet.routes";
 import { createAuthRoutes } from "../src/routes/auth.routes";
-import { ActionVersion } from "@platform/shared";
+import { ActionVersion } from "@ai-credits/shared";
 
 describe("Correlation & Observability", () => {
   it("injects request-id and propagates correlation context", async () => {

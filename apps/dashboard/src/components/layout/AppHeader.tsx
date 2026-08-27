@@ -1,6 +1,6 @@
 import React from "react";
 import { useDashboard, DashboardTab } from "../../context/DashboardContext";
-import { getEcosystemUrls } from "@platform/shared";
+import { getEcosystemUrls } from "@ai-credits/shared";
 import {
   Layers,
   Activity,

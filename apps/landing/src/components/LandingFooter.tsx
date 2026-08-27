@@ -1,6 +1,6 @@
 import React from "react";
 import { Zap, ExternalLink, BookOpen, LayoutDashboard, Play } from "lucide-react";
-import { getEcosystemUrls } from "@platform/shared";
+import { getEcosystemUrls } from "@ai-credits/shared";
 
 export const LandingFooter: React.FC = () => {
   const urls = getEcosystemUrls();
@@ -60,7 +60,7 @@ export const LandingFooter: React.FC = () => {
             <h4 className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 mb-3 font-mono">Quick Start</h4>
             <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-3 font-mono text-[11px] text-zinc-300 space-y-1">
               <p className="text-zinc-500"># Install SDK</p>
-              <p>bun add @platform/sdk</p>
+              <p>bun add @ai-credits/sdk</p>
               <p className="text-zinc-500 mt-2"># Import & Monetize</p>
               <p className="text-blue-400">const ai = createAI({'{'}</p>
               <p className="text-blue-400 pl-2">project: &quot;pk_live_*&quot;</p>

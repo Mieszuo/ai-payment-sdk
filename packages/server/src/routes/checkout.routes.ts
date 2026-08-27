@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { PlatformError, PlatformErrorCodes } from "@platform/shared";
+import { PlatformError, PlatformErrorCodes } from "@ai-credits/shared";
 import { StripeBillingService } from "../services/stripe.service";
 import { AuthService } from "../services/auth.service";
 import { correlationMiddleware, getCorrelationContext } from "../observability/correlation";

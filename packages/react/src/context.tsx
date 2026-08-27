@@ -1,5 +1,5 @@
 import { createContext, useContext, type ReactNode } from "react";
-import { AIClient } from "@platform/sdk";
+import { AIClient } from "@ai-credits/sdk";
 
 export const AIContext = createContext<AIClient | null>(null);
 

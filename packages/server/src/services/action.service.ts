@@ -1,5 +1,5 @@
-import { ActionVersion, PlatformError, PlatformErrorCodes } from "@platform/shared";
-import { renderPromptTemplate, parseUntrustedOutput, verifyMarginGuard } from "@platform/core";
+import { ActionVersion, PlatformError, PlatformErrorCodes } from "@ai-credits/shared";
+import { renderPromptTemplate, parseUntrustedOutput, verifyMarginGuard } from "@ai-credits/core";
 import { LedgerService } from "./ledger.service";
 import { ModelProvider } from "../adapters/model-provider";
 import { ActionRunService } from "./run.service";

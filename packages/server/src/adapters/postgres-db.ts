@@ -1,6 +1,6 @@
 import { InMemoryDatabase, WalletRecord } from "./in-memory-db";
-import { PlatformError, PlatformErrorCodes, LedgerTransaction } from "@platform/shared";
-import { validateDoubleEntryTransaction } from "@platform/core";
+import { PlatformError, PlatformErrorCodes, LedgerTransaction } from "@ai-credits/shared";
+import { validateDoubleEntryTransaction } from "@ai-credits/core";
 
 export interface QueryResult<T = any> {
   rows: T[];

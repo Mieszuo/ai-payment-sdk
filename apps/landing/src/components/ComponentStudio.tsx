@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { OpenAILogo, GeminiLogo, DeepSeekLogo, ClaudeLogo } from "@platform/react";
+import { OpenAILogo, GeminiLogo, DeepSeekLogo, ClaudeLogo } from "@ai-credits/react";
 import {
   Sliders,
   Sparkles,
@@ -66,7 +66,7 @@ export const ComponentStudio: React.FC = () => {
   const handleCopyCode = async () => {
     let snippet = "";
     if (codeLang === "react") {
-      snippet = `import { AIPaymentModal } from "@platform/react";
+      snippet = `import { AIPaymentModal } from "@ai-credits/react";
 
 export function App() {
   return (
@@ -87,7 +87,7 @@ export function App() {
 }`;
     } else if (codeLang === "webcomponent") {
       snippet = `<!-- Add to HTML -->
-<script type="module" src="https://unpkg.com/@platform/sdk/dist/widget.js"></script>
+<script type="module" src="https://unpkg.com/@ai-credits/sdk/dist/widget.js"></script>
 
 <ai-payment-widget
   app-name="${appName}"
@@ -649,7 +649,7 @@ export function App() {
             {/* Code Box */}
             <div className="relative">
               <pre className="p-4 rounded-xl bg-zinc-900 border border-zinc-800/90 text-xs font-mono text-zinc-200 overflow-x-auto leading-relaxed max-h-48">
-                {codeLang === "react" && `import { AIPaymentModal } from "@platform/react";
+                {codeLang === "react" && `import { AIPaymentModal } from "@ai-credits/react";
 
 <AIPaymentModal
   isOpen={isOpen}

@@ -7,16 +7,16 @@ import { DocsProvider } from "../src/context/DocsContext";
 
 describe("Docs Core Interactive Components", () => {
   it("formats install commands accurately across package managers", () => {
-    expect(getInstallCommand("bun", "@platform/sdk")).toBe("bun add @platform/sdk");
-    expect(getInstallCommand("npm", "@platform/sdk")).toBe("npm install @platform/sdk");
-    expect(getInstallCommand("pnpm", "@platform/sdk")).toBe("pnpm add @platform/sdk");
-    expect(getInstallCommand("yarn", "@platform/sdk")).toBe("yarn add @platform/sdk");
+    expect(getInstallCommand("bun", "@ai-credits/sdk")).toBe("bun add @ai-credits/sdk");
+    expect(getInstallCommand("npm", "@ai-credits/sdk")).toBe("npm install @ai-credits/sdk");
+    expect(getInstallCommand("pnpm", "@ai-credits/sdk")).toBe("pnpm add @ai-credits/sdk");
+    expect(getInstallCommand("yarn", "@ai-credits/sdk")).toBe("yarn add @ai-credits/sdk");
   });
 
   it("generates structured agent context for Cursor and Claude Code", () => {
     const cursorContext = generateAgentContext("cursor", "pk_live_demo123");
     expect(cursorContext).toContain(".cursorrules");
-    expect(cursorContext).toContain("@platform/sdk");
+    expect(cursorContext).toContain("@ai-credits/sdk");
     expect(cursorContext).toContain("INSUFFICIENT_CREDITS");
 
     const claudeContext = generateAgentContext("claude", "pk_live_demo123");
@@ -28,10 +28,10 @@ describe("Docs Core Interactive Components", () => {
       React.createElement(
         DocsProvider,
         null,
-        React.createElement(PackageManagerSwitcher, { pkgName: "@platform/sdk" })
+        React.createElement(PackageManagerSwitcher, { pkgName: "@ai-credits/sdk" })
       )
     );
-    expect(html).toContain("bun add @platform/sdk");
+    expect(html).toContain("bun add @ai-credits/sdk");
     expect(html).toContain("npm");
   });
 });

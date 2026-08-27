@@ -4,7 +4,7 @@ import { ActionExecutionService } from "../src/services/action.service";
 import { LedgerService } from "../src/services/ledger.service";
 import { InMemoryDatabase } from "../src/adapters/in-memory-db";
 import { MockModelProvider } from "../src/adapters/model-provider";
-import { ActionVersion } from "@platform/shared";
+import { ActionVersion } from "@ai-credits/shared";
 
 describe("Action Runs Immutable Audit Record", () => {
   it("stores full execution snapshot with prompt and input hashes", async () => {

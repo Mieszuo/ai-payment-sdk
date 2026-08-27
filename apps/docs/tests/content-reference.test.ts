@@ -18,7 +18,7 @@ describe("Docs Content Reference Registry", () => {
   it("retrieves articles by unique identifier", () => {
     const art = getArticleById("sdk-core");
     expect(art).toBeDefined();
-    expect(art?.title).toContain("@platform/sdk");
+    expect(art?.title).toContain("@ai-credits/sdk");
 
     const errArt = getArticleById("sdk-errors");
     expect(errArt).toBeDefined();

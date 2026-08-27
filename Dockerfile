@@ -56,7 +56,7 @@ FROM oven/bun:1.3 AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 # node_modules from the deps stage: bun links the workspace packages
-# (@platform/shared, @platform/core, @platform/server) into /app/packages/*,
+# (@ai-credits/shared, @ai-credits/core, @ai-credits/server) into /app/packages/*,
 # which the copies below restore at the same paths.
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/packages ./packages

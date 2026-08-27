@@ -6,14 +6,14 @@ export const sdkArticles: DocArticle[] = [
   {
     id: "sdk-core",
     sectionId: "sdk",
-    title: "@platform/sdk Core Reference",
+    title: "@ai-credits/sdk Core Reference",
     description: "Client SDK initialization, action dispatching, and wallet subscriptions.",
     content: (
       <div className="space-y-6">
         <h3 className="text-sm font-semibold text-white">createAI(options)</h3>
         <p className="text-xs text-zinc-300">Creates a configured AI client instance.</p>
         <CodeSnippet
-          code={`import { createAI } from "@platform/sdk";
+          code={`import { createAI } from "@ai-credits/sdk";
 
 const ai = createAI({
   project: "pk_live_demo123",       // Client public key
@@ -55,14 +55,14 @@ const unsubscribe = ai.subscribeBalance((newBalance) => {
   {
     id: "sdk-react",
     sectionId: "sdk",
-    title: "@platform/react Hooks",
+    title: "@ai-credits/react Hooks",
     description: "Declarative React 19 hooks for state, wallet balance, and action execution.",
     content: (
       <div className="space-y-6">
         <h3 className="text-sm font-semibold text-white">useAction(actionName)</h3>
         <p className="text-xs text-zinc-300">Stateful hook for triggering actions with loading and error states.</p>
         <CodeSnippet
-          code={`import { useAction } from "@platform/react";
+          code={`import { useAction } from "@ai-credits/react";
 
 function EvaluateComponent() {
   const { execute, isPending, data, error, runId } = useAction("optimize-resume");
@@ -77,7 +77,7 @@ function EvaluateComponent() {
 
         <h3 className="text-sm font-semibold text-white pt-2">useWallet()</h3>
         <CodeSnippet
-          code={`import { useWallet } from "@platform/react";
+          code={`import { useWallet } from "@ai-credits/react";
 
 function BalanceBadge() {
   const { availableCredits, reservedCredits, isLoading, refresh } = useWallet();

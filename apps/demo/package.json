@@ -6,7 +6,7 @@
     "dev": "vite"
   },
   "dependencies": {
-    "@platform/sdk": "workspace:*"
+    "@ai-credits/sdk": "workspace:*"
   },
   "devDependencies": {
     "vite": "^5.4.2"

@@ -8,7 +8,7 @@ import { FeatureGrid } from "./components/FeatureGrid";
 import { LiveActionDemo } from "./components/LiveActionDemo";
 import { ComponentStudio } from "./components/ComponentStudio";
 import { LandingFooter } from "./components/LandingFooter";
-import { AIPaymentModal } from "@platform/react";
+import { AIPaymentModal } from "@ai-credits/react";
 
 export const App: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);

@@ -1,6 +1,6 @@
 import { Hono, type Context } from "hono";
 import { streamSSE } from "hono/streaming";
-import { PlatformError, PlatformErrorCodes } from "@platform/shared";
+import { PlatformError, PlatformErrorCodes } from "@ai-credits/shared";
 import { ActionExecutionService } from "../services/action.service";
 import { AuthService } from "../services/auth.service";
 import { correlationMiddleware, getCorrelationContext } from "../observability/correlation";

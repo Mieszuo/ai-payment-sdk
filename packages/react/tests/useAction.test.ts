@@ -1,6 +1,6 @@
 import { describe, it, expect } from "bun:test";
 import React from "react";
-import { createAI, AIClient } from "@platform/sdk";
+import { createAI, AIClient } from "@ai-credits/sdk";
 import { useAction, useWallet, AIProvider, useAI, AIContext } from "../src";
 
 function createHookRunner(contextClient: AIClient | null = null) {

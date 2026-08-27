@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Zap, ExternalLink, LayoutDashboard, BookOpen, Menu, X, Palette } from "lucide-react";
-import { getEcosystemUrls } from "@platform/shared";
+import { getEcosystemUrls } from "@ai-credits/shared";
 
 export interface LandingHeaderProps {
   activeView?: "landing" | "studio";

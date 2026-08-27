@@ -5,7 +5,7 @@ import {
   PKCEChallengeRequestSchema,
   PlatformError,
   PlatformErrorCodes
-} from "@platform/shared";
+} from "@ai-credits/shared";
 import { AuthService } from "../services/auth.service";
 import { correlationMiddleware, getCorrelationContext } from "../observability/correlation";
 import type { RateLimiter } from "../services/action.service";

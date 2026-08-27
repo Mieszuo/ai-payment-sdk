@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PlatformError, PlatformErrorCodes } from "@platform/shared";
+import { PlatformError, PlatformErrorCodes } from "@ai-credits/shared";
 
 export function parseUntrustedOutput<T>(raw: string, schema?: z.ZodType<T>): T {
   // Strip markdown code fences if present

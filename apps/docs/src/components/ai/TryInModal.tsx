@@ -6,11 +6,11 @@ export function generateAgentContext(platform: AgentPlatform, projectKey: string
   switch (platform) {
     case "cursor":
       return `# .cursorrules for AI Payment Platform
-You are an expert full-stack engineer integrating @platform/sdk.
+You are an expert full-stack engineer integrating @ai-credits/sdk.
 
 Rules:
 1. Always initialize SDK with client public key:
-   import { createAI } from "@platform/sdk";
+   import { createAI } from "@ai-credits/sdk";
    const ai = createAI({ project: "${projectKey}" });
 
 2. Call managed actions using structured inputs:
@@ -32,7 +32,7 @@ Rules:
 claude mcp add ai-payment-gateway http://localhost:3000/v1/mcp
 
 # Or prompt instruction for Claude:
-"Use @platform/sdk to invoke managed AI actions for project '${projectKey}'. Verify credit balance before execution and handle rate limit 429 retries."`;
+"Use @ai-credits/sdk to invoke managed AI actions for project '${projectKey}'. Verify credit balance before execution and handle rate limit 429 retries."`;
 
     case "chatgpt":
       return `{
@@ -54,7 +54,7 @@ claude mcp add ai-payment-gateway http://localhost:3000/v1/mcp
 
     case "windsurf":
       return `# .windsurfrules for AI Payment SDK
-- Framework: @platform/sdk and @platform/react
+- Framework: @ai-credits/sdk and @ai-credits/react
 - Public Client Key: ${projectKey}
 - Follow Two-Phase credit reservation pattern
 - Component: <ai-payment-widget project="${projectKey}"></ai-payment-widget>`;
@@ -64,7 +64,7 @@ claude mcp add ai-payment-gateway http://localhost:3000/v1/mcp
   "mcpServers": {
     "ai-payment": {
       "command": "bunx",
-      "args": ["@platform/mcp-server", "--project", "${projectKey}"]
+      "args": ["@ai-credits/mcp-server", "--project", "${projectKey}"]
     }
   }
 }`;

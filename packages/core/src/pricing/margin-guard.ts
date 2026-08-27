@@ -1,4 +1,4 @@
-import { PlatformError, PlatformErrorCodes } from "@platform/shared";
+import { PlatformError, PlatformErrorCodes } from "@ai-credits/shared";
 
 export function verifyMarginGuard(params: {
   priceCredits: number;

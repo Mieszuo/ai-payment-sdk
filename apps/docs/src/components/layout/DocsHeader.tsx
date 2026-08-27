@@ -1,6 +1,6 @@
 import React from "react";
 import { useDocs } from "../../context/DocsContext";
-import { getEcosystemUrls } from "@platform/shared";
+import { getEcosystemUrls } from "@ai-credits/shared";
 import { Zap, Bot, ExternalLink, Search, LayoutDashboard } from "lucide-react";
 
 export const DocsHeader: React.FC = () => {

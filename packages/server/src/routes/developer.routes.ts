@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { PlatformError, PlatformErrorCodes } from "@platform/shared";
+import { PlatformError, PlatformErrorCodes } from "@ai-credits/shared";
 import { DeveloperService } from "../services/developer.service";
 import { ActionRunService } from "../services/run.service";
 import { ActionExecutionService } from "../services/action.service";

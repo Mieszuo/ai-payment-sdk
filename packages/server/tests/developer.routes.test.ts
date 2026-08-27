@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "bun:test";
 import { Hono } from "hono";
-import { PlatformError } from "@platform/shared";
+import { PlatformError } from "@ai-credits/shared";
 import { InMemoryDatabase } from "../src/adapters/in-memory-db";
 import { DeveloperService } from "../src/services/developer.service";
 import { createDeveloperRoutes } from "../src/routes/developer.routes";

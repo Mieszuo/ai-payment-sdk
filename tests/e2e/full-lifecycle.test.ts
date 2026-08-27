@@ -421,7 +421,7 @@ describe("E2E Full Platform Lifecycle", () => {
 
       const pkg = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
       expect(pkg.name).toBe("demo-app");
-      expect(pkg.dependencies["@platform/sdk"]).toBeDefined();
+      expect(pkg.dependencies["@ai-credits/sdk"]).toBeDefined();
 
       const html = readFileSync(indexHtmlPath, "utf-8");
       expect(html).toContain('id="cvInput"');

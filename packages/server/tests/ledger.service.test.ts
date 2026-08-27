@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "bun:test";
 import { InMemoryDatabase } from "../src/adapters/in-memory-db";
 import { LedgerService } from "../src/services/ledger.service";
-import { PlatformError, PlatformErrorCodes } from "@platform/shared";
+import { PlatformError, PlatformErrorCodes } from "@ai-credits/shared";
 
 describe("LedgerService Concurrency & Reservation", () => {
   let db: InMemoryDatabase;

@@ -1,11 +1,11 @@
 import postgres, { Sql, ISql, TransactionSql } from "postgres";
-import { PlatformError, PlatformErrorCodes, LedgerTransaction, ActionVersion, formatAccountIdentifier } from "@platform/shared";
+import { PlatformError, PlatformErrorCodes, LedgerTransaction, ActionVersion, formatAccountIdentifier } from "@ai-credits/shared";
 import {
   validateDoubleEntryTransaction,
   createReservationTransaction,
   createSettlementTransaction,
   createReleaseTransaction
-} from "@platform/core";
+} from "@ai-credits/core";
 import { LedgerDatabase, ReservationRecord, WalletRecord } from "./database";
 import type { ProjectRecord } from "../services/developer.service";
 

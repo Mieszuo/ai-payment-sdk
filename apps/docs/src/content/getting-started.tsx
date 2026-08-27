@@ -57,10 +57,10 @@ export const gettingStartedArticles: DocArticle[] = [
           Install the client SDK using your preferred package manager:
         </p>
 
-        <PackageManagerSwitcher pkgName="@platform/sdk" />
+        <PackageManagerSwitcher pkgName="@ai-credits/sdk" />
 
         <h4 className="text-xs font-semibold text-zinc-200 pt-2">For React and Next.js applications:</h4>
-        <PackageManagerSwitcher pkgName="@platform/react @platform/sdk" />
+        <PackageManagerSwitcher pkgName="@ai-credits/react @ai-credits/sdk" />
       </div>
     )
   },
@@ -78,7 +78,7 @@ export const gettingStartedArticles: DocArticle[] = [
         <h3 className="text-sm font-semibold text-white">Step 1: Initialize Client</h3>
         <CodeSnippet
           filename="src/ai.ts"
-          code={`import { createAI } from "@platform/sdk";
+          code={`import { createAI } from "@ai-credits/sdk";
 
 // Initialize with your project's client-safe public key
 export const ai = createAI({
@@ -128,14 +128,14 @@ console.log(result.output);`}
           code={`<!DOCTYPE html>
 <html>
 <head>
-  <script type="module" src="https://esm.sh/@platform/sdk"></script>
+  <script type="module" src="https://esm.sh/@ai-credits/sdk"></script>
 </head>
 <body>
   <!-- Drop-in Payment & Auth Widget -->
   <ai-payment-widget project="pk_live_demo123"></ai-payment-widget>
 
   <script type="module">
-    import { createAI } from "@platform/sdk";
+    import { createAI } from "@ai-credits/sdk";
     const ai = createAI({ project: "pk_live_demo123" });
     
     // Automatically hooks into user session
@@ -153,7 +153,7 @@ console.log(result.output);`}
     id: "react",
     sectionId: "getting-started",
     title: "React / Next.js Setup",
-    description: "Integrate @platform/react hooks with Next.js App Router or Vite.",
+    description: "Integrate @ai-credits/react hooks with Next.js App Router or Vite.",
     content: (
       <div className="space-y-6">
         <p className="text-sm text-zinc-300">
@@ -164,7 +164,7 @@ console.log(result.output);`}
           filename="app/providers.tsx"
           code={`"use client";
 import React from "react";
-import { AIProvider } from "@platform/react";
+import { AIProvider } from "@ai-credits/react";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -180,7 +180,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           filename="components/ResumeOptimizer.tsx"
           code={`"use client";
 import React, { useState } from "react";
-import { useAction, useWallet } from "@platform/react";
+import { useAction, useWallet } from "@ai-credits/react";
 
 export function ResumeOptimizer() {
   const { availableCredits } = useWallet();

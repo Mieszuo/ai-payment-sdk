@@ -1,4 +1,4 @@
-import { LedgerTransaction, PlatformError, PlatformErrorCodes } from "@platform/shared";
+import { LedgerTransaction, PlatformError, PlatformErrorCodes } from "@ai-credits/shared";
 
 export function validateDoubleEntryTransaction(tx: LedgerTransaction): void {
   const sum = tx.entries.reduce((acc, curr) => acc + curr.amountCredits, 0);

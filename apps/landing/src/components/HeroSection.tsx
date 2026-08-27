@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 import { Terminal, Copy, Check, ArrowRight, BookOpen, LayoutDashboard, CreditCard } from "lucide-react";
-import { getEcosystemUrls } from "@platform/shared";
+import { getEcosystemUrls } from "@ai-credits/shared";
 
 type PM = "bun" | "npm" | "pnpm" | "yarn";
 
 function getCmd(pm: PM): string {
   switch (pm) {
-    case "bun": return "bun add @platform/sdk";
-    case "npm": return "npm install @platform/sdk";
-    case "pnpm": return "pnpm add @platform/sdk";
-    case "yarn": return "yarn add @platform/sdk";
+    case "bun": return "bun add @ai-credits/sdk";
+    case "npm": return "npm install @ai-credits/sdk";
+    case "pnpm": return "pnpm add @ai-credits/sdk";
+    case "yarn": return "yarn add @ai-credits/sdk";
   }
 }
 

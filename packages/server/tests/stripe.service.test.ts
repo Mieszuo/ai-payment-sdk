@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { InMemoryDatabase } from "../src/adapters/in-memory-db";
 import { StripeBillingService, TOPUP_PACKAGES } from "../src/services/stripe.service";
 import { createStripeRoutes } from "../src/routes/stripe.routes";
-import { formatAccountIdentifier } from "@platform/shared";
+import { formatAccountIdentifier } from "@ai-credits/shared";
 
 describe("Stripe Top-Up & Idempotency", () => {
   it("credits wallet on checkout.session.completed and handles duplicate webhook replay safely", async () => {

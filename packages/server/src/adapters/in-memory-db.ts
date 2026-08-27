@@ -1,10 +1,10 @@
-import { PlatformError, PlatformErrorCodes, LedgerTransaction, formatAccountIdentifier } from "@platform/shared";
+import { PlatformError, PlatformErrorCodes, LedgerTransaction, formatAccountIdentifier } from "@ai-credits/shared";
 import {
   validateDoubleEntryTransaction,
   createReservationTransaction,
   createSettlementTransaction,
   createReleaseTransaction
-} from "@platform/core";
+} from "@ai-credits/core";
 import { LedgerDatabase, ReservationRecord, WalletRecord } from "./database";
 
 export type { LedgerDatabase, ReservationRecord, WalletRecord } from "./database";

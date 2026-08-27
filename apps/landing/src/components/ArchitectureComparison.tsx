@@ -53,7 +53,7 @@ app.post("/api/ai/execute", async (req, res) => {
             <h3 className="text-sm font-semibold text-zinc-200">AI Payment Platform</h3>
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">3 lines</span>
           </div>
-          <pre className="font-mono text-[11px] text-emerald-300 leading-relaxed overflow-x-auto whitespace-pre">{`import { createAI } from "@platform/sdk";
+          <pre className="font-mono text-[11px] text-emerald-300 leading-relaxed overflow-x-auto whitespace-pre">{`import { createAI } from "@ai-credits/sdk";
 
 const ai = createAI({ project: "pk_live_demo123" });
 

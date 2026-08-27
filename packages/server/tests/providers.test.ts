@@ -1,7 +1,7 @@
 import { describe, it, expect } from "bun:test";
 import { OpenAIAdapter } from "../src/adapters/openai-provider";
 import { GeminiAdapter } from "../src/adapters/gemini-provider";
-import { PlatformError, PlatformErrorCodes } from "@platform/shared";
+import { PlatformError, PlatformErrorCodes } from "@ai-credits/shared";
 
 describe("Real LLM Provider Adapters", () => {
   it("formats OpenAI request payload with json_object format and parses usage cost", async () => {

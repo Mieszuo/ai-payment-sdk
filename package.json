@@ -1,5 +1,5 @@
 {
-  "name": "ai-payment-platform",
+  "name": "ai-credits",
   "private": true,
   "workspaces": [
     "packages/*",

@@ -1,4 +1,4 @@
-import { ActionVersion, LedgerTransaction } from "@platform/shared";
+import { ActionVersion, LedgerTransaction } from "@ai-credits/shared";
 import type { ProjectRecord } from "../services/developer.service";
 
 /**

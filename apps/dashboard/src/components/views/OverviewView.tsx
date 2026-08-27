@@ -18,7 +18,7 @@ export const OverviewView: React.FC = () => {
   const { telemetry, actions, activeProject, setActiveTab } = useDashboard();
   const [copiedSnippet, setCopiedSnippet] = useState(false);
 
-  const quickstartSnippet = `import { createAI } from "@platform/sdk";
+  const quickstartSnippet = `import { createAI } from "@ai-credits/sdk";
 
 const ai = createAI({
   project: "${activeProject.publicKey}"
@@ -169,7 +169,7 @@ console.log(result.output);`;
               </button>
             </div>
             <p className="text-[11px] text-zinc-400 mb-3">
-              Drop `@platform/sdk` into your web application to connect users and execute actions.
+              Drop `@ai-credits/sdk` into your web application to connect users and execute actions.
             </p>
             <pre className="bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 text-[11px] text-zinc-300 mono-code overflow-x-auto select-all leading-relaxed">
               {quickstartSnippet}
