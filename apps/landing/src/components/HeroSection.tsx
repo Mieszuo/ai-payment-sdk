@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Terminal, Copy, Check, ArrowRight, BookOpen, LayoutDashboard, CreditCard } from "lucide-react";
+import { getEcosystemUrls } from "@platform/shared";
 
 type PM = "bun" | "npm" | "pnpm" | "yarn";
 
@@ -19,6 +20,7 @@ export interface HeroSectionProps {
 export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenModal }) => {
   const [pm, setPm] = useState<PM>("bun");
   const [copied, setCopied] = useState(false);
+  const urls = getEcosystemUrls();
 
   const handleCopy = async () => {
     try {
@@ -68,13 +70,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenModal }) => {
             <CreditCard className="w-4 h-4" />
             Preview AI Payment Modal
           </button>
-          <a href="http://localhost:5174" target="_blank" rel="noreferrer"
+          <a href={urls.dashboard} target="_blank" rel="noreferrer"
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-sm font-semibold text-white transition-all shadow-sm">
             <LayoutDashboard className="w-4 h-4 text-zinc-400" />
             Open Developer Console
             <ArrowRight className="w-4 h-4" />
           </a>
-          <a href="http://localhost:5175" target="_blank" rel="noreferrer"
+          <a href={urls.docs} target="_blank" rel="noreferrer"
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-sm font-medium text-zinc-300 transition-colors">
             <BookOpen className="w-4 h-4 text-zinc-400" />
             Documentation

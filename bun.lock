@@ -13,6 +13,7 @@
     "apps/dashboard": {
       "name": "dashboard",
       "dependencies": {
+        "@platform/shared": "workspace:*",
         "lucide-react": "^1.16.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
@@ -40,6 +41,7 @@
       "name": "docs",
       "version": "1.0.0",
       "dependencies": {
+        "@platform/shared": "workspace:*",
         "lucide-react": "^1.16.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
@@ -59,6 +61,7 @@
       "version": "1.0.0",
       "dependencies": {
         "@platform/react": "workspace:*",
+        "@platform/shared": "workspace:*",
         "lucide-react": "^1.16.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",

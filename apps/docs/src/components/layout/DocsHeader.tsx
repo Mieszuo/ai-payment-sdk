@@ -1,9 +1,11 @@
 import React from "react";
 import { useDocs } from "../../context/DocsContext";
+import { getEcosystemUrls } from "@platform/shared";
 import { Zap, Bot, ExternalLink, Search, LayoutDashboard } from "lucide-react";
 
 export const DocsHeader: React.FC = () => {
   const { setIsTryInModalOpen } = useDocs();
+  const urls = getEcosystemUrls();
 
   return (
     <header className="border-b border-white/[0.08] bg-black/60 backdrop-blur-xl sticky top-0 z-40">
@@ -50,13 +52,13 @@ export const DocsHeader: React.FC = () => {
             </button>
 
             <a
-              href="http://localhost:5174"
+              href={urls.dashboard}
               target="_blank"
               rel="noreferrer"
               className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-xs font-medium text-zinc-300 transition-colors"
             >
               <LayoutDashboard className="w-3.5 h-3.5 text-zinc-400" />
-              <span>Dashboard</span>
+              <span>Console</span>
               <ExternalLink className="w-3 h-3 text-zinc-500 ml-0.5" />
             </a>
 

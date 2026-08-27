@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { Zap, ExternalLink, LayoutDashboard, BookOpen, Menu, X } from "lucide-react";
+import { getEcosystemUrls } from "@platform/shared";
 
 export const LandingHeader: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const urls = getEcosystemUrls();
 
   const navLinks = [
     { label: "Features", href: "#features" },
@@ -27,19 +29,19 @@ export const LandingHeader: React.FC = () => {
             {navLinks.map((l) => (
               <a key={l.href} href={l.href} className="hover:text-white transition-colors">{l.label}</a>
             ))}
-            <a href="http://localhost:5175" target="_blank" rel="noreferrer" className="flex items-center gap-1 hover:text-white transition-colors">
+            <a href={urls.docs} target="_blank" rel="noreferrer" className="flex items-center gap-1 hover:text-white transition-colors">
               Documentation <ExternalLink className="w-3 h-3" />
             </a>
           </nav>
 
           {/* CTAs */}
           <div className="flex items-center gap-2">
-            <a href="http://localhost:5174" target="_blank" rel="noreferrer"
+            <a href={urls.dashboard} target="_blank" rel="noreferrer"
               className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-xs font-medium text-zinc-300 transition-colors">
               <LayoutDashboard className="w-3.5 h-3.5 text-zinc-400" />
               Developer Console
             </a>
-            <a href="http://localhost:5175" target="_blank" rel="noreferrer"
+            <a href={urls.docs} target="_blank" rel="noreferrer"
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white transition-all shadow-sm">
               <BookOpen className="w-3.5 h-3.5" />
               Get Started
@@ -58,10 +60,10 @@ export const LandingHeader: React.FC = () => {
             <a key={l.href} href={l.href} onClick={() => setMobileOpen(false)}
               className="block text-sm text-zinc-300 py-2 hover:text-white">{l.label}</a>
           ))}
-          <a href="http://localhost:5175" target="_blank" rel="noreferrer"
-            className="block text-sm text-zinc-300 py-2 hover:text-white">Documentation</a>
-          <a href="http://localhost:5174" target="_blank" rel="noreferrer"
+          <a href={urls.dashboard} target="_blank" rel="noreferrer"
             className="block text-sm text-zinc-300 py-2 hover:text-white">Developer Console</a>
+          <a href={urls.docs} target="_blank" rel="noreferrer"
+            className="block text-sm text-blue-400 font-semibold py-2">Documentation</a>
         </div>
       )}
     </header>
