@@ -20,6 +20,7 @@ import { createActionRoutes } from "./routes/actions.routes";
 import { createWalletRoutes } from "./routes/wallet.routes";
 import { createDeveloperRoutes } from "./routes/developer.routes";
 import { createStripeRoutes } from "./routes/stripe.routes";
+import { createCheckoutRoutes } from "./routes/checkout.routes";
 
 // Demo-only fallbacks, used ONLY when the matching env var is not set.
 // Production deployments always provide real values via .env / platform env.
@@ -120,6 +121,7 @@ export async function createPlatformApp(options?: { forceMock?: boolean }) {
   app.route("/v1/wallet", createWalletRoutes(ledger, authService));
   app.route("/v1/developer", createDeveloperRoutes(devService, runService, actionExecutionService));
   app.route("/v1/stripe", createStripeRoutes(stripeService));
+  app.route("/v1/stripe/checkout", createCheckoutRoutes(stripeService, authService));
 
   // Health check & info
   app.get("/", (c) => c.json({

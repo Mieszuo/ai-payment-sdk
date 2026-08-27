@@ -7,6 +7,8 @@ export interface AIPaymentModalProps {
   initialBalance?: number;
   onCreditPurchased?: (credits: number, price: number) => void;
   onAuthRequested?: (provider: "google" | "github" | "email", email?: string) => void;
+  /** When provided, pack clicks open a real Stripe Checkout session instead of simulating. */
+  checkoutUrl?: (packId: string) => Promise<string>;
 }
 
 export const AIPaymentModal: React.FC<AIPaymentModalProps> = ({
@@ -14,7 +16,8 @@ export const AIPaymentModal: React.FC<AIPaymentModalProps> = ({
   onClose,
   initialBalance = 20,
   onCreditPurchased,
-  onAuthRequested
+  onAuthRequested,
+  checkoutUrl
 }) => {
   const [balance, setBalance] = useState(initialBalance);
   const [selectedProvider, setSelectedProvider] = useState("openai");
@@ -29,7 +32,17 @@ export const AIPaymentModal: React.FC<AIPaymentModalProps> = ({
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  const handlePurchase = (credits: number, price: number) => {
+  const handlePurchase = async (credits: number, price: number, packId: string) => {
+    if (checkoutUrl) {
+      try {
+        const url = await checkoutUrl(packId);
+        window.location.href = url; // user pays on Stripe; webhook credits the wallet
+        return;
+      } catch (err: any) {
+        showToast(`Checkout unavailable: ${err.message || "try again"}`);
+        return;
+      }
+    }
     setBalance((prev) => prev + credits);
     showToast(`+${credits.toLocaleString()} credits added to your wallet ($${price}.00)`);
     if (onCreditPurchased) {
@@ -347,14 +360,14 @@ export const AIPaymentModal: React.FC<AIPaymentModalProps> = ({
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px" }}>
                 {[
-                  { price: 1, credits: 100 },
-                  { price: 3, credits: 350, bonus: "+17%" },
-                  { price: 5, credits: 650, bonus: "+30%", popular: true },
-                  { price: 10, credits: 1400, bonus: "+40%" }
+                  { packId: "micro", price: 1, credits: 100 },
+                  { packId: "starter", price: 3, credits: 300 },
+                  { packId: "popular", price: 5, credits: 550, popular: true },
+                  { packId: "power", price: 10, credits: 1200 }
                 ].map((pack) => (
                   <div
-                    key={pack.price}
-                    onClick={() => handlePurchase(pack.credits, pack.price)}
+                    key={pack.packId}
+                    onClick={() => handlePurchase(pack.credits, pack.price, pack.packId)}
                     style={{
                       background: pack.popular ? "rgba(99, 102, 241, 0.08)" : "#18181b",
                       border: pack.popular ? "1px solid #6366f1" : "1px solid #27272a",
@@ -395,11 +408,6 @@ export const AIPaymentModal: React.FC<AIPaymentModalProps> = ({
                       {pack.credits.toLocaleString()}
                     </span>
                     <span style={{ fontSize: "9px", color: "#71717a" }}>credits</span>
-                    {pack.bonus && (
-                      <span style={{ fontSize: "10px", fontWeight: 700, color: "#a78bfa", marginTop: "2px" }}>
-                        {pack.bonus}
-                      </span>
-                    )}
                   </div>
                 ))}
               </div>

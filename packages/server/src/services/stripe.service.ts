@@ -1,7 +1,10 @@
 import crypto from "node:crypto";
+import Stripe from "stripe";
+import { PlatformError, PlatformErrorCodes } from "@platform/shared";
 import { LedgerDatabase } from "../adapters/database";
 
 export const TOPUP_PACKAGES = {
+  micro: { priceCents: 100, credits: 100 },
   starter: { priceCents: 300, credits: 300 },
   popular: { priceCents: 500, credits: 550 },
   power: { priceCents: 1000, credits: 1200 }
@@ -23,6 +26,8 @@ export interface StripeDisputeAudit {
 export class StripeBillingService {
   public disputes: StripeDisputeAudit[] = [];
 
+  private stripeClient: Stripe | null | undefined;
+
   constructor(
     private db: LedgerDatabase,
     private webhookSecret?: string
@@ -37,6 +42,54 @@ export class StripeBillingService {
       return TOPUP_PACKAGES[packId as TopupPackId];
     }
     return undefined;
+  }
+
+  /** Returns the Stripe SDK client or throws when STRIPE_SECRET_KEY is not configured. */
+  getCheckoutClient(): Stripe {
+    // A manually-assigned client (e.g. a test fake injected via
+    // `(service as any).stripeClient = ...`) is authoritative.
+    if (this.stripeClient != null) {
+      return this.stripeClient;
+    }
+    const secretKey = process.env.STRIPE_SECRET_KEY;
+    if (!secretKey) {
+      throw new PlatformError(PlatformErrorCodes.PROVIDER_ERROR, "STRIPE_SECRET_KEY is not configured");
+    }
+    this.stripeClient = new Stripe(secretKey);
+    return this.stripeClient;
+  }
+
+  async createCheckoutSession(params: {
+    packId: string;
+    userId: string;
+    successUrl: string;
+    cancelUrl: string;
+  }): Promise<{ url: string; sessionId: string }> {
+    const pack = this.getPackage(params.packId);
+    if (!pack) {
+      throw new PlatformError(PlatformErrorCodes.INVALID_INPUT, `Unknown pack: ${params.packId}`);
+    }
+    const client = this.getCheckoutClient();
+    const session = await client.checkout.sessions.create({
+      mode: "payment",
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            unit_amount: pack.priceCents,
+            product_data: {
+              name: `${pack.credits} AI credits`,
+              description: `AI credit pack for ${params.packId}`
+            }
+          },
+          quantity: 1
+        }
+      ],
+      metadata: { userId: params.userId, packId: params.packId },
+      success_url: params.successUrl,
+      cancel_url: params.cancelUrl
+    });
+    return { url: session.url as string, sessionId: session.id };
   }
 
   verifySignature(payload: string, signatureHeader: string): boolean {

@@ -427,3 +427,54 @@ describe("Stripe Production Signature & Refunds", () => {
     expect(db.wallets.get("usr_http_test")?.availableCredits).toBe(550);
   });
 });
+
+describe("Stripe Checkout Sessions", () => {
+  it("creates a checkout session with server-side pack pricing and metadata", async () => {
+    const db = new InMemoryDatabase();
+    let capturedParams: any;
+    const fakeStripe = {
+      checkout: {
+        sessions: {
+          create: async (params: any) => {
+            capturedParams = params;
+            return {
+              url: "https://checkout.stripe.com/c/pay/cs_test_1",
+              id: "cs_test_1",
+              mode: params.mode,
+              line_items: params.line_items,
+              metadata: params.metadata
+            };
+          }
+        }
+      }
+    };
+    const service = new StripeBillingService(db, "whsec_test");
+    (service as any).stripeClient = fakeStripe;
+
+    const result = await service.createCheckoutSession({
+      packId: "popular",
+      userId: "usr_checkout_1",
+      successUrl: "https://app.example.com/success",
+      cancelUrl: "https://app.example.com/cancel"
+    });
+
+    expect(result.url).toBe("https://checkout.stripe.com/c/pay/cs_test_1");
+    expect(result.sessionId).toBe("cs_test_1");
+    expect(capturedParams.mode).toBe("payment");
+    expect(capturedParams.metadata).toEqual({ userId: "usr_checkout_1", packId: "popular" });
+    expect(capturedParams.line_items[0].price_data.unit_amount).toBe(500); // popular pack price
+    expect(capturedParams.line_items[0].price_data.currency).toBe("usd");
+  });
+
+  it("rejects unknown packs and missing Stripe configuration", async () => {
+    const db = new InMemoryDatabase();
+    const service = new StripeBillingService(db, "whsec_test");
+
+    await expect(service.createCheckoutSession({
+      packId: "nonexistent", userId: "u1",
+      successUrl: "https://x/s", cancelUrl: "https://x/c"
+    })).rejects.toThrow();
+
+    expect(() => service.getCheckoutClient()).toThrow();
+  });
+});
