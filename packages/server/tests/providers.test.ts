@@ -158,4 +158,95 @@ describe("Real LLM Provider Adapters", () => {
     expect(serverIndex.OpenAIAdapter).toBeDefined();
     expect(serverIndex.GeminiAdapter).toBeDefined();
   });
+
+  it("strips trailing slashes from OpenAI baseUrl and wraps network exceptions in PlatformError", async () => {
+    let capturedUrl: string | undefined;
+    const adapter = new OpenAIAdapter({
+      apiKey: "test-key",
+      baseUrl: "https://api.openai.com/v1///",
+      fetchClient: async (url) => {
+        capturedUrl = url.toString();
+        return new Response(JSON.stringify({
+          choices: [{ message: { content: "{}" } }],
+          usage: { prompt_tokens: 1, completion_tokens: 1 }
+        }), { status: 200 });
+      }
+    });
+
+    await adapter.generate({
+      model: "gpt-4o",
+      systemPrompt: "sys",
+      prompt: "hi",
+      maxTokens: 10
+    });
+    expect(capturedUrl).toBe("https://api.openai.com/v1/chat/completions");
+
+    // Test network throw
+    const networkFailingAdapter = new OpenAIAdapter({
+      apiKey: "test-key",
+      fetchClient: async () => {
+        throw new Error("Connection refused (ECONNREFUSED)");
+      }
+    });
+
+    try {
+      await networkFailingAdapter.generate({
+        model: "gpt-4o",
+        systemPrompt: "sys",
+        prompt: "hi",
+        maxTokens: 10
+      });
+      expect().fail("Should have thrown");
+    } catch (err: any) {
+      expect(err).toBeInstanceOf(PlatformError);
+      expect(err.code).toBe(PlatformErrorCodes.PROVIDER_ERROR);
+      expect(err.message).toContain("OpenAI network request failed: Connection refused");
+    }
+  });
+
+  it("encodes Gemini model and apiKey in URL and wraps network exceptions in PlatformError", async () => {
+    let capturedUrl: string | undefined;
+    const adapter = new GeminiAdapter({
+      apiKey: "key with spaces+special&chars",
+      fetchClient: async (url) => {
+        capturedUrl = url.toString();
+        return new Response(JSON.stringify({
+          candidates: [{ content: { parts: [{ text: "{}" }] } }],
+          usageMetadata: { promptTokenCount: 1, candidatesTokenCount: 1 }
+        }), { status: 200 });
+      }
+    });
+
+    await adapter.generate({
+      model: "gemini/test model:v1",
+      systemPrompt: "sys",
+      prompt: "hi",
+      maxTokens: 10
+    });
+
+    expect(capturedUrl).toContain(encodeURIComponent("gemini/test model:v1"));
+    expect(capturedUrl).toContain(encodeURIComponent("key with spaces+special&chars"));
+
+    // Test network throw
+    const networkFailingAdapter = new GeminiAdapter({
+      apiKey: "test-key",
+      fetchClient: async () => {
+        throw new Error("DNS resolution failed");
+      }
+    });
+
+    try {
+      await networkFailingAdapter.generate({
+        model: "gemini-1.5-flash",
+        systemPrompt: "sys",
+        prompt: "hi",
+        maxTokens: 10
+      });
+      expect().fail("Should have thrown");
+    } catch (err: any) {
+      expect(err).toBeInstanceOf(PlatformError);
+      expect(err.code).toBe(PlatformErrorCodes.PROVIDER_ERROR);
+      expect(err.message).toContain("Gemini network request failed: DNS resolution failed");
+    }
+  });
 });

@@ -316,4 +316,28 @@ describe("Correlation & Observability", () => {
     expect(parsed.safe).toBe("public-value");
     expect(parsed.self).toBe("[CIRCULAR]");
   });
+
+  it("handles invalid Date instances gracefully and redacts keys with hyphens and underscores", () => {
+    const logs: string[] = [];
+    const logger = new PlatformLogger({ sink: (msg) => logs.push(msg) });
+
+    const invalidDate = new Date("not-a-valid-date");
+    logger.info("Hardening test", {
+      invalidDate,
+      api_key: "key-123",
+      "api-key": "key-456",
+      auth_token: "tok-789",
+      "auth-token": "tok-000",
+      normal_field: "safe"
+    });
+
+    expect(logs).toHaveLength(1);
+    const parsed = JSON.parse(logs[0]);
+    expect(parsed.invalidDate).toBe("[INVALID DATE]");
+    expect(parsed.api_key).toBe("[REDACTED]");
+    expect(parsed["api-key"]).toBe("[REDACTED]");
+    expect(parsed.auth_token).toBe("[REDACTED]");
+    expect(parsed["auth-token"]).toBe("[REDACTED]");
+    expect(parsed.normal_field).toBe("safe");
+  });
 });

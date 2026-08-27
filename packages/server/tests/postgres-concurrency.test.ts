@@ -110,4 +110,35 @@ describe("PostgreSQL Transaction Isolation & Row-Level Locking", () => {
     const runService = new ActionRunService(inMemDb);
     expect(inMemDb.actionRuns).toBeDefined();
   });
+
+  it("ensures lockWalletRow release callback is idempotent and does not delete subsequent locks", async () => {
+    const userId = "usr_idempotent_release";
+    db.seedWallet(userId, 50);
+
+    const release1 = await db.lockWalletRow(userId);
+    release1();
+    // Second call to release1 should be a no-op
+    expect(() => release1()).not.toThrow();
+
+    // Now acquire a new lock
+    const release2 = await db.lockWalletRow(userId);
+    // Calling the old release1 again must NOT delete the active lock in release2
+    release1();
+
+    let secondLockAcquired = false;
+    const p = (async () => {
+      const release3 = await db.lockWalletRow(userId);
+      secondLockAcquired = true;
+      release3();
+    })();
+
+    // Yield macro-task to let p attempt to acquire
+    await new Promise((r) => setTimeout(r, 10));
+    expect(secondLockAcquired).toBe(false);
+
+    // Release release2
+    release2();
+    await p;
+    expect(secondLockAcquired).toBe(true);
+  });
 });

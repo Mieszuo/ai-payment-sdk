@@ -425,4 +425,21 @@ describe("Managed Actions Execution Endpoint", () => {
     const bodyBeta = await resBeta.json() as any;
     expect(bodyBeta.creditsUsed).toBe(25);
   });
+
+  it("handles missing inputs payload safely when schema requires fields without throwing TypeError", async () => {
+    const { app, token } = await setupTestEnv();
+    const res = await app.request("/v1/actions/test-action/execute", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      // inputs omitted completely
+      body: JSON.stringify({})
+    });
+
+    expect(res.status).toBe(400);
+    const body = await res.json() as any;
+    expect(body.error).toContain('Missing required input field: "name"');
+  });
 });

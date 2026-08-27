@@ -323,6 +323,23 @@ describe("Stripe Production Signature & Refunds", () => {
     expect(service.disputes[0].disputeId).toBe("dp_123");
     expect(service.disputes[0].chargeId).toBe("ch_test_dispute");
     expect(service.disputes[0].amount).toBe(500);
+
+    // Duplicate dispute delivery must not add duplicate record
+    await service.handleWebhook({
+      id: "evt_disp_1_duplicate",
+      type: "charge.dispute.created",
+      data: {
+        object: {
+          id: "dp_123",
+          charge: "ch_test_dispute",
+          amount: 500,
+          reason: "fraudulent",
+          status: "needs_response",
+          metadata: { userId: "usr_dispute_1" }
+        }
+      }
+    });
+    expect(service.disputes.length).toBe(1);
   });
 
   it("enforces server-side pack validation strictly determined by server predefined packages", async () => {

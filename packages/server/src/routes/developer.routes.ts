@@ -21,7 +21,7 @@ export function createDeveloperRoutes(devService: DeveloperService) {
       correlation.projectId = project.projectId;
 
       const body = await c.req.json().catch(() => null);
-      if (!body || typeof body !== "object") {
+      if (!body || typeof body !== "object" || Array.isArray(body)) {
         throw new PlatformError(PlatformErrorCodes.INVALID_INPUT, "Malformed or missing JSON request body");
       }
 

@@ -95,7 +95,7 @@ export class ActionRunService {
     params: { consumedCredits: number; costCents?: number }
   ): Promise<void> {
     const run = this.runs.get(runId);
-    if (run) {
+    if (run && (run.status === "RESERVED" || run.status === "RUNNING")) {
       run.status = "SUCCEEDED";
       run.consumedCredits = params.consumedCredits;
       run.costCents = params.costCents;

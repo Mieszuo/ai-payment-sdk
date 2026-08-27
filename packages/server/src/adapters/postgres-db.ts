@@ -27,8 +27,13 @@ export class PostgresSimulatorDatabase extends InMemoryDatabase implements Postg
     });
     this.rowLocks.set(userId, lockPromise);
 
+    let released = false;
     return () => {
-      this.rowLocks.delete(userId);
+      if (released) return;
+      released = true;
+      if (this.rowLocks.get(userId) === lockPromise) {
+        this.rowLocks.delete(userId);
+      }
       release();
     };
   }

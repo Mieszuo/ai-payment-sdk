@@ -207,7 +207,9 @@ export class StripeBillingService {
         createdAt: new Date().toISOString(),
         metadata: dispute.metadata
       };
-      this.disputes.push(disputeRecord);
+      if (!this.disputes.some((d) => d.disputeId === dispute.id)) {
+        this.disputes.push(disputeRecord);
+      }
       if ((this.db as any).disputes) {
         (this.db as any).disputes.set(dispute.id, disputeRecord);
       }

@@ -250,4 +250,50 @@ describe("Action Runs Immutable Audit Record", () => {
     expect(wallet.availableCredits).toBe(100);
     expect(wallet.reservedCredits).toBe(0);
   });
+
+  it("guards against markSucceeded transitioning already failed or cancelled runs", async () => {
+    const runService = new ActionRunService();
+
+    // 1. Failed run
+    await runService.recordRunReservation({
+      runId: "run_guard_failed",
+      projectId: "proj_1",
+      userId: "usr_1",
+      actionName: "test-action",
+      actionVersion: 1,
+      model: "gpt-4o",
+      priceCredits: 10,
+      systemPrompt: "sys",
+      userPrompt: "user",
+      inputs: {},
+      idempotencyKey: "idem_guard_1"
+    });
+    await runService.markFailed("run_guard_failed");
+    expect(runService.getRun("run_guard_failed")?.status).toBe("FAILED");
+
+    // Attempt markSucceeded
+    await runService.markSucceeded("run_guard_failed", { consumedCredits: 10 });
+    expect(runService.getRun("run_guard_failed")?.status).toBe("FAILED");
+
+    // 2. Cancelled run
+    await runService.recordRunReservation({
+      runId: "run_guard_cancelled",
+      projectId: "proj_1",
+      userId: "usr_1",
+      actionName: "test-action",
+      actionVersion: 1,
+      model: "gpt-4o",
+      priceCredits: 10,
+      systemPrompt: "sys",
+      userPrompt: "user",
+      inputs: {},
+      idempotencyKey: "idem_guard_2"
+    });
+    await runService.markCancelled("run_guard_cancelled");
+    expect(runService.getRun("run_guard_cancelled")?.status).toBe("CANCELLED");
+
+    // Attempt markSucceeded
+    await runService.markSucceeded("run_guard_cancelled", { consumedCredits: 10 });
+    expect(runService.getRun("run_guard_cancelled")?.status).toBe("CANCELLED");
+  });
 });

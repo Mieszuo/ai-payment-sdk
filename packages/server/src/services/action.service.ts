@@ -114,7 +114,7 @@ export class ActionExecutionService {
         const schemaObj = action.inputSchema as Record<string, unknown>;
         if (Array.isArray(schemaObj.required)) {
           for (const reqField of schemaObj.required) {
-            if (typeof reqField === "string" && (params.inputs[reqField] === undefined || params.inputs[reqField] === null)) {
+            if (typeof reqField === "string" && (params.inputs?.[reqField] === undefined || params.inputs?.[reqField] === null)) {
               throw new PlatformError(
                 PlatformErrorCodes.INVALID_INPUT,
                 `Missing required input field: "${reqField}"`

@@ -17,24 +17,33 @@ export class OpenAIAdapter implements ModelProvider {
     maxTokens: number;
   }): Promise<{ text: string; costCents: number }> {
     const fetcher = this.options.fetchClient || fetch;
-    const url = `${this.options.baseUrl || "https://api.openai.com/v1"}/chat/completions`;
+    const baseUrl = (this.options.baseUrl || "https://api.openai.com/v1").replace(/\/+$/, "");
+    const url = `${baseUrl}/chat/completions`;
 
-    const res = await fetcher(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.options.apiKey}`
-      },
-      body: JSON.stringify({
-        model: params.model,
-        messages: [
-          { role: "system", content: params.systemPrompt },
-          { role: "user", content: params.prompt }
-        ],
-        max_tokens: params.maxTokens,
-        response_format: { type: "json_object" }
-      })
-    });
+    let res: Response;
+    try {
+      res = await fetcher(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.options.apiKey}`
+        },
+        body: JSON.stringify({
+          model: params.model,
+          messages: [
+            { role: "system", content: params.systemPrompt },
+            { role: "user", content: params.prompt }
+          ],
+          max_tokens: params.maxTokens,
+          response_format: { type: "json_object" }
+        })
+      });
+    } catch (err: any) {
+      throw new PlatformError(
+        PlatformErrorCodes.PROVIDER_ERROR,
+        "OpenAI network request failed: " + (err.message || String(err))
+      );
+    }
 
     if (!res.ok) {
       throw new PlatformError(PlatformErrorCodes.PROVIDER_ERROR, `OpenAI API error (${res.status})`);

@@ -14,6 +14,8 @@ export class PlatformLogger {
     "secret",
     "authorization",
     "token",
+    "authtoken",
+    "accesstoken",
     "password",
     "apikey"
   ]);
@@ -23,7 +25,7 @@ export class PlatformLogger {
   }
 
   private isSensitiveKey(key: string): boolean {
-    return this.sensitiveKeys.has(key.toLowerCase());
+    return this.sensitiveKeys.has(key.toLowerCase().replace(/[-_]/g, ""));
   }
 
   private sanitizeValue(value: unknown, seen: WeakSet<object>): unknown {
@@ -32,7 +34,7 @@ export class PlatformLogger {
     }
 
     if (value instanceof Date) {
-      return value.toISOString();
+      return isNaN(value.getTime()) ? "[INVALID DATE]" : value.toISOString();
     }
 
     if (value instanceof Error) {

@@ -272,6 +272,17 @@ describe("Developer Action Registry Management", () => {
     });
     expect(resMalformed.status).toBe(400);
 
+    // Array JSON body
+    const resArray = await app.request("/v1/developer/actions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer sk_live_secret_456"
+      },
+      body: JSON.stringify([{ actionName: "array-test" }])
+    });
+    expect(resArray.status).toBe(400);
+
     // Missing actionName
     const resNoName = await app.request("/v1/developer/actions", {
       method: "POST",

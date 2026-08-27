@@ -16,20 +16,30 @@ export class GeminiAdapter implements ModelProvider {
     maxTokens: number;
   }): Promise<{ text: string; costCents: number }> {
     const fetcher = this.options.fetchClient || fetch;
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${params.model}:generateContent?key=${this.options.apiKey}`;
+    const encodedModel = encodeURIComponent(params.model);
+    const encodedKey = encodeURIComponent(this.options.apiKey);
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodedModel}:generateContent?key=${encodedKey}`;
 
-    const res = await fetcher(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: params.systemPrompt }] },
-        contents: [{ role: "user", parts: [{ text: params.prompt }] }],
-        generationConfig: {
-          responseMimeType: "application/json",
-          maxOutputTokens: params.maxTokens
-        }
-      })
-    });
+    let res: Response;
+    try {
+      res = await fetcher(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: params.systemPrompt }] },
+          contents: [{ role: "user", parts: [{ text: params.prompt }] }],
+          generationConfig: {
+            responseMimeType: "application/json",
+            maxOutputTokens: params.maxTokens
+          }
+        })
+      });
+    } catch (err: any) {
+      throw new PlatformError(
+        PlatformErrorCodes.PROVIDER_ERROR,
+        "Gemini network request failed: " + (err.message || String(err))
+      );
+    }
 
     if (!res.ok) {
       throw new PlatformError(PlatformErrorCodes.PROVIDER_ERROR, `Gemini API error (${res.status})`);
