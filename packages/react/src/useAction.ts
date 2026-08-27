@@ -1,19 +1,12 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useContext } from "react";
 import { AIClient } from "@platform/sdk";
-import { useAI } from "./context";
+import { AIContext } from "./context";
 
 export function useAction<TInput = any, TOutput = any>(
   actionName: string,
   explicitClient?: AIClient
 ) {
-  // Try to use explicitClient if provided, otherwise context client if in provider
-  let contextClient: AIClient | null = null;
-  try {
-    contextClient = useAI();
-  } catch {
-    // context not present, will rely on explicitClient
-  }
-
+  const contextClient = useContext(AIContext);
   const client = explicitClient || contextClient;
 
   const [data, setData] = useState<TOutput | null>(null);

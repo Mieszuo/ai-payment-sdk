@@ -167,5 +167,48 @@ describe("Client SDK", () => {
       const ai = createAI({ project: "pk_test" });
       await expect(ai.getWallet()).rejects.toThrow("Unauthorized wallet access");
     });
+
+    it("sanitizes baseUrl by stripping trailing slashes", async () => {
+      let requestedUrl = "";
+      globalThis.fetch = (async (url: string | URL | Request) => {
+        requestedUrl = url.toString();
+        return new Response(JSON.stringify({ availableCredits: 50 }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" }
+        });
+      }) as any;
+
+      const ai = createAI({
+        project: "pk_test",
+        baseUrl: "https://api.example.com///"
+      });
+
+      await ai.getWallet();
+      expect(requestedUrl).toBe("https://api.example.com/v1/wallet");
+    });
+
+    it("extracts err.error when action execution fails with server error response", async () => {
+      globalThis.fetch = (async () => {
+        return new Response(JSON.stringify({ error: "Token not valid for this project", code: "UNAUTHORIZED" }), {
+          status: 401,
+          headers: { "Content-Type": "application/json" }
+        });
+      }) as any;
+
+      const ai = createAI({ project: "pk_test" });
+      await expect(ai.action("test", { inputs: {} })).rejects.toThrow("Token not valid for this project");
+    });
+
+    it("extracts err.error when wallet fetch fails with server error response", async () => {
+      globalThis.fetch = (async () => {
+        return new Response(JSON.stringify({ error: "Missing or invalid authorization header" }), {
+          status: 401,
+          headers: { "Content-Type": "application/json" }
+        });
+      }) as any;
+
+      const ai = createAI({ project: "pk_test" });
+      await expect(ai.getWallet()).rejects.toThrow("Missing or invalid authorization header");
+    });
   });
 });

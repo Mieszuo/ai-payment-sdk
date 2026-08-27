@@ -106,6 +106,20 @@ describe("PKCE Auth Routes", () => {
       expect(err.message).toBe("Invalid code verifier");
     }
 
+    // RFC 7636: code must be invalidated immediately even if verifier failed
+    try {
+      await authService.exchangeCodeForSession({
+        projectId: "proj_123",
+        code,
+        codeVerifier: verifier
+      });
+      expect(true).toBe(false);
+    } catch (err: any) {
+      expect(err).toBeInstanceOf(PlatformError);
+      expect(err.code).toBe(PlatformErrorCodes.UNAUTHORIZED);
+      expect(err.message).toBe("Invalid or expired authorization code");
+    }
+
     // 2. HTTP route rejection returns 401
     const code2 = await authService.issueAuthorizationCode({
       userId: "00000000-0000-0000-0000-000000000003",

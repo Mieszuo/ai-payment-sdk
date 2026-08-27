@@ -1,15 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useContext } from "react";
 import { AIClient } from "@platform/sdk";
-import { useAI } from "./context";
+import { AIContext } from "./context";
 
 export function useWallet(explicitClient?: AIClient) {
-  let contextClient: AIClient | null = null;
-  try {
-    contextClient = useAI();
-  } catch {
-    // context not present
-  }
-
+  const contextClient = useContext(AIContext);
   const client = explicitClient || contextClient;
 
   const [balance, setBalance] = useState<number | null>(null);

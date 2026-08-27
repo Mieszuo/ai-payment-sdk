@@ -156,7 +156,7 @@ describe("Managed Actions Execution Endpoint", () => {
     expect(body.code).toBe("UNAUTHORIZED");
   });
 
-  it("fails with 404 when action is not found or projectId mismatches", async () => {
+  it("fails with 404 when action is not found", async () => {
     const { token, app } = await setupTestEnv(50);
 
     // Non-existent action name
@@ -171,8 +171,11 @@ describe("Managed Actions Execution Endpoint", () => {
     expect(resNotFound.status).toBe(404);
     const bodyNotFound = await resNotFound.json() as any;
     expect(bodyNotFound.code).toBe("ACTION_NOT_FOUND");
+  });
 
-    // Project mismatch
+  it("fails with 401 when body.projectId mismatches session projectId", async () => {
+    const { token, app } = await setupTestEnv(50);
+
     const resMismatch = await app.request("/v1/actions/test-action/execute", {
       method: "POST",
       headers: {
@@ -181,7 +184,10 @@ describe("Managed Actions Execution Endpoint", () => {
       },
       body: JSON.stringify({ projectId: "other_proj", inputs: { name: "Alice" } })
     });
-    expect(resMismatch.status).toBe(404);
+    expect(resMismatch.status).toBe(401);
+    const body = await resMismatch.json() as any;
+    expect(body.code).toBe("UNAUTHORIZED");
+    expect(body.error).toBe("Token not valid for this project");
   });
 
   it("fails with 402 INSUFFICIENT_CREDITS when user lacks required credits", async () => {
@@ -338,5 +344,85 @@ describe("Managed Actions Execution Endpoint", () => {
     const wallet = await ledger.getWallet("usr_1");
     expect(wallet.availableCredits).toBe(35);
     expect(wallet.reservedCredits).toBe(0);
+  });
+
+  it("supports multi-tenant action mapping with same actionName across different projects", async () => {
+    const db = new InMemoryDatabase();
+    db.seedWallet("usr_p1", 50);
+    db.seedWallet("usr_p2", 50);
+
+    const ledger = new LedgerService(db);
+    const authService = new AuthService(db, "secret-key-32-chars-long-example!");
+    const verifier = "abcdef1234567890abcdef1234567890abcdef1234567890";
+
+    const token1 = await authService.issueAuthorizationCode({
+      userId: "usr_p1",
+      email: "u1@example.com",
+      projectId: "proj_alpha",
+      codeChallenge: verifier
+    }).then(code => authService.exchangeCodeForSession({ projectId: "proj_alpha", code, codeVerifier: verifier }))
+      .then(res => res.sessionToken);
+
+    const token2 = await authService.issueAuthorizationCode({
+      userId: "usr_p2",
+      email: "u2@example.com",
+      projectId: "proj_beta",
+      codeChallenge: verifier
+    }).then(code => authService.exchangeCodeForSession({ projectId: "proj_beta", code, codeVerifier: verifier }))
+      .then(res => res.sessionToken);
+
+    const actionAlpha: ActionVersion = {
+      actionName: "shared-action",
+      version: 1,
+      projectId: "proj_alpha",
+      model: "mock/gpt",
+      priceCredits: 10,
+      maxProviderCostCents: 5,
+      maxOutputTokens: 200,
+      outputFormat: "text",
+      systemPrompt: "Alpha system",
+      userPromptTemplate: "Alpha {{input}}",
+      inputSchema: { type: "object", properties: { input: { type: "string" } } },
+      rateLimit: { maxRequests: 10, windowSeconds: 60 }
+    };
+
+    const actionBeta: ActionVersion = {
+      actionName: "shared-action",
+      version: 1,
+      projectId: "proj_beta",
+      model: "mock/gpt",
+      priceCredits: 25,
+      maxProviderCostCents: 5,
+      maxOutputTokens: 200,
+      outputFormat: "text",
+      systemPrompt: "Beta system",
+      userPromptTemplate: "Beta {{input}}",
+      inputSchema: { type: "object", properties: { input: { type: "string" } } },
+      rateLimit: { maxRequests: 10, windowSeconds: 60 }
+    };
+
+    const modelProvider = new MockModelProvider();
+    modelProvider.setResponse("Execution response");
+
+    const actionService = new ActionExecutionService(ledger, modelProvider, [actionAlpha, actionBeta]);
+    const app = new Hono().route("/v1/actions", createActionRoutes(actionService, authService));
+
+    const resAlpha = await app.request("/v1/actions/shared-action/execute", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token1}` },
+      body: JSON.stringify({ inputs: { input: "test" } })
+    });
+    expect(resAlpha.status).toBe(200);
+    const bodyAlpha = await resAlpha.json() as any;
+    expect(bodyAlpha.creditsUsed).toBe(10);
+
+    const resBeta = await app.request("/v1/actions/shared-action/execute", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token2}` },
+      body: JSON.stringify({ inputs: { input: "test" } })
+    });
+    expect(resBeta.status).toBe(200);
+    const bodyBeta = await resBeta.json() as any;
+    expect(bodyBeta.creditsUsed).toBe(25);
   });
 });

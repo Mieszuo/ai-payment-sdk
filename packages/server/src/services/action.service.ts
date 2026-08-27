@@ -25,12 +25,12 @@ export class ActionExecutionService {
     private modelProvider: ModelProvider,
     actions: ActionVersion[]
   ) {
-    actions.forEach((a) => this.actionMap.set(a.actionName, a));
+    actions.forEach((a) => this.actionMap.set(`${a.projectId}:${a.actionName}`, a));
   }
 
   async execute(params: ActionExecutionParams): Promise<ActionExecutionResult> {
-    const action = this.actionMap.get(params.actionName);
-    if (!action || action.projectId !== params.projectId) {
+    const action = this.actionMap.get(`${params.projectId}:${params.actionName}`);
+    if (!action) {
       throw new PlatformError(
         PlatformErrorCodes.ACTION_NOT_FOUND,
         `Action "${params.actionName}" not found`

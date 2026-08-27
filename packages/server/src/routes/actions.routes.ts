@@ -53,9 +53,16 @@ export function createActionRoutes(actionService: ActionExecutionService, authSe
       const body = await c.req.json().catch(() => ({}));
       const actionName = c.req.param("name");
 
+      if (body.projectId && body.projectId !== session.projectId) {
+        throw new PlatformError(
+          PlatformErrorCodes.UNAUTHORIZED,
+          "Token not valid for this project"
+        );
+      }
+
       const executionParams = {
         actionName,
-        projectId: body.projectId || session.projectId,
+        projectId: session.projectId,
         userId: session.userId,
         inputs: body.inputs || {},
         idempotencyKey: c.req.header("Idempotency-Key") || body.idempotencyKey

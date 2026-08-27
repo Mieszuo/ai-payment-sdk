@@ -10,7 +10,7 @@ export class AIClient {
   private sessionToken: string | null = null;
 
   constructor(private config: AIClientConfig) {
-    this.config.baseUrl = config.baseUrl || "https://api.example.com";
+    this.config = { ...config, baseUrl: config.baseUrl?.replace(/\/+$/, "") || "https://api.example.com" };
   }
 
   setSessionToken(token: string): void {
@@ -35,7 +35,8 @@ export class AIClient {
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || "Failed to fetch wallet");
+      const errorMsg = err.error || err.message || "Failed to fetch wallet";
+      throw new Error(errorMsg);
     }
 
     return await res.json();
@@ -68,7 +69,8 @@ export class AIClient {
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || "Failed to execute action");
+      const errorMsg = err.error || err.message || "Failed to execute action";
+      throw new Error(errorMsg);
     }
 
     return await res.json();

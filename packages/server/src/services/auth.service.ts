@@ -34,6 +34,7 @@ export class AuthService {
     this.pruneExpiredCodes();
 
     const entry = this.codes.get(params.code);
+    this.codes.delete(params.code);
     if (!entry || entry.projectId !== params.projectId || entry.expiresAt < Date.now()) {
       throw new PlatformError(PlatformErrorCodes.UNAUTHORIZED, "Invalid or expired authorization code");
     }
@@ -45,8 +46,6 @@ export class AuthService {
     if (!matches) {
       throw new PlatformError(PlatformErrorCodes.UNAUTHORIZED, "Invalid code verifier");
     }
-
-    this.codes.delete(params.code);
 
     let welcomeBonusGranted = false;
     let wallet = this.db.wallets.get(entry.userId);

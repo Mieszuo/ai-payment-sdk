@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS ledger_transactions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     idempotency_key TEXT NOT NULL UNIQUE,
     transaction_type TEXT NOT NULL,
-    reference_id UUID,
+    reference_id TEXT,
     metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
