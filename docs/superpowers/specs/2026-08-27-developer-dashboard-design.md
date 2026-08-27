@@ -2,130 +2,203 @@
 
 - **Date:** 2026-08-27
 - **Target Application:** `apps/dashboard`
-- **Design System:** Vercel / searchlize.com inspired Dark Glassmorphism
+- **Design System:** Vercel / searchlize.com inspired Utility-First Dark Interface (90% Precision / 10% Glass Glow)
 - **Tech Stack:** React 19, Vite, Tailwind CSS v4, Lucide Icons, Bun
 
 ---
 
 ## 1. Overview & Objectives
 
-The Developer Dashboard is the mission control center for developers integrating the AI Payment Platform into their applications. It provides:
-1. **API Key & Project Administration**: Secure visibility and rotation of client public keys (`pk_live_*`) and server secret keys (`sk_live_*`).
-2. **Managed Action Registry**: Authoring, versioning ($v1, v2, \dots$), and parameterizing managed AI actions (prompts, pricing in credits, margin guards, and rate limits).
-3. **Live Playground / Testbench**: In-browser sandbox to test actions against the live Gateway or smart mock engine, validating inputs, outputs, token consumption, and latency.
-4. **Cryptographic Audit Logs (`action_runs`)**: Real-time inspection of action execution snapshots, status transitions, SHA-256 prompt & input hashes, providing complete auditing transparency.
+The Developer Dashboard is the mission-control application for developers administering projects, publishing managed actions, analyzing execution telemetry, and auditing integrity within the AI Payment Platform.
+
+### Core Pillars
+1. **Multi-Tenant Project Context**: Strict top-level project scoping (`projectId`), isolating keys, actions, runs, and settings.
+2. **One-Time Secret Lifecycle**: Developer secret keys (`sk_live_*`) are displayed in plaintext **only once** upon generation or rotation, then permanently masked (`sk_live_••••••••`).
+3. **Action Registry with Margin Economics**: Full prompt authoring with automatic variable detection (`{{cvText}}`), JSON schema validation, token pricing per 1M, credit pricing, and calculated gross margin (`Margin Guard`).
+4. **Sandboxed Playground (Mock vs Live)**: Explicit switch between zero-cost `Mock` dry-run validation and `Live` model execution.
+5. **Unified Audit Log**: Comprehensive request attempt history tracking `SUCCEEDED`, `FAILED`, and `RATE_LIMITED` events with SHA-256 **Integrity Verification** (non-repudiation terminology removed).
+6. **Explicit Environment Mode**: Clear boundary between `Demo Mode` (in-memory simulator) and `Production Mode` (fails with explicit error banner if the gateway is unreachable; no silent fallback to mock data).
+7. **Dedicated Settings**: Dedicated administration surface for allowed CORS origins, secret rotation, project metadata, and danger zones.
 
 ---
 
 ## 2. Visual Design System
 
-### 2.1 Aesthetic Principles
-- **Vercel / searchlize.com Aesthetic**: High-contrast, dark minimalist canvas with razor-sharp micro-borders, translucent glassmorphism surfaces, and gentle ambient backdrops.
-- **Strictly No Emojis**: Replaced entirely by vector SVG icons from `lucide-react` (`Key`, `Cpu`, `Zap`, `ShieldCheck`, `Terminal`, `Copy`, `Check`, `Activity`, `Sparkles`, `RefreshCw`, `Play`).
-- **Pill Badges & Smooth Radii**:
-  - Cards & Panels: `rounded-2xl` (16px) with `backdrop-blur-xl`.
-  - Inputs, Buttons & Selects: `rounded-xl` (12px).
-  - Status Indicators & Tags: `rounded-full` with micro-borders and soft ambient dots.
+### 2.1 Aesthetic Principles: 90% Precision / 10% Glass
+- **Focus on Tooling**: Clean, distraction-free developer interface rather than decorative marketing eye candy. High information density, clear contrast, and instant visual hierarchy.
+- **Strictly No Emojis**: 100% vector SVG icons from `lucide-react` (`Key`, `Cpu`, `Zap`, `ShieldCheck`, `Terminal`, `Copy`, `Check`, `Activity`, `Sparkles`, `RefreshCw`, `Play`, `Sliders`, `Settings`, `AlertTriangle`).
+- **Pill Badges & Sharp Radii**:
+  - Main Cards: `rounded-xl` (12px) with `border border-white/[0.08] bg-zinc-950/60 backdrop-blur-md`.
+  - Buttons & Inputs: `rounded-lg` (8px) with `bg-zinc-900 border-zinc-800 focus:border-blue-500`.
+  - Status Indicators & Pills: `rounded-full` with subtle ambient status dots.
 
 ### 2.2 Color Palette & Surfaces
-- **Canvas Base**: Deep pure obsidian black `#000000` / `#050505` with subtle gradient radial glows.
-- **Glassmorphism Panels**: `rgba(255, 255, 255, 0.03)` with `backdrop-filter: blur(20px)`.
-- **Borders**: Thin, high-precision `border-white/[0.08]` (transitioning to `border-white/[0.18]` on hover and `border-blue-500/50` on focus).
+- **Canvas Base**: Pure obsidian black `#000000` / `#09090b`.
+- **Borders**: Hairline `border-white/[0.08]` (hover: `border-white/[0.16]`, focus: `border-blue-500`).
 - **Accents**:
-  - Brand Glow: Vercel cyan/blue gradient (`#0070f3` to `#7928ca`).
-  - Success State: Emerald `#10b981` (`bg-emerald-500/10 border-emerald-500/20 text-emerald-400`).
-  - Warning State: Amber `#f59e0b` (`bg-amber-500/10 border-amber-500/20 text-amber-400`).
-  - Error State: Rose `#f43f5e` (`bg-rose-500/10 border-rose-500/20 text-rose-400`).
+  - Primary Brand: Vercel monochrome / blue highlight (`#0070f3`).
+  - Active/Success: Emerald `#10b981` (`bg-emerald-500/10 text-emerald-400 border-emerald-500/20`).
+  - Warning/Rate-Limited: Amber `#f59e0b` (`bg-amber-500/10 text-amber-400 border-amber-500/20`).
+  - Failed/Error: Rose `#f43f5e` (`bg-rose-500/10 text-rose-400 border-rose-500/20`).
 - **Typography**:
-  - Sans: `Inter`, system-ui with disciplined font weights (`font-normal`, `font-medium`, `font-semibold`).
-  - Monospace: `JetBrains Mono` / `SF Mono` for API keys, prompt variables `{{variable}}`, hashes, and JSON code snippets.
+  - UI Sans: `Inter`, system-ui with crisp weights (`font-normal`, `font-medium`, `font-semibold`).
+  - Monospace: `JetBrains Mono` / `SF Mono` for IDs, keys, hashes, schema editors, and JSON payloads.
 
 ---
 
 ## 3. Architecture & Views (`apps/dashboard`)
 
-### 3.1 Application Shell & Navigation
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│ [Logo] AI Payment Gateway   [Connected]   Project: Searchlize  [User]   │
+├────────────────────────────────────────────────────────────────────────┤
+│ Overview  │  Actions  │  Playground  │  Audit Logs  │  Settings         │
+├────────────────────────────────────────────────────────────────────────┤
+│                                                                        │
+│                              ACTIVE VIEW                               │
+│                                                                        │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+### 3.1 Top Navigation & Shell
 - **Header**:
-  - Brand identity with micro-glow logo.
-  - Live Gateway Connection Badge: Polled indicator (`Connected` with pulsing emerald dot vs `Demo Mode` with amber dot).
-  - Tabbed Top Navigation Bar: `Overview`, `Actions`, `Playground`, `Logs`.
-  - Project Selector & Quick Secret Key Indicator.
+  - Logo with subtle highlight.
+  - Connection status badge:
+    - `Connected to Gateway` (Pulsing emerald dot, `http://localhost:3000`)
+    - `Demo Mode` (Amber badge, self-contained local mock store)
+    - `Gateway Unavailable` (Red badge with reconnect button in Production Mode)
+  - Project Selector dropdown (`Searchlize`, `Resume AI`, `+ New Project`).
+- **Tab Navigation**: `Overview`, `Actions`, `Playground`, `Audit Logs`, `Settings`.
 
-### 3.2 View 1: Overview & API Keys
-- **Telemetry Grid**:
-  - Total Executions counter.
-  - Active Actions registered.
-  - Estimated Provider Spend (in cents and credit equivalent).
-  - Average Latency (ms).
-- **API Credentials Card**:
-  - `pk_live_demo123`: Copyable public key with 1-click clipboard notification.
-  - `sk_live_demo_secret_456`: Secret key with masked dots (`••••••••`), reveal toggle, and copy button.
-  - Implementation Quickstart snippet showing `@platform/sdk` initialization.
+---
 
-### 3.3 View 2: Actions Registry
-- **Action Cards Grid**:
-  - List of active actions (`optimize-resume`, `generate-cover-letter`).
-  - Metadata badges: Version ($v1, v2$), Model (`gpt-4o-mini`, `gemini-1.5-flash`), Price in credits (⚡ 15), Margin Guard (\$0.05).
-- **Action Publisher Slide-Over Drawer**:
-  - Action Name input.
-  - Model selection dropdown.
-  - Price (⚡ credits) & Max Provider Cost (\$ cents).
-  - Rate Limiting settings (max requests per window).
-  - System Prompt textarea.
-  - User Prompt Template editor with interactive highlight of `{{templateVariables}}`.
-  - JSON Output Schema validator toggle.
-  - Submit action: calls `POST /v1/developer/actions` with `sk_live_*`.
+### 3.2 View 1: Overview & Financial Telemetry
+- **Financial & Volume Telemetry Cards**:
+  1. **Total Executions**: Count + % change vs previous period.
+  2. **Credits Consumed**: Total credits spent across all actions.
+  3. **Provider Spend**: Exact dollar cost incurred from LLM providers (e.g. `$12.43`).
+  4. **Gross Margin**: Calculated platform margin `%` ($1 - \frac{\text{Provider Cost}}{\text{Credit Revenue Value}}$).
+  5. **Average Latency**: Rolling median response latency (e.g. `842ms`).
+- **Quick Links & Health**:
+  - Active action versions in production.
+  - Rate limit rejections in last 24 hours.
 
-### 3.4 View 3: Live Playground (Testbench)
+---
+
+### 3.3 View 2: Actions Registry & Margin Economics
+- **Actions List**:
+  - Card list showing: Action Name, Active Version ($v1, v2$), Model (`gpt-4o-mini`, `gemini-1.5-flash`), Price in credits (⚡ 15), Max Provider Cost ($0.05), Calculated Margin (`~66%`), and Status (`Active`).
+- **Action Publisher / Version Editor (Slide-Over Drawer)**:
+  - **Action Metadata**: Name, description.
+  - **Model Selection & Unit Economics**:
+    - Selector displays model unit costs:
+      - `GPT-4o-mini`: Input $0.15 / 1M, Output $0.60 / 1M.
+      - `Gemini 1.5 Flash`: Input $0.075 / 1M, Output $0.30 / 1M.
+    - Interactive economics card:
+      ```text
+      Price:              15 credits ($0.15 equivalent)
+      Max Provider Cost:  $0.05
+      Calculated Margin:  ~66% minimum margin guard
+      ```
+  - **Prompt Engineering**:
+    - System Prompt textarea.
+    - User Prompt Template editor:
+      - Automatically parses `{{variables}}` from template text (e.g. `{{cvText}}`, `{{jobTitle}}`).
+      - Lists detected variables below the editor with configurable data types (`string`, `number`, `boolean`).
+  - **Output Specification**:
+    - Radio toggle: `Text` vs `Structured JSON`.
+    - JSON Schema editor with instant JSON syntax & schema validation indicator (`Valid JSON Schema`).
+  - **Rate Limiting**:
+    - `maxRequests` per `windowSeconds` (e.g. 10 req / 60s).
+
+---
+
+### 3.4 View 3: Live Playground (Mock vs Live)
 - **Split-Pane Layout**:
-  - **Left Pane (Request Config)**:
+  - **Left Pane (Request Configuration)**:
     - Action and Version picker.
-    - Dynamic input fields automatically derived from template variables (e.g. `cvText`).
-    - Run button (`Execute Action`) with execution spinner.
-  - **Right Pane (Response & Metrics)**:
-    - Formatted JSON response viewer with syntax highlighting.
-    - Real-time telemetry badges: Duration (ms), Tokens used (`prompt_tokens`, `completion_tokens`), Cost in cents, and `Run ID`.
+    - **Execution Mode Toggle**:
+      - `[ Mock ]`: Zero provider cost, zero credits consumed, deterministic structural validation.
+      - `[ Live ]`: Real model execution, uses developer test credits, live provider latency.
+    - **Dry-Run Validation Checklist**:
+      - Input schema `Valid`
+      - Detected variables populated
+      - Output schema `Valid`
+      - Model availability `OK`
+      - Margin guard `Verified`
+    - Dynamic variable input fields.
+    - `[ Execute Action ]` button.
+  - **Right Pane (Response & Telemetry)**:
+    - Syntax-highlighted JSON or text output.
+    - Performance telemetry badges:
+      - `Duration: 842ms`
+      - `Tokens: 1,284 (Prompt: 920, Completion: 364)`
+      - `Cost: $0.0031`
+      - `Run ID: ar_7f2aff...`
+      - `Integrity Digest: e4a8b1...`
 
-### 3.5 View 4: Audit Logs (`action_runs`)
-- **Real-Time Logs Table**:
-  - Columns: Timestamp, Status Pill (`SUCCEEDED`, `FAILED`, `RATE_LIMITED`), Action & Version, Prompt SHA-256 Digest (shortened), Input SHA-256 Digest (shortened), User ID, Latency.
-- **Audit Detail Drawer**:
-  - Clicking any row opens full inspection:
-    - Cryptographic non-repudiation verification: Complete SHA-256 prompt and input hashes.
+---
+
+### 3.5 View 4: Audit Logs & Integrity Verification
+- **Unified Request Event Stream**:
+  - Tracks both `action_runs` (`SUCCEEDED`, `FAILED`) and upstream gateway events (`RATE_LIMITED`).
+  - Table Columns:
+    - `Timestamp`: ISO time with relative tooltip.
+    - `Status`: Pill badge (`SUCCEEDED` [emerald], `FAILED` [rose], `RATE_LIMITED` [amber]).
+    - `Action`: Name and version (e.g. `optimize-resume v3`).
+    - `Prompt Digest`: SHA-256 hash prefix (`db1b957f...`).
+    - `Input Digest`: SHA-256 hash prefix (`1cfd8acc...`).
+    - `Latency`: Total execution duration.
+- **Audit Detail Drawer (Integrity Verification)**:
+  - Clicking any row opens side inspection:
+    - **Integrity Verification Card**:
+      ```text
+      Prompt SHA-256:   db1b957f0e7f9a22417819e9... [Verified match]
+      Input SHA-256:    1cfd8acc9c6008548d2aba5f... [Verified match]
+      ```
     - Correlation tags: `requestId`, `userId`, `projectId`, `actionName`.
-    - Lifecycle transition audit (`RESERVED` $\to$ `RUNNING` $\to$ `SUCCEEDED`).
+    - Lifecycle timestamps: `reservedAt`, `executedAt`, `settledAt`.
 
 ---
 
-## 4. Data Flow & Hybrid Runtime Mode
-
-```
-+-------------------------------------------------------+
-|              apps/dashboard (React 19)                |
-|                                                       |
-|   +-----------------------------------------------+   |
-|   |         Gateway Client (src/lib/api.ts)       |   |
-|   +-----------------------------------------------+   |
-|            |                                |         |
-|     (If Gateway Online)            (If Gateway Offline)|
-|            |                                |         |
-|            v                                v         |
-|   +-------------------+           +-----------------+ |
-|   | Hono HTTP Gateway |           | Seeded Offline  | |
-|   | (localhost:3000)  |           | Demo Store      | |
-|   +-------------------+           +-----------------+ |
-+-------------------------------------------------------+
-```
-
-1. **Auto-Discovery**: On mount, the dashboard probes `GET http://localhost:3000/`.
-2. **Online Mode**: When reachable, all queries and mutations interact directly with the live Hono backend.
-3. **Offline Demo Mode**: When the gateway is stopped, the dashboard seamlessly switches to pre-populated mock data, ensuring a flawless interactive presentation at all times without broken UI states.
+### 3.6 View 5: Project Settings & Key Management
+- **General Project Settings**:
+  - Project Name & ID (`proj_demo`).
+  - Allowed CORS Origins / Domains (`https://myapp.com`, `http://localhost:5173`).
+- **API Keys & Credentials**:
+  - **Public Key (`pk_live_*`)**:
+    - Visible in full (`pk_live_demo123`), 1-click clipboard copy.
+  - **Secret Key (`sk_live_*`)**:
+    - Masked permanently after initial creation: `sk_live_••••••••••••••••••••`.
+    - `[Copy Key]` button (copies masked or active token).
+    - `[Rotate Secret Key]` button:
+      - Opens Confirmation Dialog: *"Rotating will immediately invalidate the existing secret key."*
+      - On rotation: Displays the newly generated `sk_live_...` **once** with an alert:
+        > *"Copy this secret key now. You will not be able to view it again."*
+- **Danger Zone**:
+  - Flush action cache.
+  - Delete project.
 
 ---
 
-## 5. Verification & Testing
+## 4. State Management & Runtime Modes
 
-- Build check: `bun run --filter dashboard build` creates clean production bundle.
-- Component & rendering check: Unit tests for state management, drawer toggles, and template variable extraction.
-- Strict TypeScript: `tsc --build` with 0 diagnostic errors.
-- Visual inspection: Verified in browser with glassmorphism styling, responsiveness, and zero console warnings.
+### 4.1 Mode Separation
+- **`DEMO_MODE`**:
+  - Used for standalone reviews, presentations, and local offline testing.
+  - Operates on an in-memory seed store; changes persist locally in `localStorage`.
+  - Shows clear `Demo Mode` pill in the header.
+- **`PRODUCTION_MODE`**:
+  - Connects to Gateway URL (`http://localhost:3000` or production host).
+  - If the Gateway is unreachable, displays an **explicit error banner**: *"Unable to reach AI Payment Gateway at http://localhost:3000"*, with a retry action.
+  - **NEVER** silently falls back to mock data during real operations to prevent developer confusion.
+
+---
+
+## 5. Verification Plan
+
+1. **Static Type Safety**: `tsc --build` in `apps/dashboard` passes with 0 diagnostics.
+2. **Build Verification**: `bun run --filter dashboard build` generates clean production assets in `dist/`.
+3. **Playground Verification**: Both `Mock` and `Live` modes execute and render formatted outputs with telemetry.
+4. **Secret Key Verification**: Rotation dialog reveals secret key once, enforces dismissal acknowledgement, and masks subsequent displays.
+5. **Action Publisher Verification**: Variable parsing from `{{vars}}`, margin calculation, and submission to `/v1/developer/actions`.
