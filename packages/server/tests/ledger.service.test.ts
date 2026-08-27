@@ -157,4 +157,47 @@ describe("LedgerService Concurrency & Reservation", () => {
     expect(wallet.availableCredits).toBe(14);
     expect(wallet.reservedCredits).toBe(0);
   });
+
+  it("rejects REFUND when the user has no wallet (PROVIDER_ERROR)", async () => {
+    try {
+      await db.applyCredit("usr_no_wallet_refund", 100, "REFUND", "ref_missing_key", "ch_missing");
+      expect(true).toBe(false); // should not reach here
+    } catch (err: any) {
+      expect(err).toBeInstanceOf(PlatformError);
+      expect(err.code).toBe(PlatformErrorCodes.PROVIDER_ERROR);
+      expect(err.message).toBe("Cannot refund: wallet not found");
+    }
+  });
+
+  it("rejects REFUND that would drive available credits below zero (INVALID_INPUT)", async () => {
+    db.seedWallet("usr_over_refund", 50);
+    try {
+      await db.applyCredit("usr_over_refund", 100, "REFUND", "ref_over_key", "ch_over");
+      expect(true).toBe(false); // should not reach here
+    } catch (err: any) {
+      expect(err).toBeInstanceOf(PlatformError);
+      expect(err.code).toBe(PlatformErrorCodes.INVALID_INPUT);
+      expect(err.message).toBe("Cannot refund: insufficient balance");
+    }
+  });
+
+  it("accepts REFUND up to the available balance and no-ops on replay", async () => {
+    db.seedWallet("usr_exact_refund", 50);
+    await db.applyCredit("usr_exact_refund", 50, "REFUND", "ref_exact_key", "ch_exact");
+    expect(db.wallets.get("usr_exact_refund")?.availableCredits).toBe(0);
+
+    // Replay with the same idempotency key must not re-debit.
+    await db.applyCredit("usr_exact_refund", 50, "REFUND", "ref_exact_key", "ch_exact");
+    expect(db.wallets.get("usr_exact_refund")?.availableCredits).toBe(0);
+  });
+
+  it("does not record a ledger transaction or create a wallet for a rejected REFUND", async () => {
+    try {
+      await db.applyCredit("usr_missing_refund_ledger", 10, "REFUND", "ref_missing_ledger", "ch_missing");
+    } catch {
+      // expected: PROVIDER_ERROR
+    }
+    expect(db.transactions.get("ref_missing_ledger")).toBeUndefined();
+    expect(db.wallets.get("usr_missing_refund_ledger")).toBeUndefined();
+  });
 });

@@ -165,6 +165,20 @@ export class InMemoryDatabase implements LedgerDatabase {
   ): Promise<void> {
     await this.runInTransaction(async () => {
       if (this.processedIdempotencyKeys.has(idempotencyKey)) return;
+
+      // REFUND guards run BEFORE any state mutation — the in-memory mutex does
+      // not roll back partial writes on error, so a failed refund must not leave
+      // a ledger transaction behind without the matching wallet change.
+      if (transactionType === "REFUND") {
+        const wallet = this.wallets.get(userId);
+        if (!wallet) {
+          throw new PlatformError(PlatformErrorCodes.PROVIDER_ERROR, "Cannot refund: wallet not found");
+        }
+        if (wallet.availableCredits < amount) {
+          throw new PlatformError(PlatformErrorCodes.INVALID_INPUT, "Cannot refund: insufficient balance");
+        }
+      }
+
       const delta = transactionType === "REFUND" ? -amount : amount;
       const clearingEntry = {
         accountIdentifier: formatAccountIdentifier("PLATFORM_CLEARING"),
@@ -188,5 +202,10 @@ export class InMemoryDatabase implements LedgerDatabase {
       if (wallet) wallet.availableCredits += delta;
       else this.seedWallet(userId, amount);
     });
+  }
+
+  async upsertActionRun(_record: Record<string, any>): Promise<void> {
+    // No-op: `actionRuns` already holds the authoritative record (ActionRunService
+    // shares this map as its working state), so there is nothing to persist.
   }
 }

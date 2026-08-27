@@ -80,6 +80,7 @@ export class ActionRunService {
     };
 
     this.runs.set(params.runId, record);
+    await this.db?.upsertActionRun(record);
     return record;
   }
 
@@ -87,6 +88,7 @@ export class ActionRunService {
     const run = this.runs.get(runId);
     if (run && run.status === "RESERVED") {
       run.status = "RUNNING";
+      await this.db?.upsertActionRun(run);
     }
   }
 
@@ -100,6 +102,7 @@ export class ActionRunService {
       run.consumedCredits = params.consumedCredits;
       run.costCents = params.costCents;
       run.completedAt = new Date().toISOString();
+      await this.db?.upsertActionRun(run);
     }
   }
 
@@ -108,6 +111,7 @@ export class ActionRunService {
     if (run && run.status !== "SUCCEEDED") {
       run.status = "FAILED";
       run.completedAt = new Date().toISOString();
+      await this.db?.upsertActionRun(run);
     }
   }
 
@@ -116,6 +120,7 @@ export class ActionRunService {
     if (run && run.status !== "SUCCEEDED") {
       run.status = "CANCELLED";
       run.completedAt = new Date().toISOString();
+      await this.db?.upsertActionRun(run);
     }
   }
 

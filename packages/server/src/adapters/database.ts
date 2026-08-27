@@ -48,4 +48,11 @@ export interface LedgerDatabase {
     referenceId: string,
     metadata?: Record<string, unknown>
   ): Promise<void>;
+
+  /**
+   * Persist (or update) an action run audit record. The in-memory database is a
+   * no-op (its actionRuns map already holds the record); the Postgres adapter
+   * upserts into `action_runs`.
+   */
+  upsertActionRun(record: Record<string, any>): Promise<void>;
 }

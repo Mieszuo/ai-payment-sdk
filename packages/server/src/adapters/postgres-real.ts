@@ -121,6 +121,17 @@ export class PostgresDatabase implements LedgerDatabase {
         SELECT available_credits, reserved_credits FROM wallets WHERE user_id = ${userId} FOR UPDATE
       `;
       if (!row) throw new PlatformError(PlatformErrorCodes.UNAUTHORIZED, "Wallet not found");
+
+      // Win the idempotency key BEFORE any wallet/reservation mutation. If the
+      // key already exists (concurrent same-key replay across gateway instances),
+      // the ledger header insert returns null and this call becomes an
+      // idempotent no-op without touching the wallet.
+      const header = await this.insertLedgerTransaction(
+        tx,
+        createReservationTransaction({ userId, amountCredits: amount, idempotencyKey, runId })
+      );
+      if (!header) return;
+
       if (Number(row.available_credits) < amount) {
         throw new PlatformError(
           PlatformErrorCodes.INSUFFICIENT_CREDITS,
@@ -139,10 +150,6 @@ export class PostgresDatabase implements LedgerDatabase {
         VALUES (${runId}, ${userId}, ${amount})
         ON CONFLICT (run_id) DO UPDATE SET amount = EXCLUDED.amount
       `;
-      await this.insertLedgerTransaction(
-        tx,
-        createReservationTransaction({ userId, amountCredits: amount, idempotencyKey, runId })
-      );
       this.processedIdempotencyKeys.add(idempotencyKey);
     });
   }
@@ -161,6 +168,16 @@ export class PostgresDatabase implements LedgerDatabase {
         SELECT available_credits, reserved_credits FROM wallets WHERE user_id = ${userId} FOR UPDATE
       `;
       if (!row) throw new PlatformError(PlatformErrorCodes.UNAUTHORIZED, "Wallet not found");
+
+      // Same gate as reserveCredits: the call that wins the idempotency key is
+      // the only one allowed to move reserved -> consumed. A concurrent replay
+      // no-ops here instead of failing on the reservation/wallet checks below.
+      const header = await this.insertLedgerTransaction(
+        tx,
+        createSettlementTransaction({ userId, amountCredits: amount, idempotencyKey, runId, providerCostCents })
+      );
+      if (!header) return;
+
       if (Number(row.reserved_credits) < amount) {
         throw new PlatformError(PlatformErrorCodes.PROVIDER_ERROR, "Invalid reservation settlement state");
       }
@@ -178,10 +195,6 @@ export class PostgresDatabase implements LedgerDatabase {
         WHERE user_id = ${userId}
       `;
       await tx`DELETE FROM reservations WHERE run_id = ${runId}`;
-      await this.insertLedgerTransaction(
-        tx,
-        createSettlementTransaction({ userId, amountCredits: amount, idempotencyKey, runId, providerCostCents })
-      );
       this.processedIdempotencyKeys.add(idempotencyKey);
     });
   }
@@ -197,6 +210,12 @@ export class PostgresDatabase implements LedgerDatabase {
         return; // Nothing to release
       }
 
+      const header = await this.insertLedgerTransaction(
+        tx,
+        createReleaseTransaction({ userId, amountCredits: amount, idempotencyKey, runId })
+      );
+      if (!header) return;
+
       await tx`
         UPDATE wallets
         SET reserved_credits = reserved_credits - ${amount},
@@ -205,10 +224,6 @@ export class PostgresDatabase implements LedgerDatabase {
         WHERE user_id = ${userId}
       `;
       await tx`DELETE FROM reservations WHERE run_id = ${runId}`;
-      await this.insertLedgerTransaction(
-        tx,
-        createReleaseTransaction({ userId, amountCredits: amount, idempotencyKey, runId })
-      );
       this.processedIdempotencyKeys.add(idempotencyKey);
     });
   }
@@ -242,16 +257,62 @@ export class PostgresDatabase implements LedgerDatabase {
         entries: transactionType === "REFUND" ? [walletEntry, clearingEntry] : [clearingEntry, walletEntry],
         metadata
       };
-      await this.insertLedgerTransaction(tx, transaction);
-      await tx`
-        INSERT INTO wallets (user_id, available_credits, reserved_credits, updated_at)
-        VALUES (${userId}, ${delta}, 0, now())
-        ON CONFLICT (user_id) DO UPDATE SET
-          available_credits = wallets.available_credits + EXCLUDED.available_credits,
-          updated_at = now()
-      `;
+
+      // Gate: only the call that wins the idempotency key mutates the wallet.
+      // A concurrent same-key replay returns here with the wallet untouched.
+      const header = await this.insertLedgerTransaction(tx, transaction);
+      if (!header) return;
+
+      if (transactionType === "REFUND") {
+        // REFUND debits an existing wallet; never create one, never go negative.
+        const [row] = await tx`
+          SELECT available_credits FROM wallets WHERE user_id = ${userId} FOR UPDATE
+        `;
+        if (!row) {
+          throw new PlatformError(PlatformErrorCodes.PROVIDER_ERROR, "Cannot refund: wallet not found");
+        }
+        if (Number(row.available_credits) < amount) {
+          throw new PlatformError(PlatformErrorCodes.INVALID_INPUT, "Cannot refund: insufficient balance");
+        }
+        await tx`
+          UPDATE wallets
+          SET available_credits = available_credits - ${amount},
+              updated_at = now()
+          WHERE user_id = ${userId}
+        `;
+      } else {
+        await tx`
+          INSERT INTO wallets (user_id, available_credits, reserved_credits, updated_at)
+          VALUES (${userId}, ${delta}, 0, now())
+          ON CONFLICT (user_id) DO UPDATE SET
+            available_credits = wallets.available_credits + EXCLUDED.available_credits,
+            updated_at = now()
+        `;
+      }
       this.processedIdempotencyKeys.add(idempotencyKey);
     });
+  }
+
+  async upsertActionRun(record: Record<string, any>): Promise<void> {
+    await this.sql`
+      INSERT INTO action_runs (
+        id, project_id, user_id, action_name, action_version, idempotency_key,
+        status, model, reserved_credits, consumed_credits, input_hash,
+        prompt_hash, cost_cents, created_at, completed_at
+      )
+      VALUES (
+        ${record.id}, ${record.projectId}, ${record.userId}, ${record.actionName}, ${record.actionVersion},
+        ${record.idempotencyKey}, ${record.status}, ${record.model}, ${record.reservedCredits ?? 0},
+        ${record.consumedCredits ?? 0}, ${record.inputHash ?? ""}, ${record.promptHash ?? ""},
+        ${record.costCents ?? null}, ${record.createdAt ? new Date(record.createdAt) : new Date()},
+        ${record.completedAt ? new Date(record.completedAt) : null}
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        status = EXCLUDED.status,
+        consumed_credits = EXCLUDED.consumed_credits,
+        cost_cents = EXCLUDED.cost_cents,
+        completed_at = EXCLUDED.completed_at
+    `;
   }
 
   async close(): Promise<void> {
@@ -260,11 +321,13 @@ export class PostgresDatabase implements LedgerDatabase {
 
   /**
    * Inserts a balanced ledger transaction (header + entries) inside the caller's
-   * transaction. `ON CONFLICT (idempotency_key) DO NOTHING` makes replays
-   * idempotent at the database level — the UNIQUE constraint is the concurrency
-   * guard when two gateways race on the same key.
+   * transaction and returns the inserted header row — or `null` when the
+   * `idempotency_key` already exists. `ON CONFLICT (idempotency_key) DO NOTHING`
+   * is the concurrency guard: exactly one of several racing gateways wins the
+   * key, and the caller must gate its wallet/reservation mutations on the
+   * returned header so a replay never double-mutates state.
    */
-  private async insertLedgerTransaction(tx: ISql, transaction: LedgerTransaction): Promise<void> {
+  private async insertLedgerTransaction(tx: ISql, transaction: LedgerTransaction): Promise<Record<string, unknown> | null> {
     validateDoubleEntryTransaction(transaction);
     const [header] = await tx`
       INSERT INTO ledger_transactions (idempotency_key, transaction_type, reference_id, metadata)
@@ -285,6 +348,7 @@ export class PostgresDatabase implements LedgerDatabase {
         `;
       }
     }
+    return header ?? null;
   }
 
   /** Refreshes the in-memory read caches from the database inside `tx`. */

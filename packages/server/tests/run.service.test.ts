@@ -297,3 +297,84 @@ describe("Action Runs Immutable Audit Record", () => {
     expect(runService.getRun("run_guard_cancelled")?.status).toBe("CANCELLED");
   });
 });
+
+describe("ActionRunService persistence (upsertActionRun)", () => {
+  // Minimal LedgerDatabase stub: subclass InMemoryDatabase and record every
+  // upsertActionRun call so we can assert persistence happens after mutations.
+  class RecordingLedgerDatabase extends InMemoryDatabase {
+    public upsertedRuns: any[] = [];
+
+    async upsertActionRun(record: Record<string, any>): Promise<void> {
+      this.upsertedRuns.push({ ...record });
+    }
+  }
+
+  it("invokes upsertActionRun after recordRunReservation, markRunning and markSucceeded", async () => {
+    const db = new RecordingLedgerDatabase();
+    const runService = new ActionRunService(db);
+
+    await runService.recordRunReservation({
+      runId: "run_persist_1",
+      projectId: "proj_1",
+      userId: "usr_1",
+      actionName: "persist-action",
+      actionVersion: 1,
+      model: "gpt-4o",
+      priceCredits: 10,
+      systemPrompt: "sys",
+      userPrompt: "user",
+      inputs: {},
+      idempotencyKey: "idem_persist_1"
+    });
+    expect(db.upsertedRuns).toHaveLength(1);
+    expect(db.upsertedRuns[0].status).toBe("RESERVED");
+
+    await runService.markRunning("run_persist_1");
+    expect(db.upsertedRuns).toHaveLength(2);
+    expect(db.upsertedRuns[1].status).toBe("RUNNING");
+
+    await runService.markSucceeded("run_persist_1", { consumedCredits: 10, costCents: 1.2 });
+    const last = db.upsertedRuns[db.upsertedRuns.length - 1];
+    expect(last.status).toBe("SUCCEEDED");
+    expect(last.consumedCredits).toBe(10);
+    expect(last.costCents).toBe(1.2);
+    expect(last.completedAt).toBeDefined();
+  });
+
+  it("invokes upsertActionRun on markFailed and markCancelled", async () => {
+    const db = new RecordingLedgerDatabase();
+    const runService = new ActionRunService(db);
+
+    await runService.recordRunReservation({
+      runId: "run_persist_fail",
+      projectId: "proj_1",
+      userId: "usr_1",
+      actionName: "persist-action",
+      actionVersion: 1,
+      model: "gpt-4o",
+      priceCredits: 10,
+      systemPrompt: "sys",
+      userPrompt: "user",
+      inputs: {},
+      idempotencyKey: "idem_persist_fail"
+    });
+    await runService.markFailed("run_persist_fail");
+    expect(db.upsertedRuns[db.upsertedRuns.length - 1].status).toBe("FAILED");
+
+    await runService.recordRunReservation({
+      runId: "run_persist_cancel",
+      projectId: "proj_1",
+      userId: "usr_1",
+      actionName: "persist-action",
+      actionVersion: 1,
+      model: "gpt-4o",
+      priceCredits: 10,
+      systemPrompt: "sys",
+      userPrompt: "user",
+      inputs: {},
+      idempotencyKey: "idem_persist_cancel"
+    });
+    await runService.markCancelled("run_persist_cancel");
+    expect(db.upsertedRuns[db.upsertedRuns.length - 1].status).toBe("CANCELLED");
+  });
+});
