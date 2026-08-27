@@ -59,6 +59,34 @@ export function createAuthRoutes(authService: AuthService) {
     }
   });
 
+  router.post("/otp/request", async (c) => {
+    try {
+      const body = await c.req.json();
+      const result = await authService.requestOtp({
+        email: String(body.email),
+        projectId: String(body.projectId)
+      });
+      return c.json(result);
+    } catch (err) {
+      return handleRouteError(err, c);
+    }
+  });
+
+  router.post("/otp/verify", async (c) => {
+    try {
+      const body = await c.req.json();
+      const result = await authService.verifyOtp({
+        email: String(body.email),
+        projectId: String(body.projectId),
+        code: String(body.code),
+        codeChallenge: String(body.codeChallenge)
+      });
+      return c.json(result);
+    } catch (err) {
+      return handleRouteError(err, c);
+    }
+  });
+
   router.post("/token", async (c) => {
     try {
       const body = await c.req.json();

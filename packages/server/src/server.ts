@@ -1,11 +1,13 @@
-import { Hono } from "hono";
+import { Hono, type MiddlewareHandler } from "hono";
 import { cors } from "hono/cors";
 import { InMemoryDatabase } from "./adapters/in-memory-db";
 import { PostgresDatabase } from "./adapters/postgres-real";
 import { LedgerDatabase } from "./adapters/database";
 import { LedgerService } from "./services/ledger.service";
 import { AuthService } from "./services/auth.service";
+import { ResendEmailTransport } from "./services/email-transport";
 import { DeveloperService } from "./services/developer.service";
+import { CorsPolicyService } from "./services/cors-policy";
 import { ActionRunService } from "./services/run.service";
 import { SlidingWindowRateLimiter } from "./services/rate-limiter";
 import { ActionExecutionService } from "./services/action.service";
@@ -27,6 +29,49 @@ import { createCheckoutRoutes } from "./routes/checkout.routes";
 const DEMO_JWT_SECRET = "demo-secret-key-32-chars-long-example!";
 const DEMO_WEBHOOK_SECRET = "whsec_demo_secret_123";
 
+/**
+ * Per-project CORS guard for browser-facing routes. Replaces the previous
+ * blanket `cors("*")`: the Origin header is validated against the resolved
+ * project's allowedDomains, and disallowed origins get a 403. Requests without
+ * an Origin header (server-to-server) are always allowed.
+ *
+ * projectId resolution: the `x-project-id` header wins when present; otherwise
+ * the origin is allowed if ANY registered project lists it (the SDK sends
+ * projectId only in the request body, and the dashboard authenticates with a
+ * secret key). For allowed origins the hono `cors` middleware still runs, so
+ * OPTIONS preflights and CORS response headers keep working.
+ *
+ * Trade-off: because the projectId is resolved per request, a preflight OPTIONS
+ * cannot always know the target project (the browser does not send the
+ * x-project-id header on preflights) — it relies on the any-project fallback.
+ */
+function browserCorsGuard(policy: CorsPolicyService): MiddlewareHandler {
+  return async (c, next) => {
+    const origin = c.req.header("Origin");
+
+    // Server-to-server / non-browser requests are always allowed.
+    if (!origin) {
+      return next();
+    }
+
+    const projectId = c.req.header("x-project-id");
+    const allowed = projectId
+      ? policy.isOriginAllowed(origin, projectId)
+      : policy.isOriginAllowedByAnyProject(origin);
+
+    if (!allowed) {
+      return c.json({ error: "Origin not allowed for this project" }, 403);
+    }
+
+    // Keep preflight handling and CORS header injection for the allowed origin.
+    return cors({
+      origin: () => origin,
+      allowHeaders: ["*"],
+      allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    })(c, next);
+  };
+}
+
 export async function createPlatformApp(options?: { forceMock?: boolean }) {
   // Database: PostgreSQL (Supabase) when DATABASE_URL is set, in-memory demo otherwise.
   const databaseUrl = process.env.DATABASE_URL;
@@ -39,8 +84,9 @@ export async function createPlatformApp(options?: { forceMock?: boolean }) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || DEMO_WEBHOOK_SECRET;
 
   const ledger = new LedgerService(db);
-  const authService = new AuthService(db, jwtSecret);
+  const authService = new AuthService(db, jwtSecret, new ResendEmailTransport());
   const devService = new DeveloperService(db);
+  const corsPolicy = new CorsPolicyService(devService);
   const runService = new ActionRunService(db);
   const rateLimiter = new SlidingWindowRateLimiter();
   const stripeService = new StripeBillingService(db, webhookSecret);
@@ -75,7 +121,13 @@ export async function createPlatformApp(options?: { forceMock?: boolean }) {
     projectId: "proj_demo",
     name: "AI Resume Optimizer Demo",
     publicKey: process.env.DEMO_PUBLIC_KEY || "pk_live_demo123",
-    secretKey: process.env.DEMO_SECRET_KEY || "sk_live_demo_secret_456"
+    secretKey: process.env.DEMO_SECRET_KEY || "sk_live_demo_secret_456",
+    allowedDomains: [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "http://localhost:5175",
+      "http://localhost:5176"
+    ]
   });
 
   // Pre-publish demo action version 1
@@ -108,11 +160,14 @@ export async function createPlatformApp(options?: { forceMock?: boolean }) {
   const app = new Hono();
 
   // Middleware
-  app.use("*", cors({
-    origin: "*",
-    allowHeaders: ["*"],
-    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-  }));
+  // Per-project CORS for browser-facing routes (actions, wallet, checkout,
+  // auth OTP, developer dashboard) instead of the former blanket cors("*").
+  const browserCors = browserCorsGuard(corsPolicy);
+  app.use("/v1/actions/*", browserCors);
+  app.use("/v1/wallet/*", browserCors);
+  app.use("/v1/stripe/checkout/*", browserCors);
+  app.use("/v1/auth/*", browserCors);
+  app.use("/v1/developer/*", browserCors);
   app.use("*", correlationMiddleware());
 
   // Mount API routes

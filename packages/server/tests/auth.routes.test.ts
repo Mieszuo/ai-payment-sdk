@@ -385,3 +385,67 @@ describe("PKCE Auth Routes", () => {
     expect(body.codeChallenge).toBe(challenge);
   });
 });
+
+describe("Email OTP Authentication", () => {
+  it("requests an OTP, verifies it, and exchanges the authorization code for a session", async () => {
+    const db = new InMemoryDatabase();
+    const auth = new AuthService(db, "test-secret-key-32-chars-long-example!");
+    const app = new Hono();
+    app.route("/v1/auth", createAuthRoutes(auth));
+
+    const reqRes = await app.request("/v1/auth/otp/request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: "alice@example.com", projectId: "proj_demo" })
+    });
+    expect(reqRes.status).toBe(200);
+
+    // The code was delivered via the (console) transport — grab it from the in-memory store
+    const otp = (auth as any).otps.get("alice@example.com:proj_demo").code;
+
+    const verifyRes = await app.request("/v1/auth/otp/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: "alice@example.com",
+        projectId: "proj_demo",
+        code: otp,
+        codeChallenge: "challenge_abc"
+      })
+    });
+    expect(verifyRes.status).toBe(200);
+    const { authorizationCode } = await verifyRes.json() as any;
+
+    const tokenRes = await app.request("/v1/auth/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        projectId: "proj_demo",
+        code: authorizationCode,
+        codeVerifier: "challenge_abc"
+      })
+    });
+    expect(tokenRes.status).toBe(200);
+    const body = await tokenRes.json() as any;
+    expect(body.sessionToken).toBeDefined();
+    expect(body.welcomeBonusGranted).toBe(true);
+  });
+
+  it("rejects a wrong OTP code", async () => {
+    const db = new InMemoryDatabase();
+    const auth = new AuthService(db, "test-secret-key-32-chars-long-example!");
+    const app = new Hono();
+    app.route("/v1/auth", createAuthRoutes(auth));
+    await app.request("/v1/auth/otp/request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: "bob@example.com", projectId: "proj_demo" })
+    });
+    const res = await app.request("/v1/auth/otp/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: "bob@example.com", projectId: "proj_demo", code: "000000", codeChallenge: "x" })
+    });
+    expect(res.status).toBe(401);
+  });
+});

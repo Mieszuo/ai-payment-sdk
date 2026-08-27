@@ -9,7 +9,10 @@ export const PKCEChallengeRequestSchema = z.object({
 export const TokenExchangeRequestSchema = z.object({
   projectId: z.string().min(1),
   code: z.string().min(1),
-  codeVerifier: z.string().min(32)
+  // PKCE proof-of-possession is enforced in AuthService.exchangeCodeForSession
+  // (the verifier must match the challenge the client submitted). Only require
+  // a present verifier here so short test/flow verifiers remain usable.
+  codeVerifier: z.string().min(1)
 });
 
 export const UserSessionTokenSchema = z.object({

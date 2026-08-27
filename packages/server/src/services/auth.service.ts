@@ -1,12 +1,18 @@
 import * as jose from "jose";
 import { PlatformError, PlatformErrorCodes, UserSessionToken, UserSessionTokenSchema } from "@platform/shared";
 import { LedgerDatabase } from "../adapters/database";
+import { ConsoleEmailTransport, type EmailTransport } from "./email-transport";
 
 export class AuthService {
   private codes = new Map<string, { userId: string; email: string; projectId: string; codeChallenge: string; expiresAt: number }>();
+  private otps = new Map<string, { code: string; expiresAt: number }>();
   private secret: Uint8Array;
 
-  constructor(private db: LedgerDatabase, secretString: string) {
+  constructor(
+    private db: LedgerDatabase,
+    secretString: string,
+    private emailTransport: EmailTransport = new ConsoleEmailTransport()
+  ) {
     this.secret = new TextEncoder().encode(secretString);
   }
 
@@ -28,6 +34,36 @@ export class AuthService {
       expiresAt: Date.now() + 60000 // 60s validity
     });
     return code;
+  }
+
+  async requestOtp(params: { email: string; projectId: string }): Promise<{ expiresInSeconds: number }> {
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    this.otps.set(`${params.email}:${params.projectId}`, {
+      code,
+      expiresAt: Date.now() + 10 * 60 * 1000
+    });
+    await this.emailTransport.send({ to: params.email, code });
+    return { expiresInSeconds: 600 };
+  }
+
+  async verifyOtp(params: {
+    email: string;
+    code: string;
+    projectId: string;
+    codeChallenge: string;
+  }): Promise<{ authorizationCode: string }> {
+    const entry = this.otps.get(`${params.email}:${params.projectId}`);
+    if (!entry || entry.code !== params.code || entry.expiresAt < Date.now()) {
+      throw new PlatformError(PlatformErrorCodes.UNAUTHORIZED, "Invalid or expired OTP code");
+    }
+    this.otps.delete(`${params.email}:${params.projectId}`);
+    const authorizationCode = await this.issueAuthorizationCode({
+      userId: `usr_${params.email.replace(/[^a-z0-9]/gi, "_").toLowerCase()}`,
+      email: params.email,
+      projectId: params.projectId,
+      codeChallenge: params.codeChallenge
+    });
+    return { authorizationCode };
   }
 
   async exchangeCodeForSession(params: { projectId: string; code: string; codeVerifier: string }) {

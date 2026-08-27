@@ -6,6 +6,8 @@ export interface ProjectRecord {
   name: string;
   publicKey: string;
   secretKey: string;
+  /** Browser origins allowed to call this project's routes (enforced by CorsPolicyService). */
+  allowedDomains?: string[];
 }
 
 export class DeveloperService {
@@ -110,5 +112,9 @@ export class DeveloperService {
 
   getProjectById(projectId: string): ProjectRecord | undefined {
     return this.projectsById.get(projectId);
+  }
+
+  getAllProjects(): ProjectRecord[] {
+    return [...this.projectsById.values()];
   }
 }
