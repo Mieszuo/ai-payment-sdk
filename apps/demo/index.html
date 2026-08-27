@@ -1,19 +1,57 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
 <head>
   <meta charset="UTF-8" />
-  <title>AI Resume Optimizer (Demo)</title>
+  <title>AI Resume Optimizer — Universal AI Wallet Demo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="/src/style.css" />
 </head>
 <body>
   <div id="app">
-    <h1>🎨 AI Resume Optimizer</h1>
-    <p>Zero-backend AI integration powered by Universal AI Wallet.</p>
-    <textarea id="cvInput" rows="6" placeholder="Wklej fragment swojego CV..."></textarea>
-    <br/>
-    <button id="optimizeBtn">Optymalizuj CV (15 ⚡)</button>
-    <pre id="output"></pre>
+    <header class="app-header">
+      <div>
+        <h1>🎨 AI Resume Optimizer</h1>
+        <p class="subtitle">Zero-backend AI integration powered by Universal AI Wallet</p>
+      </div>
+      <div class="wallet-badge" id="walletBadge">
+        <span class="badge-icon">⚡</span>
+        <span id="walletCredits">--</span> kredytów
+        <button id="topupModalBtn" class="small-btn">+ Doładuj</button>
+      </div>
+    </header>
+
+    <div class="card">
+      <label for="cvInput"><strong>Treść CV / Doświadczenia:</strong></label>
+      <textarea id="cvInput" rows="7" placeholder="Wklej fragment swojego CV (np. Senior Software Engineer z 6-letnim doświadczeniem w systemach rozproszonych i fintechu)...">Senior Software Engineer z 6-letnim doświadczeniem w architekturze mikrousług, projektowaniu rozproszonych systemów transakcyjnych i fintechu. Prowadziłem migrację monolitu do chmury redukując koszty infrastruktury o 35%.</textarea>
+      
+      <div class="actions-bar">
+        <button id="optimizeBtn" class="primary-btn">Optymalizuj CV (15 ⚡)</button>
+        <span class="cost-note">Koszt: 15 kredytów</span>
+      </div>
+    </div>
+
+    <div id="resultContainer" class="card result-card" style="display: none;">
+      <h3>📊 Wynik analizy AI:</h3>
+      <div id="ratingBadge" class="rating-badge"></div>
+      <h4>Rekomendowane podsumowanie:</h4>
+      <p id="optimizedSummary" class="summary-text"></p>
+      <h4>Mocne strony:</h4>
+      <ul id="strengthsList"></ul>
+      <h4>Sugestie ulepszeń:</h4>
+      <ul id="recommendationsList"></ul>
+    </div>
+
+    <div id="errorContainer" class="card error-card" style="display: none;">
+      <h3>⚠️ Komunikat:</h3>
+      <p id="errorMessage"></p>
+      <button id="quickTopupBtn" class="secondary-btn">Doładuj portfel ($5.00 → 550 ⚡)</button>
+    </div>
+
+    <!-- Output pre for test contract and raw fallback -->
+    <pre id="output" style="display: none;"></pre>
+
+    <!-- Web Component Modal Drawer -->
+    <ai-payment-widget id="paymentWidget" project="pk_live_demo123"></ai-payment-widget>
   </div>
   <script type="module" src="/src/main.ts"></script>
 </body>
