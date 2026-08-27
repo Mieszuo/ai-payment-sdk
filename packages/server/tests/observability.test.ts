@@ -226,4 +226,94 @@ describe("Correlation & Observability", () => {
     expect(expCorrelation).toBeDefined();
     expect(ExpLogger).toBeDefined();
   });
+
+  it("ensures x-request-id response header is retained when route throws an unhandled error", async () => {
+    const app = new Hono();
+    app.use("*", correlationMiddleware());
+    app.get("/error", () => {
+      throw new Error("Unhandled crash");
+    });
+
+    const res = await app.request("/error", {
+      headers: { "x-request-id": "req_err_trace" }
+    });
+
+    expect(res.status).toBe(500);
+    expect(res.headers.get("x-request-id")).toBe("req_err_trace");
+  });
+
+  it("caches newly generated correlation context on c when getCorrelationContext is called", async () => {
+    const app = new Hono();
+    app.get("/cache-check", (c) => {
+      const ctx1 = getCorrelationContext(c);
+      const ctx2 = getCorrelationContext(c);
+      return c.json({ ctx1Id: ctx1.requestId, ctx2Id: ctx2.requestId, same: ctx1 === ctx2 });
+    });
+
+    const res = await app.request("/cache-check");
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.same).toBe(true);
+    expect(body.ctx1Id).toBe(body.ctx2Id);
+  });
+
+  it("prevents meta fields from overwriting core log envelope fields", () => {
+    const logs: string[] = [];
+    const logger = new PlatformLogger({ sink: (msg) => logs.push(msg) });
+
+    logger.info("Real message", {
+      message: "Malicious override message",
+      level: "FATAL",
+      timestamp: "1970-01-01T00:00:00.000Z"
+    });
+
+    expect(logs).toHaveLength(1);
+    const parsed = JSON.parse(logs[0]);
+    expect(parsed.message).toBe("Real message");
+    expect(parsed.level).toBe("INFO");
+    expect(parsed.timestamp).not.toBe("1970-01-01T00:00:00.000Z");
+  });
+
+  it("serializes Error instances properly preserving message, name, and stack", () => {
+    const logs: string[] = [];
+    const logger = new PlatformLogger({ sink: (msg) => logs.push(msg) });
+
+    const err = new Error("Database connection failed");
+    err.name = "DatabaseError";
+
+    logger.error("Operation failed", { error: err });
+
+    expect(logs).toHaveLength(1);
+    const parsed = JSON.parse(logs[0]);
+    expect(parsed.error.message).toBe("Database connection failed");
+    expect(parsed.error.name).toBe("DatabaseError");
+    expect(parsed.error.stack).toBeDefined();
+  });
+
+  it("serializes Date instances and redacts credentials case-insensitively without infinite recursion on cycles", () => {
+    const logs: string[] = [];
+    const logger = new PlatformLogger({ sink: (msg) => logs.push(msg) });
+
+    const cyclicObj: Record<string, unknown> = {
+      now: new Date("2026-08-27T12:00:00Z"),
+      Authorization: "Bearer sensitive-token",
+      ApiKey: "secret-api-key",
+      password: "my-password",
+      TOKEN: "auth-token",
+      safe: "public-value"
+    };
+    cyclicObj.self = cyclicObj;
+
+    logger.info("Cycle test", cyclicObj);
+
+    expect(logs).toHaveLength(1);
+    const parsed = JSON.parse(logs[0]);
+    expect(parsed.now).toBe("2026-08-27T12:00:00.000Z");
+    expect(parsed.Authorization).toBe("[REDACTED]");
+    expect(parsed.ApiKey).toBe("[REDACTED]");
+    expect(parsed.password).toBe("[REDACTED]");
+    expect(parsed.TOKEN).toBe("[REDACTED]");
+    expect(parsed.safe).toBe("public-value");
+    expect(parsed.self).toBe("[CIRCULAR]");
+  });
 });

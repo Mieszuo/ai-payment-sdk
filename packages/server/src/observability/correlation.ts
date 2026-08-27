@@ -17,12 +17,20 @@ export function correlationMiddleware(): MiddlewareHandler {
     const context: CorrelationContext = existing || { requestId };
     c.set("correlation", context);
 
-    await next();
-
-    c.header("x-request-id", requestId);
+    try {
+      await next();
+    } finally {
+      c.header("x-request-id", requestId);
+    }
   };
 }
 
 export function getCorrelationContext(c: Context): CorrelationContext {
-  return (c.get("correlation") as CorrelationContext) || { requestId: `req_${crypto.randomUUID()}` };
+  const existing = c.get("correlation") as CorrelationContext | undefined;
+  if (existing) {
+    return existing;
+  }
+  const fallback: CorrelationContext = { requestId: `req_${crypto.randomUUID()}` };
+  c.set("correlation", fallback);
+  return fallback;
 }
