@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { AgentPlatform } from "../../types";
-import { X, Copy, Check, Bot, Terminal, FileCode, Sparkles } from "lucide-react";
+import { X, Copy, Check, Bot } from "lucide-react";
 
 export function generateAgentContext(platform: AgentPlatform, projectKey: string = "pk_live_demo123"): string {
   switch (platform) {

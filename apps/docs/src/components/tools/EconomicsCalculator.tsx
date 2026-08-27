@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { DollarSign, ShieldCheck } from "lucide-react";
+import { DollarSign } from "lucide-react";
 
 export function computeEconomics(priceCredits: number, providerCostDollars: number) {
   const revenueDollars = Number((priceCredits * 0.01).toFixed(4));

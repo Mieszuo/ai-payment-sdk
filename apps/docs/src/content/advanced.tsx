@@ -1,4 +1,3 @@
-import React from "react";
 import { DocArticle } from "../types";
 import { CodeSnippet } from "../components/common/CodeSnippet";
 

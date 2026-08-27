@@ -1,7 +1,4 @@
-import React from "react";
 import { DocArticle } from "../types";
-import { CodeSnippet } from "../components/common/CodeSnippet";
-import { Layers, ShieldCheck, Key, RefreshCw, Cpu, Lock, ArrowRight } from "lucide-react";
 
 export const conceptsArticles: DocArticle[] = [
   {

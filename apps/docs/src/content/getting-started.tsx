@@ -1,10 +1,9 @@
-import React from "react";
 import { DocArticle } from "../types";
 import { PackageManagerSwitcher } from "../components/common/PackageManagerSwitcher";
 import { CodeSnippet } from "../components/common/CodeSnippet";
 import { TryInBar } from "../components/ai/TryInBar";
 import { EconomicsCalculator } from "../components/tools/EconomicsCalculator";
-import { ShieldCheck, Zap, Key, ArrowRight, Cpu, CheckCircle2 } from "lucide-react";
+import { ShieldCheck, Zap, Cpu, CheckCircle2 } from "lucide-react";
 
 export const gettingStartedArticles: DocArticle[] = [
   {

@@ -2,8 +2,7 @@ import { describe, it, expect } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import React from "react";
 import { PackageManagerSwitcher, getInstallCommand } from "../src/components/common/PackageManagerSwitcher";
-import { CodeSnippet } from "../src/components/common/CodeSnippet";
-import { TryInModal, generateAgentContext } from "../src/components/ai/TryInModal";
+import { generateAgentContext } from "../src/components/ai/TryInModal";
 import { DocsProvider } from "../src/context/DocsContext";
 
 describe("Docs Core Interactive Components", () => {

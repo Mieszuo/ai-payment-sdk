@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import { ALL_SECTIONS, ALL_ARTICLES, getArticleById } from "../src/content";
+import { ALL_SECTIONS, getArticleById } from "../src/content";
 
 describe("Docs Content Reference Registry", () => {
   it("registers all 6 root navigation sections", () => {

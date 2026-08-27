@@ -2,7 +2,7 @@ import { describe, it, expect } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import React from "react";
 import { EconomicsCalculator, computeEconomics } from "../src/components/tools/EconomicsCalculator";
-import { ErrorCodeTable, ERROR_DEFINITIONS } from "../src/components/tools/ErrorCodeTable";
+import { ERROR_DEFINITIONS } from "../src/components/tools/ErrorCodeTable";
 
 describe("Docs Tools & Matrices", () => {
   it("calculates developer economics accurately", () => {

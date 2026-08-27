@@ -1,7 +1,7 @@
 import React from "react";
 import { useDocs } from "../../context/DocsContext";
 import { ALL_SECTIONS } from "../../content";
-import { BookOpen, ChevronRight, Layers, Cpu, Terminal, ShieldCheck, Zap } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 export const DocsSidebar: React.FC = () => {
   const { activeArticleId, setActiveArticleId } = useDocs();
