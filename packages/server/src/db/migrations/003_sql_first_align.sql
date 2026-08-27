@@ -14,6 +14,5 @@ ALTER TABLE ledger_entries
     ADD CONSTRAINT fk_ledger_entries_transaction
     FOREIGN KEY (transaction_id) REFERENCES ledger_transactions(id) ON DELETE CASCADE;
 
-ALTER TABLE action_runs
-    ADD CONSTRAINT fk_action_runs_project
-    FOREIGN KEY (project_id) REFERENCES projects(id);
+-- NOTE: fk_action_runs_project is reintroduced in migration 004 (Task 6:
+-- Developer Registry Persistence) once developer_projects rows are persisted.
