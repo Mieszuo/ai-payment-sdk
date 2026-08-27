@@ -259,4 +259,154 @@ describe("Developer Action Registry Management", () => {
     const nonExistent = devService.getLatestAction("proj_dev_1", "does-not-exist");
     expect(nonExistent).toBeNull();
   });
+
+  it("returns HTTP 400 when body is malformed JSON or missing required fields", async () => {
+    // Malformed JSON
+    const resMalformed = await app.request("/v1/developer/actions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer sk_live_secret_456"
+      },
+      body: "not-json"
+    });
+    expect(resMalformed.status).toBe(400);
+
+    // Missing actionName
+    const resNoName = await app.request("/v1/developer/actions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer sk_live_secret_456"
+      },
+      body: JSON.stringify({
+        model: "openai/gpt-4o",
+        priceCredits: 10
+      })
+    });
+    expect(resNoName.status).toBe(400);
+
+    // Missing model
+    const resNoModel = await app.request("/v1/developer/actions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer sk_live_secret_456"
+      },
+      body: JSON.stringify({
+        actionName: "test-act",
+        priceCredits: 10
+      })
+    });
+    expect(resNoModel.status).toBe(400);
+
+    // Missing priceCredits
+    const resNoCredits = await app.request("/v1/developer/actions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer sk_live_secret_456"
+      },
+      body: JSON.stringify({
+        actionName: "test-act",
+        model: "openai/gpt-4o"
+      })
+    });
+    expect(resNoCredits.status).toBe(400);
+  });
+
+  it("returns HTTP 400 when priceCredits is <= 0 or non-integer, or maxProviderCostCents is <= 0", async () => {
+    // priceCredits = 0
+    const resZero = await app.request("/v1/developer/actions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer sk_live_secret_456"
+      },
+      body: JSON.stringify({
+        actionName: "test-act",
+        model: "openai/gpt-4o",
+        priceCredits: 0
+      })
+    });
+    expect(resZero.status).toBe(400);
+
+    // priceCredits = -5
+    const resNeg = await app.request("/v1/developer/actions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer sk_live_secret_456"
+      },
+      body: JSON.stringify({
+        actionName: "test-act",
+        model: "openai/gpt-4o",
+        priceCredits: -5
+      })
+    });
+    expect(resNeg.status).toBe(400);
+
+    // priceCredits is float (non-integer)
+    const resFloat = await app.request("/v1/developer/actions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer sk_live_secret_456"
+      },
+      body: JSON.stringify({
+        actionName: "test-act",
+        model: "openai/gpt-4o",
+        priceCredits: 10.5
+      })
+    });
+    expect(resFloat.status).toBe(400);
+
+    // maxProviderCostCents <= 0
+    const resNegCost = await app.request("/v1/developer/actions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer sk_live_secret_456"
+      },
+      body: JSON.stringify({
+        actionName: "test-act",
+        model: "openai/gpt-4o",
+        priceCredits: 10,
+        maxProviderCostCents: -1
+      })
+    });
+    expect(resNegCost.status).toBe(400);
+  });
+
+  it("preserves fallbackModel and outputSchema in the published action version", async () => {
+    const res = await app.request("/v1/developer/actions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer sk_live_secret_456"
+      },
+      body: JSON.stringify({
+        actionName: "structured-extract",
+        model: "openai/gpt-4o",
+        fallbackModel: "openai/gpt-4o-mini",
+        priceCredits: 15,
+        outputSchema: {
+          type: "object",
+          properties: {
+            summary: { type: "string" }
+          }
+        }
+      })
+    });
+
+    expect(res.status).toBe(201);
+    const body = await res.json() as any;
+    expect(body.action.fallbackModel).toBe("openai/gpt-4o-mini");
+    expect(body.action.outputSchema).toEqual({
+      type: "object",
+      properties: {
+        summary: { type: "string" }
+      }
+    });
+  });
 });

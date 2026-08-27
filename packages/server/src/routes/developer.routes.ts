@@ -20,8 +20,13 @@ export function createDeveloperRoutes(devService: DeveloperService) {
       const correlation = getCorrelationContext(c);
       correlation.projectId = project.projectId;
 
-      const body = await c.req.json();
+      const body = await c.req.json().catch(() => null);
+      if (!body || typeof body !== "object") {
+        throw new PlatformError(PlatformErrorCodes.INVALID_INPUT, "Malformed or missing JSON request body");
+      }
+
       const action = devService.publishActionVersion(project.projectId, body);
+      correlation.actionName = action.actionName;
 
       return c.json({ action }, 201);
     } catch (err: any) {

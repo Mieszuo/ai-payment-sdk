@@ -36,6 +36,14 @@ export class DeveloperService {
       throw new PlatformError(PlatformErrorCodes.INVALID_INPUT, "Missing required action definition fields (actionName, model, priceCredits)");
     }
 
+    if (!Number.isInteger(input.priceCredits) || input.priceCredits <= 0) {
+      throw new PlatformError(PlatformErrorCodes.INVALID_INPUT, "priceCredits must be a positive integer");
+    }
+
+    if (input.maxProviderCostCents !== undefined && input.maxProviderCostCents <= 0) {
+      throw new PlatformError(PlatformErrorCodes.INVALID_INPUT, "maxProviderCostCents must be a positive number");
+    }
+
     const key = `${projectId}:${input.actionName}`;
     const existing = this.actionVersions.get(key) || [];
     const nextVersion = existing.length + 1;
@@ -45,6 +53,7 @@ export class DeveloperService {
       version: nextVersion,
       projectId,
       model: input.model,
+      fallbackModel: input.fallbackModel,
       priceCredits: input.priceCredits,
       maxProviderCostCents: input.maxProviderCostCents ?? 10,
       maxOutputTokens: input.maxOutputTokens ?? 1000,
@@ -52,6 +61,7 @@ export class DeveloperService {
       systemPrompt: input.systemPrompt ?? "",
       userPromptTemplate: input.userPromptTemplate ?? "",
       inputSchema: input.inputSchema ?? { type: "object" },
+      outputSchema: input.outputSchema,
       rateLimit: input.rateLimit ?? { maxRequests: 60, windowSeconds: 60 }
     };
 
