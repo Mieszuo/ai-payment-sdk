@@ -6,6 +6,17 @@ import { ActionRunService } from "./run.service";
 import { SlidingWindowRateLimiter } from "./rate-limiter";
 import { DeveloperService } from "./developer.service";
 
+/**
+ * Structural rate-limiter contract shared by the in-memory
+ * `SlidingWindowRateLimiter` (sync) and the Redis-backed
+ * `RedisRateLimiter` (async). `checkLimit` may return either a
+ * boolean or a Promise<boolean>.
+ */
+export interface RateLimiter {
+  checkLimit(key: string, maxRequests: number, windowSeconds: number): boolean | Promise<boolean>;
+  getResetSeconds(key: string, windowSeconds: number): number;
+}
+
 export interface ActionExecutionParams {
   actionName: string;
   projectId: string;
@@ -25,14 +36,14 @@ export class ActionExecutionService {
   private actionMap = new Map<string, ActionVersion>();
   private devService?: DeveloperService;
   private runService?: ActionRunService;
-  private rateLimiter?: SlidingWindowRateLimiter;
+  private rateLimiter?: RateLimiter;
 
   constructor(
     private ledger: LedgerService,
     private modelProvider: ModelProvider,
     actions: ActionVersion[] | DeveloperService,
-    runServiceOrLimiter?: ActionRunService | SlidingWindowRateLimiter,
-    rateLimiter?: SlidingWindowRateLimiter
+    runServiceOrLimiter?: ActionRunService | RateLimiter,
+    rateLimiter?: RateLimiter
   ) {
     if (Array.isArray(actions)) {
       actions.forEach((a) => this.actionMap.set(`${a.projectId}:${a.actionName}`, a));
@@ -41,7 +52,7 @@ export class ActionExecutionService {
     }
 
     if (runServiceOrLimiter instanceof SlidingWindowRateLimiter || (runServiceOrLimiter && "checkLimit" in runServiceOrLimiter)) {
-      this.rateLimiter = runServiceOrLimiter as SlidingWindowRateLimiter;
+      this.rateLimiter = runServiceOrLimiter as RateLimiter;
       this.runService = undefined;
     } else {
       this.runService = runServiceOrLimiter as ActionRunService | undefined;
@@ -68,7 +79,7 @@ export class ActionExecutionService {
 
     if (this.rateLimiter && action.rateLimit) {
       const rateLimitKey = `${params.userId}:${action.projectId}:${action.actionName}`;
-      const allowed = this.rateLimiter.checkLimit(
+      const allowed = await this.rateLimiter.checkLimit(
         rateLimitKey,
         action.rateLimit.maxRequests,
         action.rateLimit.windowSeconds

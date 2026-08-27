@@ -1,8 +1,9 @@
 import { describe, it, expect } from "bun:test";
 import { Hono } from "hono";
-import { AuthService } from "../src/services/auth.service";
+import { AuthService, MAX_OTP_ATTEMPTS } from "../src/services/auth.service";
 import { createAuthRoutes } from "../src/routes/auth.routes";
 import { InMemoryDatabase } from "../src/adapters/in-memory-db";
+import { ResendEmailTransport } from "../src/services/email-transport";
 import { PlatformError, PlatformErrorCodes } from "@platform/shared";
 import * as jose from "jose";
 
@@ -474,5 +475,116 @@ describe("Email OTP Authentication", () => {
       })
     });
     expect(res.status).toBe(400);
+  });
+
+  it("invalidates the OTP entry after wrong attempts — the correct code fails on the attempt after MAX_OTP_ATTEMPTS", async () => {
+    const db = new InMemoryDatabase();
+    const auth = new AuthService(db, "test-secret-key-32-chars-long-example!");
+    const app = new Hono();
+    app.route("/v1/auth", createAuthRoutes(auth));
+
+    await app.request("/v1/auth/otp/request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: "dave@example.com", projectId: "proj_demo" })
+    });
+
+    const entry = (auth as any).otps.get("dave@example.com:proj_demo");
+    const correctCode = entry.code;
+    const pkce = "abcdef1234567890abcdef1234567890abcdef1234567890";
+
+    // MAX_OTP_ATTEMPTS wrong codes → each rejected with 401
+    for (let i = 0; i < MAX_OTP_ATTEMPTS; i++) {
+      const res = await app.request("/v1/auth/otp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: "dave@example.com",
+          projectId: "proj_demo",
+          code: "000000",
+          codeChallenge: pkce
+        })
+      });
+      expect(res.status).toBe(401);
+    }
+
+    // Entry invalidated → even the correct code now fails
+    expect((auth as any).otps.has("dave@example.com:proj_demo")).toBe(false);
+    const sixth = await app.request("/v1/auth/otp/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: "dave@example.com",
+        projectId: "proj_demo",
+        code: correctCode,
+        codeChallenge: pkce
+      })
+    });
+    expect(sixth.status).toBe(401);
+  });
+
+  it("throttles a duplicate OTP request within the 10-minute window with 429 RATE_LIMITED", async () => {
+    const db = new InMemoryDatabase();
+    const auth = new AuthService(db, "test-secret-key-32-chars-long-example!");
+    const app = new Hono();
+    app.route("/v1/auth", createAuthRoutes(auth));
+
+    const first = await app.request("/v1/auth/otp/request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: "erin@example.com", projectId: "proj_demo" })
+    });
+    expect(first.status).toBe(200);
+
+    const second = await app.request("/v1/auth/otp/request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: "erin@example.com", projectId: "proj_demo" })
+    });
+    expect(second.status).toBe(429);
+    const body = await second.json() as any;
+    expect(body.code).toBe(PlatformErrorCodes.RATE_LIMITED);
+  });
+
+  it("generates a 6-digit numeric OTP code", async () => {
+    const db = new InMemoryDatabase();
+    const auth = new AuthService(db, "test-secret-key-32-chars-long-example!");
+    const app = new Hono();
+    app.route("/v1/auth", createAuthRoutes(auth));
+
+    await app.request("/v1/auth/otp/request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: "frank@example.com", projectId: "proj_demo" })
+    });
+    const code = (auth as any).otps.get("frank@example.com:proj_demo").code;
+    expect(code).toMatch(/^\d{6}$/);
+  });
+
+  it("Resend fallback logs only a warning without leaking the OTP code or recipient email", async () => {
+    const savedKey = process.env.RESEND_API_KEY;
+    const savedFrom = process.env.RESEND_FROM;
+    delete process.env.RESEND_API_KEY;
+
+    const transport = new ResendEmailTransport();
+    const logs: string[] = [];
+    const originalWarn = console.warn;
+    const originalLog = console.log;
+    console.warn = (msg: any) => { logs.push(String(msg)); };
+    console.log = (msg: any) => { logs.push(String(msg)); };
+
+    try {
+      await transport.send({ to: "pii@example.com", code: "987654" });
+    } finally {
+      console.warn = originalWarn;
+      console.log = originalLog;
+      if (savedKey !== undefined) process.env.RESEND_API_KEY = savedKey;
+      if (savedFrom !== undefined) process.env.RESEND_FROM = savedFrom;
+    }
+
+    const joined = logs.join("\n");
+    expect(joined).toContain("RESEND_API_KEY not set");
+    expect(joined).not.toContain("987654");
+    expect(joined).not.toContain("pii@example.com");
   });
 });

@@ -24,6 +24,10 @@ are never committed. See `.env.example` for the canonical list:
 | `GEMINI_API_KEY`     | optional | Enables the real Gemini model provider (fallback to OpenAI).   |
 | `STRIPE_SECRET_KEY`  | optional | Real Stripe Checkout sessions (otherwise demo webhook mode).   |
 | `STRIPE_WEBHOOK_SECRET` | optional | Verifies Stripe webhook signatures.                         |
+| `REDIS_URL`          | optional | Upstash REST endpoint for shared rate limiting.                |
+| `REDIS_TOKEN`        | optional | Upstash REST token (used with `REDIS_URL`).                    |
+| `RESEND_API_KEY`     | optional | Enables real OTP email delivery; without it the fallback only logs a PII-safe warning (never the code). |
+| `RESEND_FROM`        | optional | OTP sender address (default `no-reply@example.com`).           |
 | `PORT`               | no       | Listen port (default `3000`).                                  |
 
 \* `DATABASE_URL`/`JWT_SECRET` have demo fallbacks baked into the code, but a
@@ -182,3 +186,31 @@ VITE_GATEWAY_URL=https://ai-payment-gateway.fly.dev bun run demo
   immediately.
 - **Rolling back:** `fly deploy --image <previous-image>` or
   `fly releases` / `fly release rollback`.
+
+---
+
+## 7. Monitoring & Ops
+
+- **Structured logs:** the gateway emits newline-delimited JSON to stdout with
+  `request_id` / `run_id` / `action_name` correlation fields, and the logger
+  redacts PII (emails, OTP codes, raw prompts) before anything reaches the log
+  stream. Wire a log drain that tails stdout — Fly log shipping (`fly logs`
+  / Logtail), Betterstack, or Grafana Loki — and alert on error-level entries
+  or elevated 429/5xx rates.
+- **Retention cleanup:** completed `action_runs` and stale `reservations`
+  accumulate in Postgres and should be purged on a schedule. The image bundles
+  `scripts/cleanup.ts`, so run `bun run cleanup -- --days=30` nightly — via Fly
+  machines cron (`fly m run --schedule daily` executing the cleanup command
+  against the app environment) or a GitHub Actions cron that runs the same
+  command against the production `DATABASE_URL`. The script is guarded: it
+  exits unless `DATABASE_URL` is set.
+- **Shared rate limiting:** set `REDIS_URL` + `REDIS_TOKEN` (Upstash REST) so
+  every gateway instance shares one rate-limit counter. Without them the
+  server falls back to the per-process `SlidingWindowRateLimiter` — fine for
+  a single machine, ineffective across replicas. `GET /` (the health check)
+  and the boot banner report which limiter is active (`redis` vs
+  `in-memory`).
+- **Point-in-time recovery of the ledger:** the ledger is an append-only
+  Postgres double-entry log. Enable Supabase's managed continuous backups so
+  it can be recovered to any point in time, and periodically test a restore
+  into a scratch project to prove the recovery path.

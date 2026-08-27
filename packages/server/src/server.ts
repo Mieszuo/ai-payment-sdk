@@ -10,6 +10,7 @@ import { DeveloperService } from "./services/developer.service";
 import { CorsPolicyService } from "./services/cors-policy";
 import { ActionRunService } from "./services/run.service";
 import { SlidingWindowRateLimiter } from "./services/rate-limiter";
+import { RedisRateLimiter } from "./services/redis-rate-limiter";
 import { ActionExecutionService } from "./services/action.service";
 import { StripeBillingService } from "./services/stripe.service";
 import { MockModelProvider } from "./adapters/model-provider";
@@ -88,7 +89,11 @@ export async function createPlatformApp(options?: { forceMock?: boolean }) {
   const devService = new DeveloperService(db);
   const corsPolicy = new CorsPolicyService(devService);
   const runService = new ActionRunService(db);
-  const rateLimiter = new SlidingWindowRateLimiter();
+  // Rate limiter: shared Redis (Upstash REST) when REDIS_URL is set,
+  // otherwise the per-process sliding-window limiter (demo mode).
+  const rateLimiter = process.env.REDIS_URL
+    ? new RedisRateLimiter({ url: process.env.REDIS_URL, token: process.env.REDIS_TOKEN })
+    : new SlidingWindowRateLimiter();
   const stripeService = new StripeBillingService(db, webhookSecret);
   const logger = new PlatformLogger();
 
@@ -184,6 +189,7 @@ export async function createPlatformApp(options?: { forceMock?: boolean }) {
     service: "AI Payment Gateway & Managed Actions Engine",
     version: "1.0.0",
     database: databaseUrl ? "postgres" : "in-memory",
+    rateLimiter: process.env.REDIS_URL ? "redis" : "in-memory",
     endpoints: {
       auth: "/v1/auth/token",
       actions: "/v1/actions/:name/execute",
@@ -202,6 +208,7 @@ if (import.meta.main) {
   const { app } = await createPlatformApp();
   console.log(`\n[Server] AI Payment Platform Gateway running at http://localhost:${port}`);
   console.log(`   - Database: ${process.env.DATABASE_URL ? "PostgreSQL (Supabase)" : "in-memory (demo)"}`);
+  console.log(`   - Rate limiter: ${process.env.REDIS_URL ? "Redis (Upstash)" : "in-memory (sliding window)"}`);
   console.log(`   - Model provider: ${process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY ? "real (OpenAI/Gemini)" : "mock (set OPENAI_API_KEY or GEMINI_API_KEY)"}`);
   console.log(`   - Public Key:  ${process.env.DEMO_PUBLIC_KEY || "pk_live_demo123"}`);
   console.log(`   - Secret Key:  ${process.env.DEMO_SECRET_KEY || "sk_live_demo_secret_456"}`);
