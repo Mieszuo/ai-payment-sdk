@@ -3,7 +3,7 @@ import { generatePKCE } from "../packages/sdk/src/pkce";
 
 async function main() {
   console.log("==========================================================");
-  console.log("⚡ AI PAYMENT PLATFORM & MANAGED ACTIONS — LIVE PLAYGROUND");
+  console.log("AI PAYMENT PLATFORM & MANAGED ACTIONS — LIVE PLAYGROUND");
   console.log("==========================================================\n");
 
   const isReal = process.env.REAL_AI === "true";
@@ -11,13 +11,13 @@ async function main() {
     forceMock: !isReal
   });
   if (isReal) {
-    console.log("🔥 Running with REAL AI provider from environment!");
+    console.log("[Mode] Running with REAL AI provider from environment!");
   } else {
-    console.log("⚡ Running in self-contained offline mode (Set REAL_AI=true to use live OpenAI/Gemini)\n");
+    console.log("[Mode] Running in self-contained offline mode (Set REAL_AI=true to use live OpenAI/Gemini)\n");
   }
 
   // --- Step 1: Developer Registers & Publishes Managed Action ---
-  console.log("👉 [1/6] DEVELOPER PUBLISHES MANAGED ACTION");
+  console.log("[1/6] DEVELOPER PUBLISHES MANAGED ACTION");
   console.log("   Developer uses Secret Key: sk_live_demo_secret_456");
 
   const devRes = await app.request("/v1/developer/actions", {
@@ -37,8 +37,8 @@ async function main() {
     })
   });
   const devBody = await devRes.json() as any;
-  console.log(`   ✅ Published action '${devBody.action.actionName}' version ${devBody.action.version}`);
-  console.log(`      Price: ${devBody.action.priceCredits} ⚡ | Model: ${devBody.action.model}`);
+  console.log(`   [Success] Published action '${devBody.action.actionName}' version ${devBody.action.version}`);
+  console.log(`      Price: ${devBody.action.priceCredits} credits | Model: ${devBody.action.model}`);
 
   // Test that public key CANNOT modify actions
   const hackRes = await app.request("/v1/developer/actions", {
@@ -49,10 +49,10 @@ async function main() {
     },
     body: JSON.stringify({ actionName: "hacked", priceCredits: 1, model: "gpt" })
   });
-  console.log(`   🛡️  Public key (pk_live_...) rejected on developer endpoint: HTTP ${hackRes.status}`);
+  console.log(`   [Security] Public key (pk_live_...) rejected on developer endpoint: HTTP ${hackRes.status}`);
 
   // --- Step 2: User Browser PKCE Authentication ---
-  console.log("\n👉 [2/6] USER AUTHENTICATION (PKCE S256 + 20⚡ WELCOME BONUS)");
+  console.log("\n[2/6] USER AUTHENTICATION (PKCE S256 + 20 CREDITS WELCOME BONUS)");
   const pkce = await generatePKCE();
   console.log(`   Generated PKCE code_challenge: ${pkce.challenge.slice(0, 16)}...`);
 
@@ -74,15 +74,15 @@ async function main() {
   });
   const tokenData = await tokenRes.json() as any;
   const userToken = tokenData.sessionToken;
-  console.log(`   ✅ Exchanged auth code for session JWT token`);
-  console.log(`   🎁 Welcome bonus granted: ${tokenData.welcomeBonusGranted}`);
+  console.log(`   [Success] Exchanged auth code for session JWT token`);
+  console.log(`   [Welcome Bonus] Granted: ${tokenData.welcomeBonusGranted}`);
 
   let wallet = await ledger.getWallet("usr_alice");
-  console.log(`   💰 Initial Alice Wallet Balance: ${wallet.availableCredits} ⚡`);
+  console.log(`   [Wallet] Initial Alice Balance: ${wallet.availableCredits} credits`);
 
   // --- Step 3: Execute Managed Action ---
-  console.log("\n👉 [3/6] EXECUTE MANAGED ACTION (Zero-Backend Client Call)");
-  console.log("   Alice calls POST /v1/actions/optimize-resume/execute (Costs 15 ⚡)");
+  console.log("\n[3/6] EXECUTE MANAGED ACTION (Zero-Backend Client Call)");
+  console.log("   Alice calls POST /v1/actions/optimize-resume/execute (Costs 15 credits)");
 
   const execRes = await app.request("/v1/actions/optimize-resume/execute", {
     method: "POST",
@@ -98,26 +98,26 @@ async function main() {
 
   const execData = await execRes.json() as any;
   console.log(`   HTTP Status: ${execRes.status} | Request ID: ${execRes.headers.get("x-request-id")}`);
-  console.log(`   🤖 Structured Output Received:`);
+  console.log(`   [Output] Structured Result Received:`);
   console.log(`      Rating: ${execData.output.rating}/10`);
   console.log(`      Summary: "${execData.output.optimizedSummary.slice(0, 80)}..."`);
 
   wallet = await ledger.getWallet("usr_alice");
-  console.log(`   💰 New Alice Wallet Balance: ${wallet.availableCredits} ⚡ (15 ⚡ deducted)`);
+  console.log(`   [Wallet] New Alice Balance: ${wallet.availableCredits} credits (15 credits deducted)`);
 
   // --- Step 4: Cryptographic Audit in action_runs ---
-  console.log("\n👉 [4/6] CRYPTOGRAPHIC AUDIT RECORD IN action_runs");
+  console.log("\n[4/6] AUDIT RECORD IN action_runs");
   const runs = (db as any).actionRuns as Map<string, any>;
   const lastRun = Array.from(runs.values())[0];
   console.log(`   Run ID:        ${lastRun.id}`);
   console.log(`   Status:        ${lastRun.status}`);
   console.log(`   Prompt Hash:   ${lastRun.promptHash.slice(0, 24)}... (SHA-256)`);
   console.log(`   Input Hash:    ${lastRun.inputHash.slice(0, 24)}... (SHA-256)`);
-  console.log(`   Model & Price: ${lastRun.model} @ ${lastRun.reservedCredits} ⚡`);
+  console.log(`   Model & Price: ${lastRun.model} @ ${lastRun.reservedCredits} credits`);
 
   // --- Step 5: Insufficient Credits / Rate Limiting Protection ---
-  console.log("\n👉 [5/6] INSUFFICIENT CREDITS PROTECTION");
-  console.log("   Alice attempts to run action again (Requires 15 ⚡, but Alice only has 5 ⚡)");
+  console.log("\n[5/6] INSUFFICIENT CREDITS PROTECTION");
+  console.log("   Alice attempts to run action again (Requires 15 credits, but Alice only has 5 credits)");
 
   const failRes = await app.request("/v1/actions/optimize-resume/execute", {
     method: "POST",
@@ -130,11 +130,11 @@ async function main() {
     })
   });
   const failData = await failRes.json() as any;
-  console.log(`   🛡️  Blocked: HTTP ${failRes.status} ${failData.code}`);
+  console.log(`   [Security Block] HTTP ${failRes.status} ${failData.code}`);
   console.log(`      Message: "${failData.error}"`);
 
   // --- Step 6: Top-Up via Stripe Webhook ---
-  console.log("\n👉 [6/6] STRIPE SECURE TOP-UP ($5.00 -> 550 ⚡)");
+  console.log("\n[6/6] STRIPE SECURE TOP-UP ($5.00 -> 550 credits)");
   console.log("   Simulating Stripe webhook event: checkout.session.completed");
 
   const stripePayload = JSON.stringify({
@@ -170,7 +170,7 @@ async function main() {
   console.log(`   Stripe Webhook Response: HTTP ${topupRes.status}`);
 
   wallet = await ledger.getWallet("usr_alice");
-  console.log(`   🎉 FINAL ALICE WALLET BALANCE: ${wallet.availableCredits} ⚡ (5 + 550 = 555 ⚡)`);
+  console.log(`   [Wallet] Final Alice Balance: ${wallet.availableCredits} credits (5 + 550 = 555 credits)`);
 
   // Ledger Invariant Verification
   for (const tx of db.transactions.values()) {
@@ -178,9 +178,9 @@ async function main() {
     for (const e of tx.entries) sum += e.amountCredits;
     if (sum !== 0) throw new Error("Ledger imbalance!");
   }
-  console.log(`   🏛️  Double-entry ledger invariant verified: All ${db.transactions.size} transactions strictly balance to 0 (∑ = 0).`);
+  console.log(`   [Ledger] Double-entry invariant verified: All ${db.transactions.size} transactions balance to 0 (sum = 0).`);
   console.log("\n==========================================================");
-  console.log("✨ ALL PRODUCTION CHECKS VERIFIED SUCCESSFULLY!");
+  console.log("ALL CHECKS VERIFIED SUCCESSFULLY");
   console.log("==========================================================\n");
 }
 

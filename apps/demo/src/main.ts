@@ -40,13 +40,13 @@ updateBalance();
 
 btn?.addEventListener("click", async () => {
   btn.disabled = true;
-  btn.innerText = "⏳ AI analizuje profil...";
+  btn.innerText = "AI analizuje profil...";
   resultContainer.style.display = "none";
   errorContainer.style.display = "none";
 
   try {
     if (localBalance < 15) {
-      throw new Error("Niewystarczająca liczba kredytów: dostępne " + localBalance + ", wymagane 15 ⚡");
+      throw new Error("Niewystarczająca liczba kredytów: dostępne " + localBalance + ", wymagane 15 kredytów");
     }
 
     // Call Managed Action: optimize-resume
@@ -63,12 +63,12 @@ btn?.addEventListener("click", async () => {
     strengthsList.innerHTML = (data.strengths ?? [
       "Wyraźne podkreślenie wymiernych rezultatów biznesowych",
       "Doświadczenie w architekturze wysokiej dostępności"
-    ]).map((s: string) => `<li>✅ ${s}</li>`).join("");
+    ]).map((s: string) => `<li>+ ${s}</li>`).join("");
 
     recommendationsList.innerHTML = (data.recommendations ?? [
       "Warto dodać konkretne metryki dotyczące redukcji opóźnień",
       "Rozwiń opis doświadczenia z chmurą"
-    ]).map((r: string) => `<li>💡 ${r}</li>`).join("");
+    ]).map((r: string) => `<li>* ${r}</li>`).join("");
 
     resultContainer.style.display = "block";
 
@@ -80,7 +80,7 @@ btn?.addEventListener("click", async () => {
     errorMessage.innerText = err.message || "Wystąpił błąd podczas optymalizacji CV.";
   } finally {
     btn.disabled = false;
-    btn.innerText = "Optymalizuj CV (15 ⚡)";
+    btn.innerText = "Optymalizuj CV (15 kredytów)";
   }
 });
 
@@ -88,7 +88,7 @@ function handleTopup() {
   localBalance += 550;
   walletCredits.innerText = String(localBalance);
   errorContainer.style.display = "none";
-  alert("🎉 Doładowano portfel o 550 ⚡ (Pakiet Popular $5.00). Nowe saldo: " + localBalance + " ⚡");
+  alert("Doładowano portfel o 550 kredytów (Pakiet Popular $5.00). Nowe saldo: " + localBalance + " kredytów");
 }
 
 topupModalBtn?.addEventListener("click", handleTopup);

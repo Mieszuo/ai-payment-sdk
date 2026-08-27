@@ -113,7 +113,7 @@ export const PlaygroundView: React.FC = () => {
             >
               {actions.map((a) => (
                 <option key={a.actionName} value={a.actionName}>
-                  {a.actionName} (v{a.version} • {a.priceCredits} ⚡)
+                  {a.actionName} (v{a.version} • {a.priceCredits} credits)
                 </option>
               ))}
             </select>

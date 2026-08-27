@@ -10,11 +10,11 @@
   <div id="app">
     <header class="app-header">
       <div>
-        <h1>🎨 AI Resume Optimizer</h1>
+        <h1>AI Resume Optimizer</h1>
         <p class="subtitle">Zero-backend AI integration powered by Universal AI Wallet</p>
       </div>
       <div class="wallet-badge" id="walletBadge">
-        <span class="badge-icon">⚡</span>
+        <span class="badge-icon">Portfel:</span>
         <span id="walletCredits">--</span> kredytów
         <button id="topupModalBtn" class="small-btn">+ Doładuj</button>
       </div>
@@ -25,13 +25,13 @@
       <textarea id="cvInput" rows="7" placeholder="Wklej fragment swojego CV (np. Senior Software Engineer z 6-letnim doświadczeniem w systemach rozproszonych i fintechu)...">Senior Software Engineer z 6-letnim doświadczeniem w architekturze mikrousług, projektowaniu rozproszonych systemów transakcyjnych i fintechu. Prowadziłem migrację monolitu do chmury redukując koszty infrastruktury o 35%.</textarea>
       
       <div class="actions-bar">
-        <button id="optimizeBtn" class="primary-btn">Optymalizuj CV (15 ⚡)</button>
+        <button id="optimizeBtn" class="primary-btn">Optymalizuj CV (15 kredytów)</button>
         <span class="cost-note">Koszt: 15 kredytów</span>
       </div>
     </div>
 
     <div id="resultContainer" class="card result-card" style="display: none;">
-      <h3>📊 Wynik analizy AI:</h3>
+      <h3>Wynik analizy AI:</h3>
       <div id="ratingBadge" class="rating-badge"></div>
       <h4>Rekomendowane podsumowanie:</h4>
       <p id="optimizedSummary" class="summary-text"></p>
@@ -42,9 +42,9 @@
     </div>
 
     <div id="errorContainer" class="card error-card" style="display: none;">
-      <h3>⚠️ Komunikat:</h3>
+      <h3>Komunikat:</h3>
       <p id="errorMessage"></p>
-      <button id="quickTopupBtn" class="secondary-btn">Doładuj portfel ($5.00 → 550 ⚡)</button>
+      <button id="quickTopupBtn" class="secondary-btn">Doładuj portfel ($5.00 → 550 kredytów)</button>
     </div>
 
     <!-- Output pre for test contract and raw fallback -->

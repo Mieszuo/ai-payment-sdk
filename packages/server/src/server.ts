@@ -120,10 +120,10 @@ export function createPlatformApp(options?: { forceMock?: boolean }) {
 if (import.meta.main) {
   const port = Number(process.env.PORT || 3000);
   const { app } = createPlatformApp();
-  console.log(`\n🚀 AI Payment Platform Gateway running at http://localhost:${port}`);
+  console.log(`\n[Server] AI Payment Platform Gateway running at http://localhost:${port}`);
   console.log(`   - Public Key:  pk_live_demo123`);
   console.log(`   - Secret Key:  sk_live_demo_secret_456`);
-  console.log(`   - Demo Action: optimize-resume (15 ⚡)\n`);
+  console.log(`   - Demo Action: optimize-resume (15 credits)\n`);
 
   Bun.serve({
     fetch: app.fetch,

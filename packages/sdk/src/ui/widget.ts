@@ -30,7 +30,7 @@ export class AIPaymentWidget extends BaseElement {
         <div class="modal-overlay" style="display: none;">
           <div class="card">
             <h3>Universal AI Wallet</h3>
-            <p>Zaloguj się, aby otrzymać ⚡ 20 darmowych kredytów.</p>
+            <p>Zaloguj się, aby otrzymać 20 darmowych kredytów.</p>
             <button class="btn-primary">Kontynuuj z Google</button>
           </div>
         </div>

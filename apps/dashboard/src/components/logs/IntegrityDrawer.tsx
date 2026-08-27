@@ -101,7 +101,7 @@ export const IntegrityDrawer: React.FC<IntegrityDrawerProps> = ({ log, isOpen, o
               </div>
               <div>
                 <span className="text-zinc-500 text-[11px] block">Reserved Credits</span>
-                <span className="font-mono font-medium text-amber-400">⚡ {log.reservedCredits}</span>
+                <span className="font-mono font-medium text-amber-400">{log.reservedCredits} credits</span>
               </div>
               <div>
                 <span className="text-zinc-500 text-[11px] block">Provider Cost</span>

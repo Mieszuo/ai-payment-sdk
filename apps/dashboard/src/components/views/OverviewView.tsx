@@ -75,7 +75,7 @@ console.log(result.output);`;
         />
         <MetricCard
           title="Credits Consumed"
-          value={`⚡ ${telemetry.creditsConsumed.toLocaleString()}`}
+          value={`${telemetry.creditsConsumed.toLocaleString()} credits`}
           subtitle="Total platform energy"
           icon={<Zap className="w-4 h-4 text-amber-400" />}
         />
@@ -131,7 +131,7 @@ console.log(result.output);`;
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">
-                    <span className="text-xs font-semibold text-amber-400 mono-code">{action.priceCredits} ⚡</span>
+                    <span className="text-xs font-semibold text-amber-400 mono-code">{action.priceCredits} credits</span>
                     <p className="text-[10px] text-zinc-500">Max ${ (action.maxProviderCostCents / 100).toFixed(2) }</p>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">

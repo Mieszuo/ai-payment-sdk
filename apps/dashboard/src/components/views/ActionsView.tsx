@@ -91,7 +91,7 @@ export const ActionsView: React.FC = () => {
                 <div className="grid grid-cols-3 gap-2 py-2 border-t border-zinc-800/80 text-[11px]">
                   <div>
                     <span className="text-zinc-500 block">Price</span>
-                    <span className="text-amber-400 font-semibold mono-code">{action.priceCredits} ⚡</span>
+                    <span className="text-amber-400 font-semibold mono-code">{action.priceCredits} credits</span>
                   </div>
                   <div>
                     <span className="text-zinc-500 block">Max Cost</span>
