@@ -10,7 +10,8 @@
     "typecheck": "tsc --build",
     "server": "bun run packages/server/src/server.ts",
     "playground": "bun run scripts/playground.ts",
-    "demo": "bun --filter demo-app dev"
+    "demo": "bun --filter demo-app dev",
+    "dashboard": "bun --filter dashboard dev"
   },
   "devDependencies": {
     "@types/bun": "^1.4.0",
