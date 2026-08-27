@@ -40,10 +40,13 @@ export const HeroSection: React.FC = () => {
 
         {/* Main Title */}
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1]">
-          <span className="gradient-text">Monetize AI Features in</span>{" "}
-          <span className="text-white">3 Lines of Code.</span>
+          <span className="gradient-text">Zero API keys.</span>
           <br />
-          <span className="text-zinc-400 text-2xl sm:text-3xl lg:text-4xl font-bold mt-2 block">Zero Backend Required.</span>
+          <span className="text-white">No financial str</span>
+          <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">AI</span>
+          <span className="text-white">n.</span>
+          <br />
+          <span className="text-zinc-400 text-2xl sm:text-3xl lg:text-4xl font-bold mt-2 block">Monetize AI features in 3 lines of code.</span>
         </h1>
 
         {/* Subtitle */}

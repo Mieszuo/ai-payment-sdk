@@ -6,6 +6,7 @@
     "apps/*"
   ],
   "scripts": {
+    "dev": "bun run scripts/dev.ts",
     "test": "bun test",
     "typecheck": "tsc --build",
     "server": "bun run packages/server/src/server.ts",

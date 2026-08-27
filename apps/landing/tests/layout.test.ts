@@ -8,8 +8,8 @@ describe("Landing Page Full Layout", () => {
     const html = renderToStaticMarkup(React.createElement(App));
 
     expect(html).toContain("AI Payment Platform");
-    expect(html).toContain("3 Lines of Code");
-    expect(html).toContain("bun add @platform/sdk");
+    expect(html).toContain("No financial str");
+    expect(html).toContain("3 lines of code");
     expect(html).toContain("Monthly Profit Calculator");
     expect(html).toContain("How It Works");
     expect(html).toContain("Zero-Trust Prompts");
