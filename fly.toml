@@ -1,0 +1,36 @@
+# AI Payment Platform — Gateway (Fly.io)
+#
+# Secrets are NEVER committed here — they are injected at deploy time via
+# `fly secrets set` and reach the container as environment variables only.
+# The image does not read any .env file.
+#
+# Required secrets (see .env.example for the full contract):
+#   fly secrets set DATABASE_URL=... JWT_SECRET=... OPENAI_API_KEY=...
+#   fly secrets set GEMINI_API_KEY=... STRIPE_SECRET_KEY=... STRIPE_WEBHOOK_SECRET=...
+#
+# JWT_SECRET must be at least 32 characters. DATABASE_URL points at a
+# Supabase Postgres instance (cloud or self-hosted).
+
+app = "ai-payment-gateway"
+primary_region = "waw"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "3000"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.checks]
+    [http_service.checks.health]
+      interval = "10s"
+      timeout = "3s"
+      grace_period = "10s"
+      method = "GET"
+      path = "/"

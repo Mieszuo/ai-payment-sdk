@@ -1,0 +1,20 @@
+# Keep the Docker build context small and free of host-only artifacts.
+# The deps stage re-installs dependencies inside the image from bun.lock —
+# host node_modules must never reach the container (bun 1.3 creates per-package
+# node_modules dirs with absolute-path links that would break the image).
+
+node_modules
+**/node_modules
+.bun
+
+.git
+.superpowers
+.worktrees
+
+.env
+.env.*
+!.env.example
+
+*.tsbuildinfo
+dist
+*.log

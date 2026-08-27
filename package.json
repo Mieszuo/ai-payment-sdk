@@ -15,6 +15,7 @@
     "db:down": "docker compose down",
     "db:reset": "docker compose down -v && docker compose up -d db",
     "db:migrate": "bun --env-file=.env run scripts/migrate.ts",
+    "db:migrate:prod": "bun run scripts/migrate.ts",
     "demo": "bun --filter demo-app dev",
     "dashboard": "bun --filter dashboard dev",
     "docs": "bun --filter docs dev",
