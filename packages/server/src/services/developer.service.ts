@@ -17,9 +17,30 @@ export class DeveloperService {
 
   constructor(private db: LedgerDatabase) {}
 
-  registerProject(project: ProjectRecord) {
+  /**
+   * Hydrates the in-memory registry from the database adapter. The in-memory
+   * adapter returns empty state (demo mode: the registry is per-instance); the
+   * Postgres adapter loads every persisted project and action version so
+   * published actions survive gateway restarts.
+   */
+  async init(): Promise<void> {
+    const state = await this.db.loadDeveloperState();
+    for (const project of state.projects) {
+      this.projectsBySecret.set(project.secretKey, project);
+      this.projectsById.set(project.projectId, project);
+    }
+    for (const version of state.versions) {
+      const key = `${version.projectId}:${version.actionName}`;
+      const existing = this.actionVersions.get(key) || [];
+      existing.push(version);
+      this.actionVersions.set(key, existing);
+    }
+  }
+
+  async registerProject(project: ProjectRecord): Promise<void> {
     this.projectsBySecret.set(project.secretKey, project);
     this.projectsById.set(project.projectId, project);
+    await this.db.upsertDeveloperProject(project);
   }
 
   verifySecret(secretKey: string): ProjectRecord {
@@ -33,7 +54,7 @@ export class DeveloperService {
     return project;
   }
 
-  publishActionVersion(projectId: string, input: Partial<ActionVersion> & { actionName: string; model: string; priceCredits: number }): ActionVersion {
+  async publishActionVersion(projectId: string, input: Partial<ActionVersion> & { actionName: string; model: string; priceCredits: number }): Promise<ActionVersion> {
     if (!input || !input.actionName || !input.model || typeof input.priceCredits !== "number") {
       throw new PlatformError(PlatformErrorCodes.INVALID_INPUT, "Missing required action definition fields (actionName, model, priceCredits)");
     }
@@ -69,6 +90,7 @@ export class DeveloperService {
 
     existing.push(version);
     this.actionVersions.set(key, existing);
+    await this.db.upsertActionVersion(version);
     return version;
   }
 
@@ -93,7 +115,7 @@ export class DeveloperService {
     return latestActions;
   }
 
-  rotateSecretKey(projectId: string): { newSecretKey: string; masked: string } {
+  async rotateSecretKey(projectId: string): Promise<{ newSecretKey: string; masked: string }> {
     const project = this.projectsById.get(projectId);
     if (!project) {
       throw new PlatformError(PlatformErrorCodes.ACTION_NOT_FOUND, "Project not found");
@@ -103,6 +125,9 @@ export class DeveloperService {
     const newSecretKey = `sk_live_${Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, "0")).join("")}`;
     project.secretKey = newSecretKey;
     this.projectsBySecret.set(newSecretKey, project);
+
+    // Write the rotated key through so a gateway restart keeps the new secret.
+    await this.db.upsertDeveloperProject(project);
 
     return {
       newSecretKey,

@@ -1,4 +1,5 @@
-import { LedgerTransaction } from "@platform/shared";
+import { ActionVersion, LedgerTransaction } from "@platform/shared";
+import type { ProjectRecord } from "../services/developer.service";
 
 /**
  * The storage surface every service depends on. Both the in-memory demo
@@ -55,4 +56,14 @@ export interface LedgerDatabase {
    * upserts into `action_runs`.
    */
   upsertActionRun(record: Record<string, any>): Promise<void>;
+
+  /**
+   * Developer registry persistence (Task 6). The in-memory database keeps the
+   * registry per-instance (demo mode) — load returns empty state and upserts are
+   * no-ops; the Postgres adapter reads/writes `developer_projects` and
+   * `developer_action_versions` so published actions survive gateway restarts.
+   */
+  loadDeveloperState(): Promise<{ projects: ProjectRecord[]; versions: ActionVersion[] }>;
+  upsertDeveloperProject(project: ProjectRecord): Promise<void>;
+  upsertActionVersion(version: ActionVersion): Promise<void>;
 }

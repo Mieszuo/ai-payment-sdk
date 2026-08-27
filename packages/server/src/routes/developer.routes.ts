@@ -56,7 +56,7 @@ export function createDeveloperRoutes(
         throw new PlatformError(PlatformErrorCodes.INVALID_INPUT, "Malformed or missing JSON request body");
       }
 
-      const action = devService.publishActionVersion(project.projectId, body);
+      const action = await devService.publishActionVersion(project.projectId, body);
       correlation.actionName = action.actionName;
 
       return c.json({ action }, 201);
@@ -215,7 +215,7 @@ export function createDeveloperRoutes(
       const correlation = getCorrelationContext(c);
       correlation.projectId = project.projectId;
 
-      const result = devService.rotateSecretKey(project.projectId);
+      const result = await devService.rotateSecretKey(project.projectId);
       return c.json(result, 200);
     } catch (err: any) {
       if (err instanceof PlatformError) {

@@ -14,7 +14,7 @@ describe("browserCorsGuard (server.ts per-project CORS)", () => {
   beforeAll(async () => {
     platform = await createPlatformApp({ forceMock: true });
     // A second project with its own allowlist, distinct from the seeded proj_demo.
-    platform.devService.registerProject({
+    await platform.devService.registerProject({
       projectId: "proj_guarded",
       name: "Guarded Project",
       publicKey: "pk_live_guarded",

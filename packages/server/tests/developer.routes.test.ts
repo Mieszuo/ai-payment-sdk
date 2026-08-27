@@ -10,18 +10,18 @@ describe("Developer Action Registry Management", () => {
   let devService: DeveloperService;
   let app: Hono;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     db = new InMemoryDatabase();
     devService = new DeveloperService(db);
     // Seed project with public key and developer secret
-    devService.registerProject({
+    await devService.registerProject({
       projectId: "proj_dev_1",
       name: "Resume App",
       publicKey: "pk_live_123",
       secretKey: "sk_live_secret_456"
     });
 
-    devService.registerProject({
+    await devService.registerProject({
       projectId: "proj_dev_2",
       name: "Doc App",
       publicKey: "pk_live_789",
@@ -494,5 +494,36 @@ describe("Developer Action Registry Management", () => {
       }
     });
     expect(newRes.status).toBe(200);
+  });
+});
+
+describe("Developer Registry Persistence", () => {
+  it("registers projects and publishes versions with write-through; versioning increments per instance", async () => {
+    const db = new InMemoryDatabase();
+    const dev = new DeveloperService(db);
+    await dev.init();
+
+    await dev.registerProject({
+      projectId: "proj_p",
+      name: "P",
+      publicKey: "pk_live_p",
+      secretKey: "sk_live_p"
+    });
+
+    const v1 = await dev.publishActionVersion("proj_p", { actionName: "a", model: "mock", priceCredits: 5 });
+    expect(v1.version).toBe(1);
+
+    // Versioning increments across publishes within the same instance.
+    const v2 = await dev.publishActionVersion("proj_p", { actionName: "a", model: "mock", priceCredits: 6 });
+    expect(v2.version).toBe(2);
+    expect(dev.getActionVersions("proj_p", "a")).toHaveLength(2);
+
+    // A second service instance hydrating the same store sees no versions: the
+    // in-memory registry is intentionally per-instance in demo mode (write-through
+    // to the in-memory adapter stores nothing). The REAL persistence assertions
+    // live in postgres-real.integration.test.ts (skipped without DATABASE_URL).
+    const dev2 = new DeveloperService(new InMemoryDatabase());
+    await dev2.init();
+    expect(dev2.getActionVersions("proj_p", "a")).toHaveLength(0);
   });
 });

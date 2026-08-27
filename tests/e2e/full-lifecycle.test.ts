@@ -128,7 +128,7 @@ describe("E2E Full Platform Lifecycle", () => {
     const stripeService = new StripeBillingService(db, webhookSecret);
 
     // Register project with developer secret and public key
-    devService.registerProject({
+    await devService.registerProject({
       projectId: "proj_hardened",
       name: "Hardened Security App",
       publicKey: "pk_live_hardened_abc",

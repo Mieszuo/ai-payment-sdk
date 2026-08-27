@@ -208,4 +208,18 @@ export class InMemoryDatabase implements LedgerDatabase {
     // No-op: `actionRuns` already holds the authoritative record (ActionRunService
     // shares this map as its working state), so there is nothing to persist.
   }
+
+  async loadDeveloperState(): Promise<{ projects: any[]; versions: any[] }> {
+    // The developer registry is per-instance in demo mode: DeveloperService keeps
+    // the authoritative in-memory maps, so there is nothing to hydrate.
+    return { projects: [], versions: [] };
+  }
+
+  async upsertDeveloperProject(_project: any): Promise<void> {
+    // No-op: registry state lives in DeveloperService's maps (demo mode).
+  }
+
+  async upsertActionVersion(_version: any): Promise<void> {
+    // No-op: registry state lives in DeveloperService's maps (demo mode).
+  }
 }

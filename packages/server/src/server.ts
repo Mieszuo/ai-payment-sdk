@@ -87,6 +87,10 @@ export async function createPlatformApp(options?: { forceMock?: boolean }) {
   const ledger = new LedgerService(db);
   const authService = new AuthService(db, jwtSecret, new ResendEmailTransport());
   const devService = new DeveloperService(db);
+  // Hydrate the developer registry BEFORE demo seeding: on Postgres this loads
+  // persisted projects/action versions (published actions survive restarts); on
+  // in-memory it is a no-op. The demo seeding below then write-throughs upserts.
+  await devService.init();
   const corsPolicy = new CorsPolicyService(devService);
   const runService = new ActionRunService(db);
   // Rate limiter: shared Redis (Upstash REST) when REDIS_URL is set,
@@ -122,7 +126,7 @@ export async function createPlatformApp(options?: { forceMock?: boolean }) {
   }
 
   // Pre-seed demo project (idempotent; real projects are registered via the API)
-  devService.registerProject({
+  await devService.registerProject({
     projectId: "proj_demo",
     name: "AI Resume Optimizer Demo",
     publicKey: process.env.DEMO_PUBLIC_KEY || "pk_live_demo123",
@@ -136,7 +140,7 @@ export async function createPlatformApp(options?: { forceMock?: boolean }) {
   });
 
   // Pre-publish demo action version 1
-  devService.publishActionVersion("proj_demo", {
+  await devService.publishActionVersion("proj_demo", {
     actionName: "optimize-resume",
     model: process.env.OPENAI_API_KEY ? "gpt-4o-mini" : "mock-model",
     priceCredits: 15,

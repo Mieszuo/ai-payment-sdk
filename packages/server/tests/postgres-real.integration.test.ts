@@ -23,6 +23,15 @@ describeDb("PostgresDatabase SQL-first persistence", () => {
 
     db = new PostgresDatabase({ url: DATABASE_URL!, max: 1 });
     await db.init();
+    // Migration 004 enforces action_runs.project_id -> developer_projects(project_id),
+    // so the run-audit fixtures below need the project row in the persisted
+    // developer registry (upsertDeveloperProject is write-through).
+    await db.upsertDeveloperProject({
+      projectId: "it_proj_1",
+      name: "Integration Test Project",
+      publicKey: "pk_it_proj_1",
+      secretKey: "sk_it_proj_1"
+    });
     // Fresh wallet for the test
     await db.runInTransaction(async () => {
       db.seedWallet("it_usr_1", 20);
@@ -139,5 +148,13 @@ describeDb("PostgresDatabase SQL-first persistence", () => {
     } finally {
       await db2.close();
     }
+  });
+
+  it("persists developer registry across instances (Postgres mode)", async () => {
+    await db.upsertDeveloperProject({ projectId: "it_proj", name: "P", publicKey: "pk_live_it", secretKey: "sk_live_it" });
+    await db.upsertActionVersion({ actionName: "a", version: 1, projectId: "it_proj", model: "mock", priceCredits: 5, maxProviderCostCents: 10, maxOutputTokens: 1000, outputFormat: "json", systemPrompt: "", userPromptTemplate: "", inputSchema: {}, rateLimit: { maxRequests: 10, windowSeconds: 60 } });
+    const state = await db.loadDeveloperState();
+    expect(state.projects.some((p) => p.projectId === "it_proj")).toBe(true);
+    expect(state.versions.some((v) => v.projectId === "it_proj" && v.actionName === "a")).toBe(true);
   });
 });

@@ -1,5 +1,5 @@
 import postgres, { Sql, ISql, TransactionSql } from "postgres";
-import { PlatformError, PlatformErrorCodes, LedgerTransaction, formatAccountIdentifier } from "@platform/shared";
+import { PlatformError, PlatformErrorCodes, LedgerTransaction, ActionVersion, formatAccountIdentifier } from "@platform/shared";
 import {
   validateDoubleEntryTransaction,
   createReservationTransaction,
@@ -7,6 +7,20 @@ import {
   createReleaseTransaction
 } from "@platform/core";
 import { LedgerDatabase, ReservationRecord, WalletRecord } from "./database";
+import type { ProjectRecord } from "../services/developer.service";
+
+/**
+ * Coerces a JSONB-bound value into something postgres.js can serialize safely.
+ * `undefined`/`null` become `{}` (the migration default); a Zod schema instance
+ * (never valid JSON state) is replaced with `{}` instead of being stringified
+ * blindly; plain objects pass through as-is. Returns `any` because the whole
+ * point is coercion into postgres.js's `JSONValue` for `sql.json()`.
+ */
+function toJsonbValue(value: unknown): any {
+  if (value === undefined || value === null) return {};
+  if (typeof value === "object" && typeof (value as { safeParse?: unknown })?.safeParse === "function") return {};
+  return value;
+}
 
 export interface PostgresDatabaseOptions {
   url: string;
@@ -313,6 +327,91 @@ export class PostgresDatabase implements LedgerDatabase {
         cost_cents = EXCLUDED.cost_cents,
         completed_at = EXCLUDED.completed_at
     `;
+  }
+
+  async upsertDeveloperProject(project: ProjectRecord): Promise<void> {
+    await this.sql`
+      INSERT INTO developer_projects (project_id, name, public_key, secret_key, allowed_domains)
+      VALUES (
+        ${project.projectId}, ${project.name}, ${project.publicKey}, ${project.secretKey},
+        ${project.allowedDomains ?? []}
+      )
+      ON CONFLICT (project_id) DO UPDATE SET
+        name = EXCLUDED.name,
+        public_key = EXCLUDED.public_key,
+        secret_key = EXCLUDED.secret_key,
+        allowed_domains = EXCLUDED.allowed_domains
+    `;
+  }
+
+  async upsertActionVersion(version: ActionVersion): Promise<void> {
+    await this.sql`
+      INSERT INTO developer_action_versions (
+        project_id, action_name, version, model, price_credits,
+        max_provider_cost_cents, max_output_tokens, output_format,
+        system_prompt, user_prompt_template, input_schema, rate_limit
+      )
+      VALUES (
+        ${version.projectId}, ${version.actionName}, ${version.version}, ${version.model}, ${version.priceCredits},
+        ${version.maxProviderCostCents}, ${version.maxOutputTokens}, ${version.outputFormat},
+        ${version.systemPrompt}, ${version.userPromptTemplate},
+        ${this.sql.json(toJsonbValue(version.inputSchema))},
+        ${this.sql.json(toJsonbValue(version.rateLimit))}
+      )
+      ON CONFLICT (project_id, action_name, version) DO UPDATE SET
+        model = EXCLUDED.model,
+        price_credits = EXCLUDED.price_credits,
+        max_provider_cost_cents = EXCLUDED.max_provider_cost_cents,
+        max_output_tokens = EXCLUDED.max_output_tokens,
+        output_format = EXCLUDED.output_format,
+        system_prompt = EXCLUDED.system_prompt,
+        user_prompt_template = EXCLUDED.user_prompt_template,
+        input_schema = EXCLUDED.input_schema,
+        rate_limit = EXCLUDED.rate_limit
+    `;
+  }
+
+  async loadDeveloperState(): Promise<{ projects: ProjectRecord[]; versions: ActionVersion[] }> {
+    const projectRows = await this.sql`
+      SELECT project_id, name, public_key, secret_key, allowed_domains
+      FROM developer_projects
+      ORDER BY created_at ASC
+    `;
+    const versionRows = await this.sql`
+      SELECT project_id, action_name, version, model, price_credits,
+             max_provider_cost_cents, max_output_tokens, output_format,
+             system_prompt, user_prompt_template, input_schema, rate_limit
+      FROM developer_action_versions
+      ORDER BY project_id, action_name, version ASC
+    `;
+
+    const projects: ProjectRecord[] = projectRows.map((r: any) => ({
+      projectId: r.project_id,
+      name: r.name,
+      publicKey: r.public_key,
+      secretKey: r.secret_key,
+      allowedDomains: r.allowed_domains ?? []
+    }));
+
+    const versions: ActionVersion[] = versionRows.map((r: any) => ({
+      actionName: r.action_name,
+      version: r.version,
+      projectId: r.project_id,
+      model: r.model,
+      priceCredits: Number(r.price_credits),
+      maxProviderCostCents: Number(r.max_provider_cost_cents),
+      maxOutputTokens: Number(r.max_output_tokens),
+      outputFormat: r.output_format,
+      systemPrompt: r.system_prompt,
+      userPromptTemplate: r.user_prompt_template,
+      inputSchema: r.input_schema ?? {},
+      rateLimit:
+        r.rate_limit && Object.keys(r.rate_limit).length > 0
+          ? r.rate_limit
+          : { maxRequests: 10, windowSeconds: 3600 }
+    }));
+
+    return { projects, versions };
   }
 
   async close(): Promise<void> {
