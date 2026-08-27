@@ -21,6 +21,9 @@ interface DashboardContextValue {
   setActiveProjectId: (id: string) => void;
   activeTab: DashboardTab;
   setActiveTab: (tab: DashboardTab) => void;
+  selectedActionName: string | null;
+  setSelectedActionName: (name: string | null) => void;
+  openInPlayground: (actionName: string) => void;
   actions: ActionItem[];
   logs: AuditLogEvent[];
   telemetry: FinancialTelemetry;
@@ -29,6 +32,8 @@ interface DashboardContextValue {
   refreshData: () => Promise<void>;
   publishAction: (payload: Partial<ActionItem>) => Promise<ActionItem>;
   rotateSecretKey: () => Promise<{ newSecretKey: string }>;
+  addAllowedDomain: (domain: string) => void;
+  removeAllowedDomain: (domain: string) => void;
 }
 
 const defaultTelemetry: FinancialTelemetry = {
@@ -76,6 +81,7 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [projects] = useState<ProjectConfig[]>([defaultProject]);
   const [activeProjectId, setActiveProjectId] = useState<string>("proj_demo");
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
+  const [selectedActionName, setSelectedActionName] = useState<string | null>("optimize-resume");
   const [actions, setActions] = useState<ActionItem[]>(defaultActions);
   const [logs, setLogs] = useState<AuditLogEvent[]>([]);
   const [telemetry, setTelemetry] = useState<FinancialTelemetry>(defaultTelemetry);
@@ -87,6 +93,23 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({ children 
   const setMode = (newMode: RuntimeMode) => {
     setModeState(newMode);
     api.setMode(newMode);
+    refreshData();
+  };
+
+  const openInPlayground = (actionName: string) => {
+    setSelectedActionName(actionName);
+    setActiveTab("playground");
+  };
+
+  const addAllowedDomain = (domain: string) => {
+    const trimmed = domain.trim();
+    if (!trimmed || activeProject.allowedDomains.includes(trimmed)) return;
+    activeProject.allowedDomains.push(trimmed);
+    refreshData();
+  };
+
+  const removeAllowedDomain = (domain: string) => {
+    activeProject.allowedDomains = activeProject.allowedDomains.filter((d) => d !== domain);
     refreshData();
   };
 
@@ -143,6 +166,9 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({ children 
         setActiveProjectId,
         activeTab,
         setActiveTab,
+        selectedActionName,
+        setSelectedActionName,
+        openInPlayground,
         actions,
         logs,
         telemetry,
@@ -150,7 +176,9 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({ children 
         error,
         refreshData,
         publishAction,
-        rotateSecretKey
+        rotateSecretKey,
+        addAllowedDomain,
+        removeAllowedDomain
       }}
     >
       {children}

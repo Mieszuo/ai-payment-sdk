@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useDashboard } from "../../context/DashboardContext";
 import { extractTemplateVariables } from "../../lib/parser";
 import { validateDryRun, DryRunValidator } from "../playground/DryRunValidator";
@@ -18,9 +18,9 @@ import {
 } from "lucide-react";
 
 export const PlaygroundView: React.FC = () => {
-  const { actions, activeProject, api } = useDashboard();
-  const [selectedActionName, setSelectedActionName] = useState<string>(
-    actions[0]?.actionName || "optimize-resume"
+  const { actions, activeProject, api, selectedActionName: contextActionName, setSelectedActionName: setContextActionName } = useDashboard();
+  const [selectedActionName, setSelectedActionNameState] = useState<string>(
+    contextActionName || actions[0]?.actionName || "optimize-resume"
   );
   const [executionMode, setExecutionMode] = useState<"Mock" | "Live">("Mock");
   const [inputs, setInputs] = useState<Record<string, string>>({
@@ -31,11 +31,38 @@ export const PlaygroundView: React.FC = () => {
   const [result, setResult] = useState<ExecutionResult | null>(null);
   const [copiedResponse, setCopiedResponse] = useState(false);
 
+  useEffect(() => {
+    if (contextActionName && contextActionName !== selectedActionName) {
+      setSelectedActionNameState(contextActionName);
+    }
+  }, [contextActionName]);
+
   const currentAction = actions.find((a) => a.actionName === selectedActionName) || actions[0];
 
   const requiredVariables = useMemo(() => {
     return currentAction ? extractTemplateVariables(currentAction.userPromptTemplate) : [];
   }, [currentAction]);
+
+  useEffect(() => {
+    if (requiredVariables.length > 0) {
+      setInputs((prev) => {
+        const next: Record<string, string> = { ...prev };
+        for (const v of requiredVariables) {
+          if (!next[v]) {
+            next[v] = v.toLowerCase().includes("cv") || v.toLowerCase().includes("doc")
+              ? "Sample input text for evaluation"
+              : `Sample ${v}`;
+          }
+        }
+        return next;
+      });
+    }
+  }, [currentAction]);
+
+  const setSelectedActionName = (name: string) => {
+    setSelectedActionNameState(name);
+    setContextActionName?.(name);
+  };
 
   const dryRunResult = useMemo(() => {
     return validateDryRun({

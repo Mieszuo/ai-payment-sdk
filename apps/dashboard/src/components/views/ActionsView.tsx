@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 export const ActionsView: React.FC = () => {
-  const { actions, publishAction, activeProject, setActiveTab } = useDashboard();
+  const { actions, publishAction, activeProject, openInPlayground } = useDashboard();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<ActionItem | null>(null);
 
@@ -119,7 +119,7 @@ export const ActionsView: React.FC = () => {
                     <Edit3 className="w-3.5 h-3.5" />
                   </button>
                   <button
-                    onClick={() => setActiveTab("playground")}
+                    onClick={() => openInPlayground(action.actionName)}
                     className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[11px] text-zinc-200 font-medium transition-colors"
                   >
                     <Terminal className="w-3 h-3 text-blue-400" />
