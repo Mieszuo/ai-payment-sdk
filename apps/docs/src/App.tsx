@@ -23,7 +23,7 @@ const DocsShell: React.FC = () => {
 
       <footer className="border-t border-zinc-900 py-6 text-center text-xs text-zinc-500 mt-12">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>AI Payment Platform • Developer Documentation</span>
+          <span>AI Credits • Developer Documentation</span>
           <span className="font-mono text-[11px] text-zinc-600">Built with Bun, React 19 &amp; Tailwind v4</span>
         </div>
       </footer>

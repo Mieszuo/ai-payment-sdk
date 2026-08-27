@@ -9,7 +9,7 @@ export const ArchitectureComparison: React.FC = () => {
           <Code2 className="w-3.5 h-3.5" />
           Before vs After
         </span>
-        <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight mt-3">Traditional Stack vs AI Payment Platform</h2>
+        <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight mt-3">Traditional Stack vs AI Credits</h2>
         <p className="text-sm text-zinc-400 mt-2 max-w-xl mx-auto">
           Replace hundreds of lines of billing infrastructure with 3 lines of frontend code.
         </p>
@@ -50,7 +50,7 @@ app.post("/api/ai/execute", async (req, res) => {
         {/* After */}
         <div className="glass-panel p-5 border-emerald-500/20 bg-emerald-950/5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-zinc-200">AI Payment Platform</h3>
+            <h3 className="text-sm font-semibold text-zinc-200">AI Credits</h3>
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">3 lines</span>
           </div>
           <pre className="font-mono text-[11px] text-emerald-300 leading-relaxed overflow-x-auto whitespace-pre">{`import { createAI } from "@ai-credits/sdk";

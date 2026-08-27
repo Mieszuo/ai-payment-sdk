@@ -35,7 +35,7 @@ const pad = (s: string, n: number) => s.padEnd(n);
 const maxName = Math.max(...services.map((s) => s.name.length));
 
 console.log("");
-console.log("  AI Payment Platform — Development Server");
+console.log("  AI Credits — Development Server");
 console.log("  -----------------------------------------");
 for (const svc of services) {
   console.log(`  ${pad(svc.name, maxName + 2)} http://localhost:${svc.port}`);

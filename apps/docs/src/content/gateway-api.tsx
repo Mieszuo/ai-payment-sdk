@@ -10,7 +10,7 @@ export const gatewayApiArticles: DocArticle[] = [
     content: (
       <div className="space-y-6">
         <p className="text-xs text-zinc-300">
-          The AI Payment Gateway exposes standard JSON REST endpoints on port 3000 (or custom URL):
+          The AI Credits Gateway exposes standard JSON REST endpoints on port 3000 (or custom URL):
         </p>
 
         <div className="bg-zinc-950 p-4 rounded-xl border border-zinc-800 text-xs font-mono text-zinc-300 space-y-2">

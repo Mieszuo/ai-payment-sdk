@@ -5,7 +5,7 @@ import { X, Copy, Check, Bot } from "lucide-react";
 export function generateAgentContext(platform: AgentPlatform, projectKey: string = "pk_live_demo123"): string {
   switch (platform) {
     case "cursor":
-      return `# .cursorrules for AI Payment Platform
+      return `# .cursorrules for AI Credits
 You are an expert full-stack engineer integrating @ai-credits/sdk.
 
 Rules:
@@ -37,7 +37,7 @@ claude mcp add ai-payment-gateway http://localhost:3000/v1/mcp
     case "chatgpt":
       return `{
   "openapi": "3.1.0",
-  "info": { "title": "AI Payment Platform Gateway", "version": "1.0.0" },
+  "info": { "title": "AI Credits Gateway", "version": "1.0.0" },
   "servers": [{ "url": "http://localhost:3000/v1" }],
   "paths": {
     "/actions/{name}/execute": {
@@ -53,7 +53,7 @@ claude mcp add ai-payment-gateway http://localhost:3000/v1/mcp
 }`;
 
     case "windsurf":
-      return `# .windsurfrules for AI Payment SDK
+      return `# .windsurfrules for AI Credits SDK
 - Framework: @ai-credits/sdk and @ai-credits/react
 - Public Client Key: ${projectKey}
 - Follow Two-Phase credit reservation pattern
@@ -64,7 +64,7 @@ claude mcp add ai-payment-gateway http://localhost:3000/v1/mcp
   "mcpServers": {
     "ai-payment": {
       "command": "bunx",
-      "args": ["@ai-credits/mcp-server", "--project", "${projectKey}"]
+      "args": ["@ai-credits/server", "--project", "${projectKey}"]
     }
   }
 }`;

@@ -3,7 +3,7 @@ import { generatePKCE } from "../packages/sdk/src/pkce";
 
 async function main() {
   console.log("==========================================================");
-  console.log("AI PAYMENT PLATFORM & MANAGED ACTIONS — LIVE PLAYGROUND");
+  console.log("AI CREDITS & MANAGED ACTIONS — LIVE PLAYGROUND");
   console.log("==========================================================\n");
 
   const isReal = process.env.REAL_AI === "true";

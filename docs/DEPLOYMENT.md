@@ -1,6 +1,6 @@
 # Deployment Runbook — Gateway (Docker + Fly.io)
 
-This document covers running and deploying the AI Payment Platform **gateway**
+This document covers running and deploying the AI Credits **gateway**
 (the Bun/Hono server in `packages/server`) as a container image on
 [Fly.io](https://fly.io). The static apps (dashboard, demo, docs, landing) are
 deployed separately (Vercel); only the gateway lives in this container.
@@ -61,7 +61,7 @@ bun run db:migrate
 # 4) Boot the gateway and smoke-test the health endpoint
 bun run server
 curl http://localhost:3000/
-#    expect: {"status":"ok","service":"AI Payment Gateway & Managed Actions Engine",...,"database":"postgres"}
+#    expect: {"status":"ok","service":"AI Credits Gateway & Managed Actions Engine",...,"database":"postgres"}
 ```
 
 ---

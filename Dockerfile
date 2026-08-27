@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# AI Payment Platform — Gateway container image
+# AI Credits — Gateway container image
 #
 # Three stages:
 #   deps    – install the exact dependency set from bun.lock

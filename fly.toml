@@ -1,4 +1,4 @@
-# AI Payment Platform — Gateway (Fly.io)
+# AI Credits — Gateway (Fly.io)
 #
 # Secrets are NEVER committed here — they are injected at deploy time via
 # `fly secrets set` and reach the container as environment variables only.

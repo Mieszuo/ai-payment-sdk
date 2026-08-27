@@ -15,7 +15,7 @@ export const LandingFooter: React.FC = () => {
               <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white">
                 <Zap className="w-3.5 h-3.5 fill-white" />
               </div>
-              <span className="text-sm font-bold text-white">AI Payment Platform</span>
+              <span className="text-sm font-bold text-white">AI Credits</span>
             </div>
             <p className="text-xs text-zinc-500 leading-relaxed">
               The universal AI wallet and monetization engine for indie developers and software teams.
@@ -70,7 +70,7 @@ export const LandingFooter: React.FC = () => {
         </div>
 
         <div className="border-t border-zinc-900 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-600 gap-4">
-          <p>&copy; {new Date().getFullYear()} AI Payment Platform. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} AI Credits. All rights reserved.</p>
           <div className="flex items-center gap-6">
             <a href="#" className="hover:text-zinc-400 transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-zinc-400 transition-colors">Terms of Service</a>

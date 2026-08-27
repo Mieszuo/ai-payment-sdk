@@ -1,4 +1,4 @@
-# Local Supabase-compatible Postgres for the AI Payment Platform.
+# Local Supabase-compatible Postgres for the AI Credits platform.
 #
 # Usage:
 #   docker compose up -d db        # start the database
@@ -15,7 +15,7 @@
 services:
   db:
     image: supabase/postgres:17.6.1.136
-    container_name: ai-payment-supabase-db
+    container_name: ai-credits-db
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres

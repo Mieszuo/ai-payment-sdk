@@ -10,11 +10,11 @@ export const gettingStartedArticles: DocArticle[] = [
     id: "introduction",
     sectionId: "getting-started",
     title: "Introduction",
-    description: "Overview of the AI Payment Platform and Managed Actions architecture.",
+    description: "Overview of the AI Credits platform and Managed Actions architecture.",
     content: (
       <div className="space-y-6">
         <p className="text-sm text-zinc-300 leading-relaxed">
-          The <strong>AI Payment Platform</strong> enables developers to monetize AI workflows in client-side web and mobile apps with <strong>zero backend infrastructure</strong>. By decoupling client interfaces from confidential model prompts and billing logic, developers publish version-controlled <strong>Managed Actions</strong> that users execute using a universal, double-entry credit wallet.
+          The <strong>AI Credits</strong> platform enables developers to monetize AI workflows in client-side web and mobile apps with <strong>zero backend infrastructure</strong>. By decoupling client interfaces from confidential model prompts and billing logic, developers publish version-controlled <strong>Managed Actions</strong> that users execute using a universal, double-entry credit wallet.
         </p>
 
         <TryInBar />

@@ -68,7 +68,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenModal }) => {
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-sm font-semibold text-white transition-all shadow-lg shadow-blue-500/25 cursor-pointer"
           >
             <CreditCard className="w-4 h-4" />
-            Preview AI Payment Modal
+            Preview AI Credits Modal
           </button>
           <a href={urls.dashboard} target="_blank" rel="noreferrer"
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-sm font-semibold text-white transition-all shadow-sm">

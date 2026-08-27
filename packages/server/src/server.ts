@@ -223,7 +223,7 @@ export async function createPlatformApp(options?: { forceMock?: boolean }) {
   // Health check & info
   app.get("/", (c) => c.json({
     status: "ok",
-    service: "AI Payment Gateway & Managed Actions Engine",
+    service: "AI Credits Gateway & Managed Actions Engine",
     version: "1.0.0",
     database: databaseUrl ? "postgres" : "in-memory",
     rateLimiter: process.env.REDIS_URL ? "redis" : "in-memory",
@@ -243,7 +243,7 @@ export async function createPlatformApp(options?: { forceMock?: boolean }) {
 if (import.meta.main) {
   const port = Number(process.env.PORT || 3000);
   const { app } = await createPlatformApp();
-  console.log(`\n[Server] AI Payment Platform Gateway running at http://localhost:${port}`);
+  console.log(`\n[Server] AI Credits Gateway running at http://localhost:${port}`);
   console.log(`   - Database: ${process.env.DATABASE_URL ? "PostgreSQL (Supabase)" : "in-memory (demo)"}`);
   console.log(`   - Rate limiter: ${process.env.REDIS_URL ? "Redis (Upstash)" : "in-memory (sliding window)"}`);
   console.log(`   - Model provider: ${process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY ? "real (OpenAI/Gemini)" : "mock (set OPENAI_API_KEY or GEMINI_API_KEY)"}`);

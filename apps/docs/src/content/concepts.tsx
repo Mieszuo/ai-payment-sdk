@@ -9,7 +9,7 @@ export const conceptsArticles: DocArticle[] = [
     content: (
       <div className="space-y-6">
         <p className="text-sm text-zinc-300 leading-relaxed">
-          The AI Payment Platform coordinates five primary entities:
+          The AI Credits platform coordinates five primary entities:
         </p>
 
         <div className="bg-zinc-950 p-4 rounded-xl border border-zinc-800 font-mono text-xs text-zinc-300 leading-relaxed space-y-2">

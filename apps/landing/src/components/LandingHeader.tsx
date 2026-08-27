@@ -32,7 +32,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
             <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
               <Zap className="w-4 h-4 fill-white" />
             </div>
-            <span className="text-sm font-bold tracking-tight text-white">AI Payment Platform</span>
+            <span className="text-sm font-bold tracking-tight text-white">AI Credits</span>
           </button>
 
           {/* Desktop Nav */}

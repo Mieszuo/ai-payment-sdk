@@ -60,7 +60,7 @@ export const App: React.FC = () => {
 
       <LandingFooter />
 
-      {/* Drop-in AI Payment Modal matching exact design */}
+      {/* Drop-in AI Credits Modal matching exact design */}
       <AIPaymentModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

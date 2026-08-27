@@ -49,7 +49,7 @@ export const AppHeader: React.FC = () => {
               </div>
               <div className="flex flex-col">
                 <span className="text-sm font-semibold tracking-tight text-white flex items-center gap-1.5">
-                  AI Payment Platform
+                  AI Credits
                   <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
                     Console
                   </span>

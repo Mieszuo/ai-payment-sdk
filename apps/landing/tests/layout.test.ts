@@ -7,7 +7,7 @@ describe("Landing Page Full Layout", () => {
   it("renders all major sections without emojis", () => {
     const html = renderToStaticMarkup(React.createElement(App));
 
-    expect(html).toContain("AI Payment Platform");
+    expect(html).toContain("AI Credits");
     expect(html).toContain("No financial str");
     expect(html).toContain("3 lines of code");
     expect(html).toContain("Monthly Profit Calculator");

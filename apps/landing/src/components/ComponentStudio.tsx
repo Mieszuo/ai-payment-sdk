@@ -132,7 +132,7 @@ export function App() {
           Component Theme Studio & Customizer
         </div>
         <h1 className="text-3xl font-extrabold text-white tracking-tight sm:text-4xl">
-          Customize Your AI Payment Components
+          Customize Your AI Credits Components
         </h1>
         <p className="text-sm text-zinc-400 mt-2 max-w-2xl">
           Tweak colors, typography, providers, and layout in real-time. Copy production-ready React or Web Component code in one click.
