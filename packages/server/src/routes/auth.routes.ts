@@ -75,11 +75,18 @@ export function createAuthRoutes(authService: AuthService) {
   router.post("/otp/verify", async (c) => {
     try {
       const body = await c.req.json();
+      // PKCE floor for the OTP path: the codeChallenge must satisfy the same
+      // min(32) constraint as the authorize flow (PKCEChallengeRequestSchema).
+      // A short challenge fails here with a 400 via handleRouteError.
+      const parsedChallenge = PKCEChallengeRequestSchema.parse({
+        projectId: body.projectId,
+        codeChallenge: body.codeChallenge
+      });
       const result = await authService.verifyOtp({
         email: String(body.email),
         projectId: String(body.projectId),
         code: String(body.code),
-        codeChallenge: String(body.codeChallenge)
+        codeChallenge: parsedChallenge.codeChallenge
       });
       return c.json(result);
     } catch (err) {

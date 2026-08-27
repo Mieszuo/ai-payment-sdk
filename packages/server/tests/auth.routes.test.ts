@@ -403,6 +403,9 @@ describe("Email OTP Authentication", () => {
     // The code was delivered via the (console) transport — grab it from the in-memory store
     const otp = (auth as any).otps.get("alice@example.com:proj_demo").code;
 
+    // PKCE code challenge must satisfy the min(32) floor (same shape as a verifier)
+    const pkceValue = "abcdef1234567890abcdef1234567890abcdef1234567890";
+
     const verifyRes = await app.request("/v1/auth/otp/verify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -410,7 +413,7 @@ describe("Email OTP Authentication", () => {
         email: "alice@example.com",
         projectId: "proj_demo",
         code: otp,
-        codeChallenge: "challenge_abc"
+        codeChallenge: pkceValue
       })
     });
     expect(verifyRes.status).toBe(200);
@@ -422,7 +425,7 @@ describe("Email OTP Authentication", () => {
       body: JSON.stringify({
         projectId: "proj_demo",
         code: authorizationCode,
-        codeVerifier: "challenge_abc"
+        codeVerifier: pkceValue
       })
     });
     expect(tokenRes.status).toBe(200);
@@ -444,8 +447,32 @@ describe("Email OTP Authentication", () => {
     const res = await app.request("/v1/auth/otp/verify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: "bob@example.com", projectId: "proj_demo", code: "000000", codeChallenge: "x" })
+      body: JSON.stringify({
+        email: "bob@example.com",
+        projectId: "proj_demo",
+        code: "000000",
+        codeChallenge: "abcdef1234567890abcdef1234567890abcdef1234567890"
+      })
     });
     expect(res.status).toBe(401);
+  });
+
+  it("rejects a codeChallenge shorter than 32 chars in /otp/verify with 400", async () => {
+    const db = new InMemoryDatabase();
+    const auth = new AuthService(db, "test-secret-key-32-chars-long-example!");
+    const app = new Hono();
+    app.route("/v1/auth", createAuthRoutes(auth));
+
+    const res = await app.request("/v1/auth/otp/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: "carol@example.com",
+        projectId: "proj_demo",
+        code: "123456",
+        codeChallenge: "too_short"
+      })
+    });
+    expect(res.status).toBe(400);
   });
 });

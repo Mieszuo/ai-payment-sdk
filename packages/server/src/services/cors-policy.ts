@@ -7,7 +7,7 @@ export class CorsPolicyService {
     if (!origin) return true; // server-to-server / non-browser requests
     const project = this.devService.getProjectById(projectId);
     if (!project) return false;
-    const allowed = (project as any).allowedDomains as string[] | undefined;
+    const allowed = project.allowedDomains;
     return Array.isArray(allowed) && allowed.includes(origin);
   }
 
