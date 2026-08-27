@@ -12,7 +12,8 @@
     "playground": "bun run scripts/playground.ts",
     "demo": "bun --filter demo-app dev",
     "dashboard": "bun --filter dashboard dev",
-    "docs": "bun --filter docs dev"
+    "docs": "bun --filter docs dev",
+    "landing": "bun --filter landing dev"
   },
   "devDependencies": {
     "@types/bun": "^1.4.0",
