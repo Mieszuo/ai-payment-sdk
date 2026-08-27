@@ -4,6 +4,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "strict": true,
-    "declaration": true
+    "declaration": true,
+    "types": ["bun"]
   }
 }
