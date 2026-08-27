@@ -17,6 +17,13 @@
         "zod": "^3.23.8",
       },
     },
+    "packages/sdk": {
+      "name": "@platform/sdk",
+      "version": "0.1.0",
+      "dependencies": {
+        "@platform/shared": "workspace:*",
+      },
+    },
     "packages/server": {
       "name": "@platform/server",
       "version": "0.1.0",
@@ -39,6 +46,8 @@
   },
   "packages": {
     "@platform/core": ["@platform/core@workspace:packages/core"],
+
+    "@platform/sdk": ["@platform/sdk@workspace:packages/sdk"],
 
     "@platform/server": ["@platform/server@workspace:packages/server"],
 
