@@ -1,4 +1,7 @@
 export * from "./adapters/in-memory-db";
+export * from "./adapters/model-provider";
 export * from "./services/ledger.service";
 export * from "./services/auth.service";
+export * from "./services/action.service";
 export * from "./routes/auth.routes";
+export * from "./routes/actions.routes";
