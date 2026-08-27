@@ -1286,3 +1286,37 @@ Run: `bun test` (full suite), `bun run typecheck` — Expected: all pass, exit 0
 git add packages/server/src/adapters packages/server/src/services/developer.service.ts packages/server/src/server.ts packages/server/src/db/migrations/004_developer_registry.sql packages/server/tests
 git commit -m "feat(server): persist developer registry (projects, action versions) and enforce action_runs FK"
 ```
+
+### OTP Authentication Hardening (follow-up folded into Task 5)
+
+**Context:** Task 3 review (F2-F6) requires production-grade OTP before real users: cryptographically random codes, constant-time comparison, failed-attempt limiting, request throttling, expiry pruning, and a PII-safe email fallback. These steps belong to the Task 5 hardening pass; implement them inside Task 5 after the Redis rate limiter.
+
+- [ ] **Step 5a: Replace `Math.random` with `crypto.randomInt` and add constant-time comparison**
+
+In `packages/server/src/services/auth.service.ts`:
+```typescript
+import crypto from "node:crypto";
+// in requestOtp:
+const code = String(crypto.randomInt(100000, 1000000));
+// in verifyOtp (constant-time compare):
+const expected = Buffer.from(entry.code);
+const actual = Buffer.from(params.code);
+const matches = expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
+if (!entry || !matches || entry.expiresAt < Date.now()) { ... }
+```
+
+- [ ] **Step 5b: Add failed-attempt limiting and request throttling**
+
+Track `attempts` per `otps` entry (max 5 wrong attempts → delete the entry so a new code is required). Throttle `requestOtp` per email: reject with `PlatformError(RATE_LIMITED, ...)` when a fresh unexpired code already exists for that `email:projectId` (one code per 10-minute window). Export a testable constant `MAX_OTP_ATTEMPTS = 5`.
+
+- [ ] **Step 5c: Prune expired OTP entries**
+
+Add `pruneExpiredOtps()` mirroring the existing `pruneExpiredCodes()` (called at the start of `requestOtp` and `verifyOtp`).
+
+- [ ] **Step 5d: PII-safe email fallback and configurable sender**
+
+In `packages/server/src/services/email-transport.ts`: `ResendEmailTransport.send` fallback (no `RESEND_API_KEY`) logs ONLY a warning (`[OTP] RESEND_API_KEY not set — code delivered via console transport`), never the code itself. Sender address becomes `process.env.RESEND_FROM || "no-reply@example.com"`. The `ConsoleEmailTransport` stays as the explicit dev transport.
+
+- [ ] **Step 5e: Tests**
+
+Extend `packages/server/tests/auth.routes.test.ts`: wrong-code 5 times → 401 and the code is invalidated (6th attempt with the correct code fails); duplicate `requestOtp` within the window → 429; code is 6 digits. Keep the PII rule: assert the Resend fallback warning does NOT contain the code.
