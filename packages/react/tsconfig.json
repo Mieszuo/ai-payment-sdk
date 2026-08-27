@@ -3,13 +3,9 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "strict": true,
-    "skipLibCheck": true,
-    "declaration": true,
-    "declarationMap": true,
-    "esModuleInterop": true,
     "jsx": "react-jsx",
-    "types": ["bun-types"],
-    "noEmit": true
+    "strict": true,
+    "declaration": true,
+    "types": ["bun-types"]
   }
 }
