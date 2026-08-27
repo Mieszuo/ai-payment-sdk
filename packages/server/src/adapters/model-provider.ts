@@ -1,3 +1,5 @@
+export type FetchClient = (url: string | URL | Request, init?: RequestInit) => Promise<Response>;
+
 export interface ModelProvider {
   generate(params: {
     model: string;
