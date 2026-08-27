@@ -30,6 +30,14 @@ function mapPlatformErrorToStatus(code: string): number {
 function handleRouteError(err: unknown, c: Context) {
   if (err instanceof PlatformError) {
     const status = mapPlatformErrorToStatus(err.code) as any;
+    if (err.code === PlatformErrorCodes.RATE_LIMITED) {
+      const retryAfter =
+        (err.details as any)?.retryAfter ??
+        err.message.match(/Retry in (\d+)s/)?.[1];
+      if (retryAfter !== undefined) {
+        c.header("Retry-After", String(retryAfter));
+      }
+    }
     return c.json({ error: err.message, code: err.code, details: err.details }, status);
   }
   return c.json({ error: (err as any)?.message || "Internal server error" }, 500);

@@ -3,6 +3,7 @@ import { renderPromptTemplate, parseUntrustedOutput, verifyMarginGuard } from "@
 import { LedgerService } from "./ledger.service";
 import { ModelProvider } from "../adapters/model-provider";
 import { ActionRunService } from "./run.service";
+import { SlidingWindowRateLimiter } from "./rate-limiter";
 
 export interface ActionExecutionParams {
   actionName: string;
@@ -21,14 +22,24 @@ export interface ActionExecutionResult {
 
 export class ActionExecutionService {
   private actionMap = new Map<string, ActionVersion>();
+  private runService?: ActionRunService;
+  private rateLimiter?: SlidingWindowRateLimiter;
 
   constructor(
     private ledger: LedgerService,
     private modelProvider: ModelProvider,
     actions: ActionVersion[],
-    private runService?: ActionRunService
+    runServiceOrLimiter?: ActionRunService | SlidingWindowRateLimiter,
+    rateLimiter?: SlidingWindowRateLimiter
   ) {
     actions.forEach((a) => this.actionMap.set(`${a.projectId}:${a.actionName}`, a));
+    if (runServiceOrLimiter instanceof SlidingWindowRateLimiter || (runServiceOrLimiter && "checkLimit" in runServiceOrLimiter)) {
+      this.rateLimiter = runServiceOrLimiter as SlidingWindowRateLimiter;
+      this.runService = undefined;
+    } else {
+      this.runService = runServiceOrLimiter as ActionRunService | undefined;
+      this.rateLimiter = rateLimiter;
+    }
   }
 
   async execute(params: ActionExecutionParams): Promise<ActionExecutionResult> {
@@ -38,6 +49,23 @@ export class ActionExecutionService {
         PlatformErrorCodes.ACTION_NOT_FOUND,
         `Action "${params.actionName}" not found`
       );
+    }
+
+    if (this.rateLimiter && action.rateLimit) {
+      const rateLimitKey = `${params.userId}:${action.projectId}:${action.actionName}`;
+      const allowed = this.rateLimiter.checkLimit(
+        rateLimitKey,
+        action.rateLimit.maxRequests,
+        action.rateLimit.windowSeconds
+      );
+      if (!allowed) {
+        const retryAfter = this.rateLimiter.getResetSeconds(rateLimitKey, action.rateLimit.windowSeconds);
+        throw new PlatformError(
+          PlatformErrorCodes.RATE_LIMITED,
+          `Rate limit exceeded. Retry in ${retryAfter}s`,
+          { retryAfter }
+        );
+      }
     }
 
     const runId = crypto.randomUUID();
