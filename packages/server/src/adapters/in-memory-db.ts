@@ -1,24 +1,25 @@
 import { PlatformError, PlatformErrorCodes, LedgerTransaction } from "@platform/shared";
 import { validateDoubleEntryTransaction } from "@platform/core";
+import { LedgerDatabase, ReservationRecord, WalletRecord } from "./database";
 
-export interface WalletRecord {
-  userId: string;
-  availableCredits: number;
-  reservedCredits: number;
-}
+export type { LedgerDatabase, ReservationRecord, WalletRecord } from "./database";
 
-export interface ReservationRecord {
-  userId: string;
-  amount: number;
-}
-
-export class InMemoryDatabase {
+export class InMemoryDatabase implements LedgerDatabase {
   public wallets = new Map<string, WalletRecord>();
   public transactions = new Map<string, LedgerTransaction>();
   public reservations = new Map<string, ReservationRecord>();
   public processedIdempotencyKeys = new Set<string>();
   public actionRuns = new Map<string, any>();
   private mutex = Promise.resolve();
+
+  async init(): Promise<void> {
+    // Nothing to hydrate — state lives in memory by design.
+  }
+
+  async lockWalletRow(_userId: string): Promise<() => void> {
+    // runInTransaction's mutex already serializes access in this process.
+    return () => {};
+  }
 
   seedWallet(userId: string, credits: number) {
     this.wallets.set(userId, {

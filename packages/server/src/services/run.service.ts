@@ -1,4 +1,4 @@
-import { InMemoryDatabase } from "../adapters/in-memory-db";
+import { LedgerDatabase } from "../adapters/database";
 
 export type RunStatus = "RESERVED" | "RUNNING" | "SUCCEEDED" | "FAILED" | "CANCELLED";
 
@@ -24,7 +24,7 @@ export interface ActionRunRecord {
 export class ActionRunService {
   private runs: Map<string, ActionRunRecord>;
 
-  constructor(private db?: InMemoryDatabase) {
+  constructor(private db?: LedgerDatabase) {
     if (db && db.actionRuns) {
       this.runs = db.actionRuns as Map<string, ActionRunRecord>;
     } else {

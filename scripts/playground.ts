@@ -7,7 +7,7 @@ async function main() {
   console.log("==========================================================\n");
 
   const isReal = process.env.REAL_AI === "true";
-  const { app, db, ledger, authService, devService } = createPlatformApp({
+  const { app, db, ledger, authService, devService } = await createPlatformApp({
     forceMock: !isReal
   });
   if (isReal) {

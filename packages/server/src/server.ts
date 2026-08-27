@@ -1,6 +1,8 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { InMemoryDatabase } from "./adapters/in-memory-db";
+import { PostgresDatabase } from "./adapters/postgres-real";
+import { LedgerDatabase } from "./adapters/database";
 import { LedgerService } from "./services/ledger.service";
 import { AuthService } from "./services/auth.service";
 import { DeveloperService } from "./services/developer.service";
@@ -19,14 +21,28 @@ import { createWalletRoutes } from "./routes/wallet.routes";
 import { createDeveloperRoutes } from "./routes/developer.routes";
 import { createStripeRoutes } from "./routes/stripe.routes";
 
-export function createPlatformApp(options?: { forceMock?: boolean }) {
-  const db = new InMemoryDatabase();
+// Demo-only fallbacks, used ONLY when the matching env var is not set.
+// Production deployments always provide real values via .env / platform env.
+const DEMO_JWT_SECRET = "demo-secret-key-32-chars-long-example!";
+const DEMO_WEBHOOK_SECRET = "whsec_demo_secret_123";
+
+export async function createPlatformApp(options?: { forceMock?: boolean }) {
+  // Database: PostgreSQL (Supabase) when DATABASE_URL is set, in-memory demo otherwise.
+  const databaseUrl = process.env.DATABASE_URL;
+  const db: LedgerDatabase = databaseUrl
+    ? new PostgresDatabase({ url: databaseUrl })
+    : new InMemoryDatabase();
+  await db.init();
+
+  const jwtSecret = process.env.JWT_SECRET || DEMO_JWT_SECRET;
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || DEMO_WEBHOOK_SECRET;
+
   const ledger = new LedgerService(db);
-  const authService = new AuthService(db, "demo-secret-key-32-chars-long-example!");
+  const authService = new AuthService(db, jwtSecret);
   const devService = new DeveloperService(db);
   const runService = new ActionRunService(db);
   const rateLimiter = new SlidingWindowRateLimiter();
-  const stripeService = new StripeBillingService(db, "whsec_demo_secret_123");
+  const stripeService = new StripeBillingService(db, webhookSecret);
   const logger = new PlatformLogger();
 
   // Model provider: use real OpenAI/Gemini if API key exists and not forceMock, otherwise smart mock provider
@@ -53,16 +69,16 @@ export function createPlatformApp(options?: { forceMock?: boolean }) {
     }));
   }
 
-  // Pre-seed demo project
+  // Pre-seed demo project (idempotent; real projects are registered via the API)
   devService.registerProject({
     projectId: "proj_demo",
     name: "AI Resume Optimizer Demo",
-    publicKey: "pk_live_demo123",
-    secretKey: "sk_live_demo_secret_456"
+    publicKey: process.env.DEMO_PUBLIC_KEY || "pk_live_demo123",
+    secretKey: process.env.DEMO_SECRET_KEY || "sk_live_demo_secret_456"
   });
 
   // Pre-publish demo action version 1
-  const demoAction = devService.publishActionVersion("proj_demo", {
+  devService.publishActionVersion("proj_demo", {
     actionName: "optimize-resume",
     model: process.env.OPENAI_API_KEY ? "gpt-4o-mini" : "mock-model",
     priceCredits: 15,
@@ -74,12 +90,11 @@ export function createPlatformApp(options?: { forceMock?: boolean }) {
     rateLimit: { maxRequests: 5, windowSeconds: 60 }
   });
 
-  // Pre-seed dev_playground wallet for developer testing
-  db.wallets.set("dev_playground", {
-    userId: "dev_playground",
-    availableCredits: 1000,
-    reservedCredits: 0
-  });
+  // Pre-seed dev_playground wallet for developer testing (only if not present,
+  // so a persisted balance survives gateway restarts)
+  if (!db.wallets.has("dev_playground")) {
+    db.seedWallet("dev_playground", 1000);
+  }
 
   const actionExecutionService = new ActionExecutionService(
     ledger,
@@ -111,6 +126,7 @@ export function createPlatformApp(options?: { forceMock?: boolean }) {
     status: "ok",
     service: "AI Payment Gateway & Managed Actions Engine",
     version: "1.0.0",
+    database: databaseUrl ? "postgres" : "in-memory",
     endpoints: {
       auth: "/v1/auth/token",
       actions: "/v1/actions/:name/execute",
@@ -126,10 +142,12 @@ export function createPlatformApp(options?: { forceMock?: boolean }) {
 // Standalone entrypoint when executed directly with bun
 if (import.meta.main) {
   const port = Number(process.env.PORT || 3000);
-  const { app } = createPlatformApp();
+  const { app } = await createPlatformApp();
   console.log(`\n[Server] AI Payment Platform Gateway running at http://localhost:${port}`);
-  console.log(`   - Public Key:  pk_live_demo123`);
-  console.log(`   - Secret Key:  sk_live_demo_secret_456`);
+  console.log(`   - Database: ${process.env.DATABASE_URL ? "PostgreSQL (Supabase)" : "in-memory (demo)"}`);
+  console.log(`   - Model provider: ${process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY ? "real (OpenAI/Gemini)" : "mock (set OPENAI_API_KEY or GEMINI_API_KEY)"}`);
+  console.log(`   - Public Key:  ${process.env.DEMO_PUBLIC_KEY || "pk_live_demo123"}`);
+  console.log(`   - Secret Key:  ${process.env.DEMO_SECRET_KEY || "sk_live_demo_secret_456"}`);
   console.log(`   - Demo Action: optimize-resume (15 credits)\n`);
 
   Bun.serve({

@@ -1,5 +1,5 @@
 import { ActionVersion, PlatformError, PlatformErrorCodes } from "@platform/shared";
-import { InMemoryDatabase } from "../adapters/in-memory-db";
+import { LedgerDatabase } from "../adapters/database";
 
 export interface ProjectRecord {
   projectId: string;
@@ -13,7 +13,7 @@ export class DeveloperService {
   private projectsById = new Map<string, ProjectRecord>();
   private actionVersions = new Map<string, ActionVersion[]>();
 
-  constructor(private db: InMemoryDatabase) {}
+  constructor(private db: LedgerDatabase) {}
 
   registerProject(project: ProjectRecord) {
     this.projectsBySecret.set(project.secretKey, project);

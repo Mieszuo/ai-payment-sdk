@@ -6,6 +6,18 @@ node_modules/
 *.tsbuildinfo
 dist/
 
+# Local environment & secrets (keep the example as the template)
+.env
+.env.*
+!.env.example
+
+# Local tooling temp (bun add fallback dir)
+.bun-tmp/
+
+# Superpowers SDD scratch (per-plan workspaces) and git worktrees
+.superpowers/sdd/
+.worktrees/
+
 # Logs
 *.log
 

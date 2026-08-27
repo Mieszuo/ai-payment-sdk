@@ -11,6 +11,8 @@
  */
 
 import { Subprocess } from "bun";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 
 interface Service {
   name: string;
@@ -19,8 +21,11 @@ interface Service {
   cwd?: string;
 }
 
+// Load .env for the gateway if present (mirrors `bun run server`)
+const envFlag = existsSync(join(process.cwd(), ".env")) ? ["--env-file=.env"] : [];
+
 const services: Service[] = [
-  { name: "Gateway",      port: 3000, cmd: ["bun", "run", "packages/server/src/server.ts"] },
+  { name: "Gateway",      port: 3000, cmd: ["bun", ...envFlag, "run", "packages/server/src/server.ts"] },
   { name: "Landing",      port: 5176, cmd: ["bun", "--filter", "landing", "dev"] },
   { name: "Dashboard",    port: 5174, cmd: ["bun", "--filter", "dashboard", "dev"] },
   { name: "Docs",         port: 5175, cmd: ["bun", "--filter", "docs", "dev"] },

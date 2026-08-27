@@ -4,10 +4,10 @@ import {
   createSettlementTransaction, 
   createReleaseTransaction 
 } from "@platform/core";
-import { InMemoryDatabase } from "../adapters/in-memory-db";
+import { LedgerDatabase } from "../adapters/database";
 
 export class LedgerService {
-  constructor(private db: InMemoryDatabase) {}
+  constructor(private db: LedgerDatabase) {}
 
   async getWallet(userId: string): Promise<{ userId: string; availableCredits: number; reservedCredits: number }> {
     const wallet = this.db.wallets.get(userId);

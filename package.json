@@ -9,8 +9,12 @@
     "dev": "bun run scripts/dev.ts",
     "test": "bun test",
     "typecheck": "tsc --build",
-    "server": "bun run packages/server/src/server.ts",
+    "server": "bun --env-file=.env run packages/server/src/server.ts",
     "playground": "bun run scripts/playground.ts",
+    "db:up": "docker compose up -d db",
+    "db:down": "docker compose down",
+    "db:reset": "docker compose down -v && docker compose up -d db",
+    "db:migrate": "bun --env-file=.env run scripts/migrate.ts",
     "demo": "bun --filter demo-app dev",
     "dashboard": "bun --filter dashboard dev",
     "docs": "bun --filter docs dev",
@@ -19,6 +23,7 @@
   "devDependencies": {
     "@types/bun": "^1.4.0",
     "bun-types": "^1.4.0",
-    "hono": "^4.13.5"
+    "hono": "^4.13.5",
+    "postgres": "^3.4.9"
   }
 }

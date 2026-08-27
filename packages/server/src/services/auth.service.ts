@@ -1,12 +1,12 @@
 import * as jose from "jose";
 import { PlatformError, PlatformErrorCodes, UserSessionToken, UserSessionTokenSchema } from "@platform/shared";
-import { InMemoryDatabase } from "../adapters/in-memory-db";
+import { LedgerDatabase } from "../adapters/database";
 
 export class AuthService {
   private codes = new Map<string, { userId: string; email: string; projectId: string; codeChallenge: string; expiresAt: number }>();
   private secret: Uint8Array;
 
-  constructor(private db: InMemoryDatabase, secretString: string) {
+  constructor(private db: LedgerDatabase, secretString: string) {
     this.secret = new TextEncoder().encode(secretString);
   }
 

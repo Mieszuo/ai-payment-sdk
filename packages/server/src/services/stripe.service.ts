@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { formatAccountIdentifier, LedgerTransaction } from "@platform/shared";
-import { InMemoryDatabase } from "../adapters/in-memory-db";
+import { LedgerDatabase } from "../adapters/database";
 
 export const TOPUP_PACKAGES = {
   starter: { priceCents: 300, credits: 300 },
@@ -25,7 +25,7 @@ export class StripeBillingService {
   public disputes: StripeDisputeAudit[] = [];
 
   constructor(
-    private db: InMemoryDatabase,
+    private db: LedgerDatabase,
     private webhookSecret?: string
   ) {}
 
