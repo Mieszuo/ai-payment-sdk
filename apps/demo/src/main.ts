@@ -1,11 +1,10 @@
 import { createAI } from "@platform/sdk";
 
 // Initialize AI Client
-// By default, points to local gateway if available, with smooth fallback
 const ai = createAI({
   project: "pk_live_demo123",
   baseUrl: "http://localhost:3000",
-  mock: false // Will connect to local gateway on :3000
+  mock: false
 });
 
 // UI Elements
@@ -21,8 +20,9 @@ const errorContainer = document.getElementById("errorContainer") as HTMLElement;
 const errorMessage = document.getElementById("errorMessage") as HTMLElement;
 const topupModalBtn = document.getElementById("topupModalBtn") as HTMLButtonElement;
 const quickTopupBtn = document.getElementById("quickTopupBtn") as HTMLButtonElement;
+const paymentWidget = document.getElementById("paymentWidget") as any;
 
-// Mock local balance if running without full backend session
+// Local wallet balance
 let localBalance = 20;
 
 async function updateBalance() {
@@ -30,13 +30,32 @@ async function updateBalance() {
     const w = await ai.getWallet();
     walletCredits.innerText = String(w.availableCredits);
     localBalance = w.availableCredits;
+    paymentWidget?.setBalance(localBalance);
   } catch {
-    // If not authenticated yet, display local wallet balance
     walletCredits.innerText = String(localBalance);
+    paymentWidget?.setBalance(localBalance);
   }
 }
 
 updateBalance();
+
+// Handle credit purchase inside the widget modal
+paymentWidget?.addEventListener("credit-purchased", (e: any) => {
+  localBalance = e.detail.newBalance;
+  walletCredits.innerText = String(localBalance);
+  errorContainer.style.display = "none";
+});
+
+// Open modal on click
+topupModalBtn?.addEventListener("click", () => {
+  paymentWidget?.setBalance(localBalance);
+  paymentWidget?.open();
+});
+
+quickTopupBtn?.addEventListener("click", () => {
+  paymentWidget?.setBalance(localBalance);
+  paymentWidget?.open();
+});
 
 btn?.addEventListener("click", async () => {
   btn.disabled = true;
@@ -46,7 +65,9 @@ btn?.addEventListener("click", async () => {
 
   try {
     if (localBalance < 15) {
-      throw new Error("Niewystarczająca liczba kredytów: dostępne " + localBalance + ", wymagane 15 kredytów");
+      paymentWidget?.setBalance(localBalance);
+      paymentWidget?.open();
+      throw new Error("Niewystarczająca liczba kredytów: dostępne " + localBalance + ", wymagane 15 kredytów. Wybierz pakiet doładowania w oknie.");
     }
 
     // Call Managed Action: optimize-resume
@@ -75,6 +96,7 @@ btn?.addEventListener("click", async () => {
     // Deduct local balance
     localBalance = Math.max(0, localBalance - 15);
     walletCredits.innerText = String(localBalance);
+    paymentWidget?.setBalance(localBalance);
   } catch (err: any) {
     errorContainer.style.display = "block";
     errorMessage.innerText = err.message || "Wystąpił błąd podczas optymalizacji CV.";
@@ -83,13 +105,3 @@ btn?.addEventListener("click", async () => {
     btn.innerText = "Optymalizuj CV (15 kredytów)";
   }
 });
-
-function handleTopup() {
-  localBalance += 550;
-  walletCredits.innerText = String(localBalance);
-  errorContainer.style.display = "none";
-  alert("Doładowano portfel o 550 kredytów (Pakiet Popular $5.00). Nowe saldo: " + localBalance + " kredytów");
-}
-
-topupModalBtn?.addEventListener("click", handleTopup);
-quickTopupBtn?.addEventListener("click", handleTopup);

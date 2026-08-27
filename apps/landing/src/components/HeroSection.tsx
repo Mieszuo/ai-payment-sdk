@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Terminal, Copy, Check, ArrowRight, BookOpen, LayoutDashboard } from "lucide-react";
+import { Terminal, Copy, Check, ArrowRight, BookOpen, LayoutDashboard, CreditCard } from "lucide-react";
 
 type PM = "bun" | "npm" | "pnpm" | "yarn";
 
@@ -12,7 +12,11 @@ function getCmd(pm: PM): string {
   }
 }
 
-export const HeroSection: React.FC = () => {
+export interface HeroSectionProps {
+  onOpenModal?: () => void;
+}
+
+export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenModal }) => {
   const [pm, setPm] = useState<PM>("bun");
   const [copied, setCopied] = useState(false);
 
@@ -57,16 +61,23 @@ export const HeroSection: React.FC = () => {
 
         {/* CTAs */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-8">
+          <button
+            onClick={onOpenModal}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-sm font-semibold text-white transition-all shadow-lg shadow-blue-500/25 cursor-pointer"
+          >
+            <CreditCard className="w-4 h-4" />
+            Preview AI Payment Modal
+          </button>
           <a href="http://localhost:5174" target="_blank" rel="noreferrer"
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-sm font-semibold text-white transition-all shadow-lg shadow-blue-500/20">
-            <LayoutDashboard className="w-4 h-4" />
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-sm font-semibold text-white transition-all shadow-sm">
+            <LayoutDashboard className="w-4 h-4 text-zinc-400" />
             Open Developer Console
             <ArrowRight className="w-4 h-4" />
           </a>
           <a href="http://localhost:5175" target="_blank" rel="noreferrer"
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-sm font-medium text-zinc-300 transition-colors">
             <BookOpen className="w-4 h-4 text-zinc-400" />
-            Read Documentation
+            Documentation
           </a>
         </div>
 
