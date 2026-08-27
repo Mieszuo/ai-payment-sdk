@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { OpenAILogo, GeminiLogo, DeepSeekLogo, ClaudeLogo, StripeLogo } from "./ProviderLogos";
 
 export interface AIPaymentModalProps {
   isOpen: boolean;
@@ -435,20 +436,30 @@ export const AIPaymentModal: React.FC<AIPaymentModalProps> = ({
                   id: "openai",
                   name: "OpenAI",
                   badge: "Recommended",
-                  desc: "Most capable models for text, vision and more.",
-                  color: "#10a37f"
+                  desc: "GPT-4o, o1, o3-mini models for reasoning & text.",
+                  color: "#10a37f",
+                  icon: <OpenAILogo size={20} className="text-white" />
                 },
                 {
                   id: "gemini",
                   name: "Google Gemini",
-                  desc: "Powerful multimodal models from Google.",
-                  color: "#2563eb"
+                  desc: "Gemini 1.5/2.0 Flash multimodal models.",
+                  color: "#1e293b",
+                  icon: <GeminiLogo size={22} />
                 },
                 {
                   id: "deepseek",
                   name: "DeepSeek",
-                  desc: "High-performance models at lower cost.",
-                  color: "#0284c7"
+                  desc: "DeepSeek V3 & R1 with ultra-low token cost.",
+                  color: "#0284c7",
+                  icon: <DeepSeekLogo size={20} className="text-white" />
+                },
+                {
+                  id: "claude",
+                  name: "Anthropic Claude",
+                  desc: "Claude 3.5 Sonnet & Haiku for elite coding.",
+                  color: "#d97757",
+                  icon: <ClaudeLogo size={20} className="text-white" />
                 }
               ].map((p) => {
                 const isSelected = selectedProvider === p.id;
@@ -463,7 +474,7 @@ export const AIPaymentModal: React.FC<AIPaymentModalProps> = ({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
-                      padding: "14px",
+                      padding: "12px 14px",
                       background: isSelected ? "rgba(99, 102, 241, 0.08)" : "#18181b",
                       border: isSelected ? "1px solid #6366f1" : "1px solid #27272a",
                       borderRadius: "14px",
@@ -481,26 +492,24 @@ export const AIPaymentModal: React.FC<AIPaymentModalProps> = ({
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          color: "white"
+                          color: "white",
+                          flexShrink: 0
                         }}
                       >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <circle cx="12" cy="12" r="10"></circle>
-                          <path d="M8 12h8"></path>
-                        </svg>
+                        {p.icon}
                       </div>
                       <div>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <span style={{ fontSize: "14px", fontWeight: 600, color: "#ffffff" }}>{p.name}</span>
+                          <span style={{ fontSize: "13px", fontWeight: 600, color: "#ffffff" }}>{p.name}</span>
                           {p.badge && (
                             <span
                               style={{
                                 background: "rgba(99, 102, 241, 0.2)",
                                 color: "#a5b4fc",
                                 border: "1px solid rgba(99, 102, 241, 0.3)",
-                                fontSize: "10px",
+                                fontSize: "9px",
                                 fontWeight: 600,
-                                padding: "1px 6px",
+                                padding: "1px 5px",
                                 borderRadius: "999px"
                               }}
                             >
@@ -508,7 +517,7 @@ export const AIPaymentModal: React.FC<AIPaymentModalProps> = ({
                             </span>
                           )}
                         </div>
-                        <div style={{ fontSize: "11px", color: "#71717a", marginTop: "2px" }}>{p.desc}</div>
+                        <div style={{ fontSize: "11px", color: "#71717a", marginTop: "1px" }}>{p.desc}</div>
                       </div>
                     </div>
                     <div

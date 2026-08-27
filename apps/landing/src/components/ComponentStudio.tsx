@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { OpenAILogo, GeminiLogo, DeepSeekLogo, ClaudeLogo } from "@platform/react";
 import {
   Sliders,
   Sparkles,
@@ -456,7 +457,12 @@ export function App() {
                                 borderColor: selectedProvider === "openai" ? accent.hex : "#27272a"
                               }}
                             >
-                              <span className="font-medium text-white">OpenAI GPT-4o</span>
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-6 h-6 rounded-lg bg-[#10a37f] flex items-center justify-center text-white shrink-0">
+                                  <OpenAILogo size={14} />
+                                </div>
+                                <span className="font-medium text-white">OpenAI GPT-4o</span>
+                              </div>
                               <span className="text-[10px] text-zinc-400 font-mono">Fast & Smart</span>
                             </div>
                           )}
@@ -470,7 +476,12 @@ export function App() {
                                 borderColor: selectedProvider === "gemini" ? accent.hex : "#27272a"
                               }}
                             >
-                              <span className="font-medium text-white">Google Gemini</span>
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-6 h-6 rounded-lg bg-zinc-900 flex items-center justify-center shrink-0">
+                                  <GeminiLogo size={16} />
+                                </div>
+                                <span className="font-medium text-white">Google Gemini</span>
+                              </div>
                               <span className="text-[10px] text-zinc-400 font-mono">Multimodal</span>
                             </div>
                           )}
@@ -484,7 +495,12 @@ export function App() {
                                 borderColor: selectedProvider === "deepseek" ? accent.hex : "#27272a"
                               }}
                             >
-                              <span className="font-medium text-white">DeepSeek V3/R1</span>
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-6 h-6 rounded-lg bg-[#0284c7] flex items-center justify-center text-white shrink-0">
+                                  <DeepSeekLogo size={14} />
+                                </div>
+                                <span className="font-medium text-white">DeepSeek V3/R1</span>
+                              </div>
                               <span className="text-[10px] text-zinc-400 font-mono">Ultra Low Cost</span>
                             </div>
                           )}
@@ -498,7 +514,12 @@ export function App() {
                                 borderColor: selectedProvider === "claude" ? accent.hex : "#27272a"
                               }}
                             >
-                              <span className="font-medium text-white">Anthropic Claude</span>
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-6 h-6 rounded-lg bg-[#d97757] flex items-center justify-center text-white shrink-0">
+                                  <ClaudeLogo size={14} />
+                                </div>
+                                <span className="font-medium text-white">Anthropic Claude</span>
+                              </div>
                               <span className="text-[10px] text-zinc-400 font-mono">Coding/Reasoning</span>
                             </div>
                           )}
