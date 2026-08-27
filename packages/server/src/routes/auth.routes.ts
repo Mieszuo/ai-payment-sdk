@@ -7,6 +7,7 @@ import {
   PlatformErrorCodes
 } from "@platform/shared";
 import { AuthService } from "../services/auth.service";
+import { correlationMiddleware, getCorrelationContext } from "../observability/correlation";
 
 function mapPlatformErrorToStatus(code: string): number {
   switch (code) {
@@ -38,11 +39,15 @@ function handleRouteError(err: unknown, c: Context) {
 
 export function createAuthRoutes(authService: AuthService) {
   const router = new Hono();
+  router.use("*", correlationMiddleware());
 
   router.post("/authorize", async (c) => {
     try {
       const body = await c.req.json();
       const parsed = PKCEChallengeRequestSchema.parse(body);
+      const correlation = getCorrelationContext(c);
+      correlation.projectId = parsed.projectId;
+
       const redirectParam = parsed.redirectUri ? `&redirect_uri=${encodeURIComponent(parsed.redirectUri)}` : "";
       const authUrl = `/oauth/authorize?project_id=${encodeURIComponent(parsed.projectId)}&code_challenge=${encodeURIComponent(parsed.codeChallenge)}${redirectParam}`;
       return c.json({
@@ -58,6 +63,9 @@ export function createAuthRoutes(authService: AuthService) {
     try {
       const body = await c.req.json();
       const parsed = TokenExchangeRequestSchema.parse(body);
+      const correlation = getCorrelationContext(c);
+      correlation.projectId = parsed.projectId;
+
       const result = await authService.exchangeCodeForSession(parsed);
       return c.json(result);
     } catch (err) {

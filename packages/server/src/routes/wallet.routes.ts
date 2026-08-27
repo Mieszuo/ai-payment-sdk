@@ -2,6 +2,7 @@ import { Hono, type Context } from "hono";
 import { PlatformError, PlatformErrorCodes } from "@platform/shared";
 import { LedgerService } from "../services/ledger.service";
 import { AuthService } from "../services/auth.service";
+import { correlationMiddleware, getCorrelationContext } from "../observability/correlation";
 
 function mapPlatformErrorToStatus(code: string): number {
   switch (code) {
@@ -30,6 +31,7 @@ function handleRouteError(err: unknown, c: Context) {
 
 export function createWalletRoutes(ledgerService: LedgerService, authService: AuthService) {
   const router = new Hono();
+  router.use("*", correlationMiddleware());
 
   router.get("/", async (c) => {
     try {
@@ -43,6 +45,10 @@ export function createWalletRoutes(ledgerService: LedgerService, authService: Au
 
       const token = authHeader.replace("Bearer ", "");
       const session = await authService.verifySessionToken(token);
+
+      const correlation = getCorrelationContext(c);
+      correlation.userId = session.userId;
+      correlation.projectId = session.projectId;
 
       const wallet = await ledgerService.getWallet(session.userId);
 

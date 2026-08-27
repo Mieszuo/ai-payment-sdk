@@ -3,6 +3,7 @@ import { streamSSE } from "hono/streaming";
 import { PlatformError, PlatformErrorCodes } from "@platform/shared";
 import { ActionExecutionService } from "../services/action.service";
 import { AuthService } from "../services/auth.service";
+import { correlationMiddleware, getCorrelationContext } from "../observability/correlation";
 
 function mapPlatformErrorToStatus(code: string): number {
   switch (code) {
@@ -36,6 +37,7 @@ function handleRouteError(err: unknown, c: Context) {
 
 export function createActionRoutes(actionService: ActionExecutionService, authService: AuthService) {
   const router = new Hono();
+  router.use("*", correlationMiddleware());
 
   router.post("/:name/execute", async (c) => {
     try {
@@ -52,6 +54,11 @@ export function createActionRoutes(actionService: ActionExecutionService, authSe
 
       const body = await c.req.json().catch(() => ({}));
       const actionName = c.req.param("name");
+
+      const correlation = getCorrelationContext(c);
+      correlation.projectId = session.projectId;
+      correlation.userId = session.userId;
+      correlation.actionName = actionName;
 
       if (body.projectId && body.projectId !== session.projectId) {
         throw new PlatformError(

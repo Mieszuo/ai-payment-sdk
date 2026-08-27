@@ -8,3 +8,4 @@ export * from "./routes/actions.routes";
 export * from "./services/stripe.service";
 export * from "./routes/stripe.routes";
 export * from "./routes/wallet.routes";
+export * from "./observability";
