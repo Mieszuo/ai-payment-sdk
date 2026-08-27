@@ -1,0 +1,14 @@
+{
+  "name": "demo-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite"
+  },
+  "dependencies": {
+    "@platform/sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "^5.4.2"
+  }
+}

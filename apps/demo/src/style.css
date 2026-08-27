@@ -1,0 +1,36 @@
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 0 20px;
+  color: #111827;
+}
+textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+button {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 10px;
+}
+button:disabled {
+  background: #93c5fd;
+  cursor: not-allowed;
+}
+pre {
+  background: #f3f4f6;
+  padding: 16px;
+  border-radius: 8px;
+  margin-top: 20px;
+  white-space: pre-wrap;
+}
