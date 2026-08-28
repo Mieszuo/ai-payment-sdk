@@ -37,7 +37,6 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
   const [balance, setBalance] = useState(initialBalance);
   const [selectedProvider, setSelectedProvider] = useState("openai");
   const [emailInput, setEmailInput] = useState("");
-  const [showEmailField, setShowEmailField] = useState(false);
   const [authenticatedUser, setAuthenticatedUser] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -82,7 +81,6 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
     e.preventDefault();
     if (emailInput.trim()) {
       handleLogin("email", emailInput.trim());
-      setShowEmailField(false);
     }
   };
 
@@ -277,46 +275,36 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
                   Kontynuuj przez Google
                 </button>
 
-                {/* 2. Email Option */}
-                {showEmailField ? (
-                  <form onSubmit={handleEmailSubmit} style={{ display: "flex", gap: "8px" }}>
-                    <input
-                      type="email"
-                      required
-                      placeholder="twoj@email.com"
-                      value={emailInput}
-                      onChange={(e) => setEmailInput(e.target.value)}
-                      style={{
-                        flex: 1,
-                        padding: "10px 14px",
-                        borderRadius: "12px",
-                        background: "rgba(255, 255, 255, 0.08)",
-                        border: "1px solid rgba(255, 255, 255, 0.2)",
-                        color: "#ffffff",
-                        fontSize: "12px",
-                        outline: "none",
-                        fontFamily: "monospace"
-                      }}
-                    />
-                    <button
-                      type="submit"
-                      style={{
-                        padding: "10px 16px",
-                        borderRadius: "12px",
-                        background: accentColor,
-                        color: "#ffffff",
-                        border: "none",
-                        fontSize: "12px",
-                        fontWeight: 600,
-                        cursor: "pointer"
-                      }}
-                    >
-                      Dalej
-                    </button>
-                  </form>
-                ) : (
+                {/* Divider */}
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "2px 0" }}>
+                  <div style={{ flex: 1, height: "1px", background: "rgba(255, 255, 255, 0.1)" }} />
+                  <span style={{ fontSize: "10px", color: "rgba(243, 241, 255, 0.4)", textTransform: "uppercase", fontFamily: "monospace" }}>lub</span>
+                  <div style={{ flex: 1, height: "1px", background: "rgba(255, 255, 255, 0.1)" }} />
+                </div>
+
+                {/* 2. Email Option (Input above button) */}
+                <form onSubmit={handleEmailSubmit} style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <input
+                    type="email"
+                    required
+                    placeholder="Wpisz swój adres e-mail"
+                    value={emailInput}
+                    onChange={(e) => setEmailInput(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "11px 14px",
+                      borderRadius: "12px",
+                      background: "rgba(255, 255, 255, 0.08)",
+                      border: "1px solid rgba(255, 255, 255, 0.18)",
+                      color: "#ffffff",
+                      fontSize: "12px",
+                      outline: "none",
+                      boxSizing: "border-box",
+                      fontFamily: "monospace"
+                    }}
+                  />
                   <button
-                    onClick={() => setShowEmailField(true)}
+                    type="submit"
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -324,7 +312,7 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
                       gap: "8px",
                       width: "100%",
                       padding: "11px 16px",
-                      borderRadius: "14px",
+                      borderRadius: "12px",
                       fontSize: "13px",
                       fontWeight: 600,
                       cursor: "pointer",
@@ -340,29 +328,7 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
                     </svg>
                     Kontynuuj z adresem e-mail
                   </button>
-                )}
-
-                {/* 3. GitHub Option */}
-                <button
-                  onClick={() => handleLogin("github")}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "8px",
-                    width: "100%",
-                    padding: "10px 16px",
-                    borderRadius: "14px",
-                    fontSize: "12px",
-                    fontWeight: 500,
-                    cursor: "pointer",
-                    background: "rgba(255, 255, 255, 0.04)",
-                    color: "rgba(243, 241, 255, 0.8)",
-                    border: "1px solid rgba(255, 255, 255, 0.1)"
-                  }}
-                >
-                  <span>gh</span> Kontynuuj przez GitHub
-                </button>
+                </form>
               </div>
             )}
 

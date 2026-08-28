@@ -50,7 +50,6 @@ export const ComponentStudio: React.FC = () => {
 
   // Embedded modal preview state
   const [authEmail, setAuthEmail] = useState("");
-  const [showEmailInput, setShowEmailInput] = useState(false);
   const [loggedInUser, setLoggedInUser] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -390,39 +389,35 @@ export function MyApp() {
                       <span>Kontynuuj przez Google</span>
                     </button>
 
-                    {/* Email Login Form */}
-                    {showEmailInput ? (
-                      <form
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          if (authEmail) {
-                            setLoggedInUser(authEmail);
-                            setShowEmailInput(false);
-                            showToast(`Zalogowano jako ${authEmail}`);
-                          }
-                        }}
-                        className="flex gap-2"
-                      >
-                        <input
-                          type="email"
-                          required
-                          placeholder="twoj@email.com"
-                          value={authEmail}
-                          onChange={(e) => setAuthEmail(e.target.value)}
-                          className="flex-1 px-3 py-2 rounded-xl bg-white/[0.08] border border-white/[0.2] text-xs font-mono text-white outline-none"
-                        />
-                        <button
-                          type="submit"
-                          style={{ backgroundColor: accent.hex }}
-                          className="px-4 py-2 rounded-xl text-xs font-bold text-white cursor-pointer active:scale-95"
-                        >
-                          Dalej
-                        </button>
-                      </form>
-                    ) : (
+                    {/* Divider */}
+                    <div className="flex items-center gap-2 my-1">
+                      <div className="flex-1 h-px bg-white/10" />
+                      <span className="text-[10px] font-mono uppercase text-white/40">lub</span>
+                      <div className="flex-1 h-px bg-white/10" />
+                    </div>
+
+                    {/* Email Login Form (Input directly above button) */}
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (authEmail) {
+                          setLoggedInUser(authEmail);
+                          showToast(`Zalogowano jako ${authEmail}`);
+                        }
+                      }}
+                      className="space-y-2"
+                    >
+                      <input
+                        type="email"
+                        required
+                        placeholder="Wpisz swój adres e-mail"
+                        value={authEmail}
+                        onChange={(e) => setAuthEmail(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.08] border border-white/[0.18] text-xs font-mono text-white outline-none focus:border-white/40"
+                      />
                       <button
-                        onClick={() => setShowEmailInput(true)}
-                        className="w-full py-2.5 px-4 rounded-xl bg-white/[0.08] hover:bg-white/[0.12] border border-white/[0.16] text-xs font-medium text-white flex items-center justify-center gap-2 transition-all cursor-pointer"
+                        type="submit"
+                        className="w-full py-2.5 px-4 rounded-xl bg-white/[0.08] hover:bg-white/[0.12] border border-white/[0.16] text-xs font-medium text-white flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <rect width="20" height="16" x="2" y="4" rx="2"/>
@@ -430,19 +425,7 @@ export function MyApp() {
                         </svg>
                         <span>Kontynuuj z adresem e-mail</span>
                       </button>
-                    )}
-
-                    {/* GitHub Login */}
-                    <button
-                      onClick={() => {
-                        setLoggedInUser("developer@github.com");
-                        showToast("Zalogowano przez GitHub");
-                      }}
-                      className="w-full py-2 px-4 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.1] text-xs text-white/70 flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      <span className="font-mono font-bold">gh</span>
-                      <span>Kontynuuj przez GitHub</span>
-                    </button>
+                    </form>
                   </div>
                 )}
 
