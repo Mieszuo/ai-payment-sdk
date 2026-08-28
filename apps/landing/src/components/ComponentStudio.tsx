@@ -66,11 +66,11 @@ export const ComponentStudio: React.FC = () => {
   const handleCopyCode = async () => {
     let snippet = "";
     if (codeLang === "react") {
-      snippet = `import { AIPaymentModal } from "@ai-credits/react";
+      snippet = `import { AICreditsModal } from "@ai-credits/react";
 
 export function App() {
   return (
-    <AIPaymentModal
+    <AICreditsModal
       isOpen={isOpen}
       onClose={() => setIsOpen(false)}
       title="${appName}"
@@ -89,16 +89,16 @@ export function App() {
       snippet = `<!-- Add to HTML -->
 <script type="module" src="https://unpkg.com/@ai-credits/sdk/dist/widget.js"></script>
 
-<ai-payment-widget
+<ai-credits-widget
   app-name="${appName}"
   accent-color="${accent.hex}"
   border-radius="${radius}px"
   theme-bg="${theme.cardBg}"
   credit-label="${creditLabel}"
-></ai-payment-widget>
+></ai-credits-widget>
 
 <script>
-  const widget = document.querySelector('ai-payment-widget');
+  const widget = document.querySelector('ai-credits-widget');
   widget.open();
 </script>`;
     } else {
@@ -649,9 +649,9 @@ export function App() {
             {/* Code Box */}
             <div className="relative">
               <pre className="p-4 rounded-xl bg-zinc-900 border border-zinc-800/90 text-xs font-mono text-zinc-200 overflow-x-auto leading-relaxed max-h-48">
-                {codeLang === "react" && `import { AIPaymentModal } from "@ai-credits/react";
+                {codeLang === "react" && `import { AICreditsModal } from "@ai-credits/react";
 
-<AIPaymentModal
+<AICreditsModal
   isOpen={isOpen}
   onClose={() => setIsOpen(false)}
   title="${appName}"
@@ -663,13 +663,13 @@ export function App() {
     background: "${theme.cardBg}"
   }}
 />`}
-                {codeLang === "webcomponent" && `<ai-payment-widget
+                {codeLang === "webcomponent" && `<ai-credits-widget
   app-name="${appName}"
   accent-color="${accent.hex}"
   border-radius="${radius}px"
   theme-bg="${theme.cardBg}"
   credit-label="${creditLabel}"
-></ai-payment-widget>`}
+></ai-credits-widget>`}
                 {codeLang === "tailwind" && `:root {
   --ai-widget-accent: ${accent.hex};
   --ai-widget-accent-light: ${accent.lightHex};

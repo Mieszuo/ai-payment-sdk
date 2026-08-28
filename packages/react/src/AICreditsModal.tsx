@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { OpenAILogo, GeminiLogo, DeepSeekLogo, ClaudeLogo, StripeLogo } from "./ProviderLogos";
 
-export interface AIPaymentModalProps {
+export interface AICreditsModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialBalance?: number;
@@ -11,7 +11,7 @@ export interface AIPaymentModalProps {
   checkoutUrl?: (packId: string) => Promise<string>;
 }
 
-export const AIPaymentModal: React.FC<AIPaymentModalProps> = ({
+export const AICreditsModal: React.FC<AICreditsModalProps> = ({
   isOpen,
   onClose,
   initialBalance = 20,

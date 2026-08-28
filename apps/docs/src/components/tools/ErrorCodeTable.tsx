@@ -13,7 +13,7 @@ export const ERROR_DEFINITIONS: ErrorDefinition[] = [
     code: "INSUFFICIENT_CREDITS",
     httpStatus: 402,
     description: "User wallet does not have enough available credits for this action.",
-    recovery: "Prompt the user to top up their wallet or open <ai-payment-widget>."
+    recovery: "Prompt the user to top up their wallet or open <ai-credits-widget>."
   },
   {
     code: "RATE_LIMITED",

@@ -28,9 +28,9 @@ const steps = [
     subtitle: "30 seconds for end-users",
     description: "Drop a single HTML tag into your page. Users sign in with Google, receive 20 free welcome credits, and can top up instantly via Stripe Checkout.",
     code: `<!-- One line of HTML -->
-<ai-payment-widget
+<ai-credits-widget
   project="pk_live_demo123">
-</ai-payment-widget>
+</ai-credits-widget>
 
 <!-- User gets: -->
 <!-- Google PKCE login -->

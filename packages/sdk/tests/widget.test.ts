@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import { AIPaymentWidget, WidgetStateMachine, WidgetState, WIDGET_CSS } from "../src/ui";
+import { AICreditsWidget, WidgetStateMachine, WidgetState, WIDGET_CSS } from "../src/ui";
 import * as SdkIndex from "../src/index";
 
 describe("Shadow DOM Widget Isolation", () => {
@@ -39,14 +39,14 @@ describe("Shadow DOM Widget Isolation", () => {
   });
 
   it("attaches shadow root in open mode and renders encapsulated container", () => {
-    const widget = new AIPaymentWidget();
+    const widget = new AICreditsWidget();
     expect(widget.shadowRoot).toBeDefined();
     expect(widget.shadowRoot?.mode).toBe("open");
     expect(widget.stateMachine).toBeInstanceOf(WidgetStateMachine);
   });
 
   it("exports widget and state components from root SDK package", () => {
-    expect((SdkIndex as any).AIPaymentWidget).toBeDefined();
+    expect((SdkIndex as any).AICreditsWidget).toBeDefined();
     expect((SdkIndex as any).WidgetStateMachine).toBeDefined();
     expect((SdkIndex as any).WIDGET_CSS).toBeDefined();
   });

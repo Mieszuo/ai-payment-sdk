@@ -8,7 +8,7 @@ import { FeatureGrid } from "./components/FeatureGrid";
 import { LiveActionDemo } from "./components/LiveActionDemo";
 import { ComponentStudio } from "./components/ComponentStudio";
 import { LandingFooter } from "./components/LandingFooter";
-import { AIPaymentModal } from "@ai-credits/react";
+import { AICreditsModal } from "@ai-credits/react";
 
 export const App: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -61,7 +61,7 @@ export const App: React.FC = () => {
       <LandingFooter />
 
       {/* Drop-in AI Credits Modal matching exact design */}
-      <AIPaymentModal
+      <AICreditsModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         initialBalance={142}

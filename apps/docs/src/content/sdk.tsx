@@ -90,7 +90,7 @@ function BalanceBadge() {
   {
     id: "sdk-widget",
     sectionId: "sdk",
-    title: "Web Component <ai-payment-widget>",
+    title: "Web Component <ai-credits-widget>",
     description: "Zero-dependency Shadow DOM custom element with auth and top-ups.",
     content: (
       <div className="space-y-6">
@@ -99,7 +99,7 @@ function BalanceBadge() {
         </p>
         <CodeSnippet
           language="html"
-          code={`<ai-payment-widget project="pk_live_demo123"></ai-payment-widget>`}
+          code={`<ai-credits-widget project="pk_live_demo123"></ai-credits-widget>`}
         />
       </div>
     )
@@ -124,7 +124,7 @@ try {
   switch (err.code) {
     case "INSUFFICIENT_CREDITS":
       // User needs top-up
-      document.querySelector("ai-payment-widget")?.setAttribute("open", "true");
+      document.querySelector("ai-credits-widget")?.setAttribute("open", "true");
       break;
     case "RATE_LIMITED":
       console.warn("Too many requests. Retry after:", err.retryAfter);

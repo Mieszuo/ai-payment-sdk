@@ -57,7 +57,7 @@ claude mcp add ai-payment-gateway http://localhost:3000/v1/mcp
 - Framework: @ai-credits/sdk and @ai-credits/react
 - Public Client Key: ${projectKey}
 - Follow Two-Phase credit reservation pattern
-- Component: <ai-payment-widget project="${projectKey}"></ai-payment-widget>`;
+- Component: <ai-credits-widget project="${projectKey}"></ai-credits-widget>`;
 
     case "mcp":
       return `{

@@ -119,7 +119,7 @@ console.log(result.output);`}
     content: (
       <div className="space-y-6">
         <p className="text-sm text-zinc-300">
-          The SDK bundles an isolated Shadow DOM custom element <code>&lt;ai-payment-widget&gt;</code> that works in any framework or vanilla HTML page.
+          The SDK bundles an isolated Shadow DOM custom element <code>&lt;ai-credits-widget&gt;</code> that works in any framework or vanilla HTML page.
         </p>
 
         <CodeSnippet
@@ -132,7 +132,7 @@ console.log(result.output);`}
 </head>
 <body>
   <!-- Drop-in Payment & Auth Widget -->
-  <ai-payment-widget project="pk_live_demo123"></ai-payment-widget>
+  <ai-credits-widget project="pk_live_demo123"></ai-credits-widget>
 
   <script type="module">
     import { createAI } from "@ai-credits/sdk";

@@ -13,7 +13,7 @@ const BaseElement =
         }
       } as unknown as typeof HTMLElement);
 
-export class AIPaymentWidget extends BaseElement {
+export class AICreditsWidget extends BaseElement {
   public stateMachine: WidgetStateMachine;
   private overlay: HTMLElement | null = null;
   private balanceEl: HTMLElement | null = null;
@@ -354,6 +354,6 @@ export class AIPaymentWidget extends BaseElement {
 export * from "./styles";
 export * from "./state";
 
-if (typeof customElements !== "undefined" && !customElements.get("ai-payment-widget")) {
-  customElements.define("ai-payment-widget", AIPaymentWidget);
+if (typeof customElements !== "undefined" && !customElements.get("ai-credits-widget")) {
+  customElements.define("ai-credits-widget", AICreditsWidget);
 }
