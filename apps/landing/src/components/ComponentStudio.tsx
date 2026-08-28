@@ -3,7 +3,6 @@ import {
   OpenAILogo,
   GeminiLogo,
   DeepSeekLogo,
-  ClaudeLogo,
   CreditCounter,
   CreditPacksGrid,
   PaywallGuard,
@@ -329,13 +328,11 @@ export function MyApp() {
                   className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-md border border-white/20"
                   style={{ backgroundColor: accent.hex }}
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-                  </svg>
+                  <Sparkles className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white tracking-tight">Doładuj Kredyty AI</h3>
-                  <p className="text-xs text-white/50">Zaloguj się i wybierz pakiet doładowania</p>
+                  <h3 className="text-lg font-bold text-white tracking-tight">Use AI</h3>
+                  <p className="text-xs text-white/50">Log in to continue and unlock AI features</p>
                 </div>
               </div>
 
@@ -351,12 +348,8 @@ export function MyApp() {
 
             {/* 2-Column Content */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Left Column: Auth & Packs */}
-              <div className="space-y-5">
-                <label className="block text-[11px] font-mono uppercase tracking-wider text-white/50">
-                  1. Autoryzacja Konta
-                </label>
-
+              {/* Left Column: Auth, Balance & Packs */}
+              <div className="space-y-4">
                 {loggedInUser ? (
                   <div className="p-3.5 rounded-2xl bg-[#5effa8]/10 border border-[#5effa8]/25 flex items-center justify-between">
                     <div>
@@ -376,7 +369,7 @@ export function MyApp() {
                     <button
                       onClick={() => {
                         setLoggedInUser("developer@gmail.com");
-                        showToast("Zalogowano przez Google (+20 bonus)");
+                        showToast("Zalogowano przez Google");
                       }}
                       className="w-full py-2.5 px-4 rounded-xl bg-white text-[#07060d] hover:bg-white/90 text-xs font-semibold flex items-center justify-center gap-2.5 transition-all shadow-md active:scale-95 cursor-pointer"
                     >
@@ -386,17 +379,31 @@ export function MyApp() {
                         <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
                         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
                       </svg>
-                      <span>Kontynuuj przez Google</span>
+                      <span>Continue with Google</span>
+                    </button>
+
+                    {/* GitHub Button */}
+                    <button
+                      onClick={() => {
+                        setLoggedInUser("developer@github.com");
+                        showToast("Zalogowano przez GitHub");
+                      }}
+                      className="w-full py-2.5 px-4 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.14] text-xs font-semibold text-white flex items-center justify-center gap-2.5 transition-all cursor-pointer active:scale-95"
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                        <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+                      </svg>
+                      <span>Continue with GitHub</span>
                     </button>
 
                     {/* Divider */}
                     <div className="flex items-center gap-2 my-1">
                       <div className="flex-1 h-px bg-white/10" />
-                      <span className="text-[10px] font-mono uppercase text-white/40">lub</span>
+                      <span className="text-[10px] font-sans text-white/40">or</span>
                       <div className="flex-1 h-px bg-white/10" />
                     </div>
 
-                    {/* Email Login Form (Input directly above button) */}
+                    {/* Email Login Form */}
                     <form
                       onSubmit={(e) => {
                         e.preventDefault();
@@ -410,106 +417,205 @@ export function MyApp() {
                       <input
                         type="email"
                         required
-                        placeholder="Wpisz swój adres e-mail"
+                        placeholder="Email address"
                         value={authEmail}
                         onChange={(e) => setAuthEmail(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.08] border border-white/[0.18] text-xs font-mono text-white outline-none focus:border-white/40"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.05] border border-white/[0.12] text-xs text-white outline-none focus:border-white/30"
                       />
                       <button
                         type="submit"
-                        className="w-full py-2.5 px-4 rounded-xl bg-white/[0.08] hover:bg-white/[0.12] border border-white/[0.16] text-xs font-medium text-white flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
+                        style={{ backgroundColor: accent.hex }}
+                        className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold text-white flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 shadow-md"
                       >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <rect width="20" height="16" x="2" y="4" rx="2"/>
-                          <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-                        </svg>
-                        <span>Kontynuuj z adresem e-mail</span>
+                        <span>Continue with Email</span>
                       </button>
                     </form>
                   </div>
                 )}
 
-                {/* Credit Packs */}
-                <div className="pt-2">
-                  <label className="block text-[11px] font-mono uppercase tracking-wider text-white/50 mb-2">
-                    2. Wybierz Pakiet
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { credits: 100, price: "$5" },
-                      { credits: 500, price: "$20", pop: true },
-                      { credits: 2000, price: "$65" },
-                    ].map((pack) => (
-                      <button
-                        key={pack.credits}
-                        onClick={() => {
-                          setBalance((b) => b + pack.credits);
-                          showToast(`+${pack.credits} kredytów dodane!`);
-                        }}
-                        className={`p-3 rounded-2xl border text-center cursor-pointer transition-all hover:scale-105 active:scale-95 ${
-                          pack.pop
-                            ? "bg-white/[0.14] border-white/[0.3] shadow-md ring-1 ring-white/20"
-                            : "bg-white/[0.05] border-white/[0.1] hover:border-white/[0.2]"
-                        }`}
-                      >
-                        <div className="text-xs font-bold text-white font-mono">{pack.price}</div>
-                        <div className="text-[10px] text-white/60 font-mono mt-0.5">{pack.credits} cr</div>
-                      </button>
-                    ))}
+                {/* Balance Widget Card */}
+                <div className="p-3.5 rounded-2xl bg-white/[0.05] border border-white/[0.12] flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-white/50">Your balance</div>
+                      <div className="text-base font-bold text-white font-mono leading-none mt-0.5">
+                        {balance} <span className="text-xs text-white/60 font-sans font-normal">AI credits</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-white/40 hover:text-white cursor-pointer">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="16" x2="12" y2="12" />
+                      <line x1="12" y1="8" x2="12.01" y2="8" />
+                    </svg>
                   </div>
                 </div>
-              </div>
 
-              {/* Right Column: AI Models & Payment Brands */}
-              <div className="flex flex-col justify-between space-y-5">
-                <div>
-                  <label className="block text-[11px] font-mono uppercase tracking-wider text-white/50 mb-2">
-                    Wspierane Modele AI
-                  </label>
-                  <div className="space-y-2">
+                {/* Add AI Credits 4-pack Box */}
+                <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.1] space-y-2.5">
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-xs font-bold text-white">Add AI credits</span>
+                    <span className="text-[10px] text-indigo-400 font-medium">More credits, more possibilities.</span>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-1.5">
                     {[
-                      { id: "openai", name: "OpenAI GPT-4o", logo: <OpenAILogo size={14} />, bg: "#10a37f" },
-                      { id: "gemini", name: "Google Gemini 2.0", logo: <GeminiLogo size={16} />, bg: "#18181b" },
-                      { id: "deepseek", name: "DeepSeek V3/R1", logo: <DeepSeekLogo size={14} />, bg: "#0284c7" },
-                      { id: "claude", name: "Anthropic Claude 3.5", logo: <ClaudeLogo size={14} />, bg: "#d97757" },
-                    ].map((p) => (
+                      { price: 1, credits: 100 },
+                      { price: 3, credits: 350, bonus: "+17%" },
+                      { price: 5, credits: 650, bonus: "+30%", popular: true },
+                      { price: 10, credits: 1400, bonus: "+40%" },
+                    ].map((pack) => (
                       <div
-                        key={p.id}
-                        onClick={() => setSelectedModel(p.id as any)}
-                        className={`flex items-center justify-between p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
-                          selectedModel === p.id
-                            ? "bg-white/[0.14] text-white border-white/[0.28] shadow-sm"
-                            : "bg-white/[0.04] text-white/60 border-white/[0.08] hover:text-white"
+                        key={pack.price}
+                        onClick={() => {
+                          setBalance((b) => b + pack.credits);
+                          showToast(`+${pack.credits} credits added!`);
+                        }}
+                        className={`relative p-2 rounded-xl border text-center cursor-pointer transition-all hover:scale-105 active:scale-95 flex flex-col items-center gap-0.5 ${
+                          pack.popular
+                            ? "bg-indigo-500/15 border-indigo-500/50 shadow-[0_0_12px_rgba(99,102,241,0.25)] ring-1 ring-indigo-500/30"
+                            : "bg-white/[0.04] border-white/[0.08] hover:border-white/[0.18]"
                         }`}
                       >
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-6 h-6 rounded-md flex items-center justify-center text-white shrink-0" style={{ backgroundColor: p.bg }}>
-                            {p.logo}
-                          </div>
-                          <span className="font-medium text-white">{p.name}</span>
-                        </div>
-                        {selectedModel === p.id && (
-                          <span className="text-[10px] text-[#5effa8] font-mono font-bold">Aktywny</span>
+                        {pack.popular && (
+                          <span className="absolute -top-2 px-1.5 py-0.2 rounded-full bg-indigo-600 text-white text-[7px] font-bold uppercase tracking-wider">
+                            Popular
+                          </span>
+                        )}
+                        <span className="text-xs font-bold text-white font-mono">${pack.price}</span>
+                        <span className="text-[10px] font-bold text-white/90 font-mono">{pack.credits}</span>
+                        <span className="text-[8px] text-white/40">credits</span>
+                        {pack.bonus && (
+                          <span className="text-[7px] font-mono text-indigo-300 bg-indigo-500/20 px-1 rounded mt-0.5">
+                            {pack.bonus}
+                          </span>
                         )}
                       </div>
                     ))}
                   </div>
-                </div>
 
-                {/* Official Vector Payment Badges & Legal Terms */}
-                <div className="pt-4 border-t border-white/[0.1] space-y-3">
-                  <div className="flex items-center justify-center gap-3 flex-wrap">
-                    <ApplePayLogo className="hover:opacity-90 transition-opacity" />
-                    <GooglePayLogo className="hover:opacity-90 transition-opacity" />
-                    <VisaLogo className="hover:opacity-90 transition-opacity" />
-                    <MastercardLogo className="hover:opacity-90 transition-opacity" />
-                  </div>
-
-                  <div className="text-[10px] text-white/50 text-center leading-tight">
-                    Przechodząc dalej, akceptujesz <a href="#terms" className="text-white/80 underline">Regulamin</a> oraz <a href="#privacy" className="text-white/80 underline">Politykę Prywatności</a>.
+                  <div className="text-[9px] text-white/40 text-center flex items-center justify-center gap-1 font-sans">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    <span>Secure payment powered by Stripe</span>
                   </div>
                 </div>
               </div>
+
+              {/* Right Column: AI Providers & Payment Badges Under Providers */}
+              <div className="flex flex-col justify-between space-y-4">
+                <div>
+                  <h4 className="text-sm font-bold text-white">Choose AI provider</h4>
+                  <p className="text-[11px] text-white/50 mt-0.5 mb-3">Select which AI model you want to use.</p>
+
+                  <div className="space-y-2">
+                    {[
+                      {
+                        id: "openai",
+                        name: "OpenAI",
+                        desc: "Most capable models for text, vision and more.",
+                        recommended: true,
+                        logo: <OpenAILogo size={16} />,
+                        bg: "#10a37f"
+                      },
+                      {
+                        id: "gemini",
+                        name: "Google Gemini",
+                        desc: "Powerful multimodal models from Google.",
+                        logo: <GeminiLogo size={16} />,
+                        bg: "#1e293b"
+                      },
+                      {
+                        id: "deepseek",
+                        name: "DeepSeek",
+                        desc: "High-performance models at lower cost.",
+                        logo: <DeepSeekLogo size={14} />,
+                        bg: "#0284c7"
+                      },
+                    ].map((p) => {
+                      const isSelected = selectedModel === p.id;
+                      return (
+                        <div
+                          key={p.id}
+                          onClick={() => setSelectedModel(p.id as any)}
+                          className={`flex items-center justify-between p-3 rounded-2xl border text-xs cursor-pointer transition-all ${
+                            isSelected
+                              ? "bg-indigo-500/10 border-indigo-500 shadow-sm"
+                              : "bg-white/[0.04] text-white/60 border-white/[0.08] hover:text-white"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white shrink-0" style={{ backgroundColor: p.bg }}>
+                              {p.logo}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-bold text-white">{p.name}</span>
+                                {p.recommended && (
+                                  <span className="text-[8px] font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-1.5 py-0.5 rounded">
+                                    Recommended
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-[10px] text-white/50 mt-0.5">{p.desc}</div>
+                            </div>
+                          </div>
+
+                          <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${isSelected ? "border-indigo-500" : "border-white/20"}`}>
+                            {isSelected && <div className="w-2 h-2 rounded-full bg-indigo-500" />}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Payment Badges Placed Under Providers (As Requested) */}
+                  <div className="mt-4 p-3 rounded-2xl bg-white/[0.03] border border-white/[0.07] space-y-2">
+                    <div className="text-[9px] uppercase tracking-wider text-white/40 text-center font-mono">
+                      Obsługiwane Metody Płatności
+                    </div>
+                    <div className="flex items-center justify-center gap-2.5 flex-wrap">
+                      <ApplePayLogo className="hover:opacity-90 transition-opacity" />
+                      <GooglePayLogo className="hover:opacity-90 transition-opacity" />
+                      <VisaLogo className="hover:opacity-90 transition-opacity" />
+                      <MastercardLogo className="hover:opacity-90 transition-opacity" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3 Trust Features Under Providers */}
+                <div className="grid grid-cols-3 gap-2 pt-3 border-t border-white/[0.08]">
+                  <div>
+                    <div className="text-[10px] font-bold text-indigo-400 flex items-center gap-1">
+                      <span>🛡️</span> Secure & private
+                    </div>
+                    <p className="text-[8px] text-white/40 mt-0.5 leading-tight">Your data is encrypted and never shared.</p>
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-bold text-indigo-400 flex items-center gap-1">
+                      <span>⚡</span> Pay as you go
+                    </div>
+                    <p className="text-[8px] text-white/40 mt-0.5 leading-tight">Only pay for what you use.</p>
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-bold text-indigo-400 flex items-center gap-1">
+                      <span>🔄</span> Works anywhere
+                    </div>
+                    <p className="text-[8px] text-white/40 mt-0.5 leading-tight">Use in any project with our SDK.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Bottom Disclaimer */}
+            <div className="mt-6 pt-3 border-t border-white/[0.08] text-center text-[10px] text-white/45">
+              By continuing, you agree to our <a href="#terms" className="text-indigo-400 hover:underline">Terms of Service</a> and <a href="#privacy" className="text-indigo-400 hover:underline">Privacy Policy</a>.
             </div>
           </div>
         )}
