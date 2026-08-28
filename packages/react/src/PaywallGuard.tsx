@@ -41,9 +41,9 @@ export const PaywallGuard: React.FC<PaywallGuardProps> = ({
 
   if (isLoading && manualBalance === undefined) {
     return (
-      <div className="p-8 rounded-2xl bg-zinc-900/50 border border-zinc-800/80 flex items-center justify-center gap-2 text-xs text-zinc-400 font-mono">
-        <span className="w-2 h-2 rounded-full bg-blue-400 animate-ping" />
-        <span>Verifying credit wallet...</span>
+      <div className="p-8 rounded-[24px] bg-white/[0.05] backdrop-blur-2xl border border-white/[0.12] flex items-center justify-center gap-2 text-xs font-mono text-white/60 shadow-[0_16px_48px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.18)]">
+        <span className="w-2 h-2 rounded-full bg-[#5effa8] animate-ping" />
+        <span>Verifying credits...</span>
       </div>
     );
   }
@@ -57,31 +57,28 @@ export const PaywallGuard: React.FC<PaywallGuardProps> = ({
   }
 
   return (
-    <div className="relative p-6 sm:p-8 rounded-2xl bg-[#090e1d]/95 backdrop-blur-xl border border-blue-500/30 shadow-2xl shadow-blue-950/50 text-center flex flex-col items-center justify-center max-w-lg mx-auto my-4 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]">
-      {/* Radiant Pulse Icon Frame */}
-      <div className="relative w-14 h-14 rounded-2xl bg-blue-600/15 border border-blue-500/30 flex items-center justify-center text-blue-400 mb-5 shadow-inner">
-        <span className="absolute -inset-1 rounded-2xl bg-blue-500/20 blur-sm animate-pulse-ring pointer-events-none" />
-        <svg className="w-6 h-6 fill-current relative z-10 animate-pulse-dot" viewBox="0 0 24 24">
+    <div className="relative p-8 sm:p-10 rounded-[28px] bg-white/[0.06] backdrop-blur-2xl backdrop-saturate-150 border border-white/[0.16] shadow-[0_24px_70px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.25)] text-center flex flex-col items-center justify-center max-w-lg mx-auto my-4 transition-all duration-300">
+      {/* Radiant Glowing Icon Frame */}
+      <div className="relative w-14 h-14 rounded-2xl bg-white/[0.08] border border-white/[0.18] flex items-center justify-center text-white mb-5 shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]">
+        <span className="absolute -inset-1.5 rounded-2xl bg-gradient-to-tr from-[#4b2fd6]/40 to-[#d62f8f]/40 blur-md animate-pulse pointer-events-none" />
+        <svg className="w-6 h-6 fill-current relative z-10 text-white" viewBox="0 0 24 24">
           <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
         </svg>
       </div>
 
-      <h3 className="text-base sm:text-lg font-bold text-white mb-1.5 tracking-tight">
-        Additional Credits Required
+      <h3 className="text-lg font-bold text-[#f3f1ff] mb-2 tracking-tight">
+        Kredyty Wymagane
       </h3>
-      <p className="text-xs sm:text-sm text-zinc-400 mb-6 max-w-sm leading-relaxed">
-        You need <strong className="text-zinc-100 font-mono font-semibold">{requiredCredits} credits</strong> to run {featureName}. Your current balance is <span className="font-mono font-bold text-amber-400">{currentBalance} credits</span>.
+      <p className="text-xs sm:text-sm text-white/70 mb-6 max-w-sm leading-relaxed font-sans">
+        Potrzebujesz <strong className="text-white font-mono font-semibold">{requiredCredits} kredytów</strong>, aby uruchomić {featureName}. Twoje obecne saldo: <span className="font-mono font-bold text-[#5effa8]">{currentBalance} kredytów</span>.
       </p>
 
       {onTopUpClick && (
         <button
           onClick={onTopUpClick}
-          className="relative px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-95 text-xs font-semibold text-white transition-all duration-200 shadow-lg shadow-blue-500/30 cursor-pointer overflow-hidden group"
+          className="px-6 py-3 rounded-full bg-white/[0.92] text-[#12101c] hover:bg-white active:scale-95 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 shadow-[0_14px_40px_rgba(255,255,255,0.25)] cursor-pointer"
         >
-          <span className="relative z-10 flex items-center gap-1.5">
-            <span>Top Up Credits</span>
-            <span className="transition-transform duration-200 group-hover:translate-x-0.5">&rarr;</span>
-          </span>
+          Doładuj kredyty →
         </button>
       )}
     </div>
