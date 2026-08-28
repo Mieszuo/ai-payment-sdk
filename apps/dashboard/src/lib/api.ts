@@ -47,7 +47,8 @@ export class DashboardApiClient {
       publicKey: "pk_live_demo123",
       secretKeyMasked: "sk_live_••••••••••••••••••••",
       allowedDomains: ["http://localhost:5173", "https://searchlize.com"],
-      environment: "production"
+      environment: "production",
+      walletMode: "universal"
     };
     this.demoProjects.set(proj.projectId, proj);
 

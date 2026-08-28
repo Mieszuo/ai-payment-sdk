@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { OpenAILogo, GeminiLogo, DeepSeekLogo, ClaudeLogo, StripeLogo } from "./ProviderLogos";
+import { OpenAILogo, GeminiLogo, DeepSeekLogo, ClaudeLogo } from "./ProviderLogos";
 
 export interface AICreditsModalProps {
   isOpen: boolean;

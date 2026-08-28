@@ -1,0 +1,75 @@
+# AI Payment Platform / @ai-credits/sdk Documentation for AI Assistants & Coding Agents
+
+> AI Payment Platform is a zero-backend monetization engine and credit billing infrastructure for AI-powered web applications. It allows developers to monetize OpenAI, Anthropic, Gemini, DeepSeek, and custom LLM prompts in 3 lines of code without client-side API keys or custom Stripe webhook infrastructure.
+
+## Quick Reference for AI Coding Agents
+
+When generating code for applications using AI Payment Platform, follow these rules:
+
+1. **Packages**:
+   - SDK Core: `@ai-credits/sdk`
+   - React Components & Modals: `@ai-credits/react`
+   - Shared Types & Invariants: `@ai-credits/shared`
+
+2. **Installation**:
+   - Bun: `bun add @ai-credits/sdk @ai-credits/react`
+   - NPM: `npm install @ai-credits/sdk @ai-credits/react`
+   - PNPM: `pnpm add @ai-credits/sdk @ai-credits/react`
+   - Script Tag: `<script src="https://js.aipayment.com/v1/sdk.js"></script>`
+
+3. **Client-Side Initialization**:
+   Always use public project keys (`pk_live_*` or `pk_test_*`) on client applications. Never expose secret keys (`sk_live_*`) in frontend bundles.
+
+   ```typescript
+   import { AiPay } from '@ai-credits/sdk';
+
+   const aiPay = new AiPay({
+     apiKey: 'pk_live_demo123',
+     model: 'gpt-4o', // or 'claude-3-5-sonnet', 'gemini-1.5-pro'
+   });
+   ```
+
+4. **Charging Credits on AI Invocations**:
+   ```typescript
+   try {
+     const result = await aiPay.charge({
+       userId: 'user_123',
+       credits: 10,
+       prompt: 'Generate an executive summary for this document.',
+     });
+     console.log('AI Result:', result.text);
+   } catch (error: any) {
+     if (error.code === 'INSUFFICIENT_CREDITS') {
+       // Open top-up credit modal or redirect to Stripe checkout
+       openCreditTopupModal();
+     }
+   }
+   ```
+
+5. **React Drop-in Modal & Widget**:
+   ```tsx
+   import React, { useState } from 'react';
+   import { AICreditsModal } from '@ai-credits/react';
+
+   export function App() {
+     const [isOpen, setIsOpen] = useState(false);
+
+     return (
+       <div>
+         <button onClick={() => setIsOpen(true)}>Buy Credits</button>
+         <AICreditsModal
+           isOpen={isOpen}
+           onClose={() => setIsOpen(false)}
+           initialBalance={100}
+         />
+       </div>
+     );
+   }
+   ```
+
+## Detailed Sections & Machine-Readable Resources
+
+- [Full Consolidated AI Documentation](/llms-full.txt): Complete SDK API, methods, error codes, and React UI components in a single markdown file.
+- [OpenAPI 3.1 JSON Specification](/openapi.json): Complete machine-readable API routes, parameter definitions, and request/response models for Tool Calling and Custom GPTs.
+- [TypeScript Definitions](/docs#sdk-types): Interfaces for User Wallets, Ledger Transactions, and Managed Actions.
+- [Error Handling Guide](/docs#sdk-errors): Exhaustive catalog of Gateway error codes (`INSUFFICIENT_CREDITS`, `ACTION_RATE_LIMITED`, `MARGIN_GUARD_EXCEEDED`).

@@ -5,15 +5,11 @@ import {
   Sparkles,
   Copy,
   Check,
-  Eye,
   Code,
   Palette,
   Layers,
   Shield,
-  CreditCard,
-  Zap,
-  RotateCcw,
-  Layout
+  Zap
 } from "lucide-react";
 
 export type AccentColor = {

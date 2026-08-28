@@ -11,6 +11,7 @@ export interface ProjectConfig {
   secretKeyMasked: string;
   allowedDomains: string[];
   environment: "production" | "sandbox";
+  walletMode: "universal" | "isolated";
 }
 
 export interface ActionItem {

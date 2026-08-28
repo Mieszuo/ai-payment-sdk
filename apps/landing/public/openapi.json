@@ -1,0 +1,171 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AI Payment Platform Gateway API",
+    "version": "1.0.0",
+    "description": "Zero-backend AI monetization, credit wallet billing, and atomic model execution API."
+  },
+  "servers": [
+    {
+      "url": "https://api.aipayment.com/v1",
+      "description": "Production Gateway"
+    }
+  ],
+  "paths": {
+    "/charge": {
+      "post": {
+        "summary": "Charge user credits and execute AI prompt",
+        "operationId": "chargeAndExecuteAI",
+        "description": "Deducts specified credits from user wallet, applies Margin Guard checks, and routes the prompt to the upstream AI model.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChargeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Execution successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChargeResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Insufficient user credits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/credits/balance": {
+      "get": {
+        "summary": "Retrieve user credit balance",
+        "operationId": "getUserBalance",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Balance retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BalanceResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ChargeRequest": {
+        "type": "object",
+        "required": ["userId", "credits", "prompt"],
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "Unique identifier of the end-user"
+          },
+          "credits": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Amount of credits to deduct"
+          },
+          "prompt": {
+            "type": "string",
+            "description": "User prompt text for the AI model"
+          },
+          "model": {
+            "type": "string",
+            "default": "gpt-4o",
+            "description": "Target LLM model (gpt-4o, claude-3-5-sonnet, gemini-1.5-pro)"
+          },
+          "systemPrompt": {
+            "type": "string",
+            "description": "Optional system prompt instructions"
+          }
+        }
+      },
+      "ChargeResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "creditsDeducted": {
+            "type": "integer"
+          },
+          "remainingBalance": {
+            "type": "integer"
+          },
+          "modelUsed": {
+            "type": "string"
+          }
+        }
+      },
+      "BalanceResponse": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "balance": {
+            "type": "integer"
+          },
+          "currency": {
+            "type": "string",
+            "default": "credits"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "INSUFFICIENT_CREDITS",
+              "INVALID_API_KEY",
+              "MARGIN_GUARD_EXCEEDED",
+              "ACTION_RATE_LIMITED",
+              "PROVIDER_UNAVAILABLE"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

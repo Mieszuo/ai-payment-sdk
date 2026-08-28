@@ -34,6 +34,7 @@ interface DashboardContextValue {
   rotateSecretKey: () => Promise<{ newSecretKey: string }>;
   addAllowedDomain: (domain: string) => void;
   removeAllowedDomain: (domain: string) => void;
+  updateWalletMode: (mode: "universal" | "isolated") => void;
 }
 
 const defaultTelemetry: FinancialTelemetry = {
@@ -51,7 +52,8 @@ const defaultProject: ProjectConfig = {
   publicKey: "pk_live_demo123",
   secretKeyMasked: "sk_live_••••••••••••••••••••",
   allowedDomains: ["http://localhost:5173", "https://searchlize.com"],
-  environment: "production"
+  environment: "production",
+  walletMode: "universal"
 };
 
 const defaultActions: ActionItem[] = [
@@ -78,7 +80,7 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [mode, setModeState] = useState<RuntimeMode>("PRODUCTION_MODE");
   const [api] = useState<DashboardApiClient>(() => createDashboardApiClient({ mode: "PRODUCTION_MODE" }));
   const [gatewayStatus, setGatewayStatus] = useState<GatewayStatus>("connected");
-  const [projects] = useState<ProjectConfig[]>([defaultProject]);
+  const [projects, setProjects] = useState<ProjectConfig[]>([defaultProject]);
   const [activeProjectId, setActiveProjectId] = useState<string>("proj_demo");
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
   const [selectedActionName, setSelectedActionName] = useState<string | null>("optimize-resume");
@@ -147,6 +149,16 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({ children 
     return published;
   };
 
+  const updateWalletMode = (newWalletMode: "universal" | "isolated") => {
+    setProjects((prev) =>
+      prev.map((p) =>
+        p.projectId === activeProjectId
+          ? { ...p, walletMode: newWalletMode }
+          : p
+      )
+    );
+  };
+
   const rotateSecretKey = async (): Promise<{ newSecretKey: string }> => {
     const result = await api.rotateSecretKey(activeProject.projectId);
     activeProject.secretKeyMasked = result.masked;
@@ -178,7 +190,8 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({ children 
         publishAction,
         rotateSecretKey,
         addAllowedDomain,
-        removeAllowedDomain
+        removeAllowedDomain,
+        updateWalletMode
       }}
     >
       {children}

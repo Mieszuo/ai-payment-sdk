@@ -1,0 +1,155 @@
+# AI Payment Platform (@ai-credits/sdk) — Complete AI Developer Reference
+
+## 1. System Architecture & Core Concept
+
+AI Payment Platform eliminates the need for developers to build backend LLM proxies, Stripe webhook handlers, and user wallet databases for AI applications.
+
+### Architecture Overview
+1. **Developer Console**: Developer registers an application, gets a public key (`pk_live_*`) and secret key (`sk_live_*`).
+2. **Universal Credit Wallet**: End-users hold a credit balance. Credits can be purchased via Stripe Checkout or granted on signup.
+3. **Gateway Execution & Atomic Two-Phase Locking**:
+   - Step 1 (Reserve): Gateway verifies and reserves the specified credits atomically (`SELECT ... FOR UPDATE`).
+   - Step 2 (Execute): Gateway routes the prompt to the requested model (OpenAI, Anthropic, Gemini, DeepSeek).
+   - Step 3 (Settle): Margin Guard ensures the model token cost is below threshold, deducts user credits, credits developer margin spread, and logs SHA-256 audit entry.
+
+---
+
+## 2. Package Installation
+
+```bash
+# Using Bun (Recommended)
+bun add @ai-credits/sdk @ai-credits/react
+
+# Using NPM
+npm install @ai-credits/sdk @ai-credits/react
+
+# Using PNPM
+pnpm add @ai-credits/sdk @ai-credits/react
+
+# Using Yarn
+yarn add @ai-credits/sdk @ai-credits/react
+```
+
+---
+
+## 3. Core SDK Reference (`@ai-credits/sdk`)
+
+### `AiPay` Class
+
+```typescript
+import { AiPay } from '@ai-credits/sdk';
+
+const aiPay = new AiPay({
+  apiKey: string;          // pk_live_* (public client key) or sk_live_* (backend)
+  baseUrl?: string;        // Optional custom gateway URL (default: https://api.aipayment.com)
+  model?: string;          // Default model: 'gpt-4o', 'claude-3-5-sonnet', etc.
+  timeoutMs?: number;      // Request timeout in milliseconds (default: 30000)
+});
+```
+
+### Method: `aiPay.charge(params)`
+
+Charges user credits and executes the AI prompt through the Gateway.
+
+#### Request Parameters
+- `userId` (`string`, required): Unique identifier of the end user in your application.
+- `credits` (`number`, required): Number of credits to charge the user for this operation.
+- `prompt` (`string`, required): The user prompt or instructions to send to the model.
+- `systemPrompt` (`string`, optional): Custom system instructions.
+- `model` (`string`, optional): Override default model for this specific call.
+- `temperature` (`number`, optional): Sampling temperature (0.0 to 2.0).
+
+#### Return Value
+```typescript
+interface ChargeResult {
+  id: string;               // Transaction ID
+  text: string;             // AI generated response text
+  creditsDeducted: number;  // Actual credits billed
+  remainingBalance: number; // User's updated balance
+  modelUsed: string;        // AI model executed
+}
+```
+
+#### Example Usage
+```typescript
+import { AiPay } from '@ai-credits/sdk';
+
+const aiPay = new AiPay({ apiKey: 'pk_live_sec98127391823' });
+
+async function handleGenerateEssay(userId: string, topic: string) {
+  try {
+    const result = await aiPay.charge({
+      userId: userId,
+      credits: 15,
+      prompt: `Write a comprehensive essay on: ${topic}`,
+      model: 'gpt-4o',
+    });
+
+    console.log('Essay:', result.text);
+    console.log('User remaining balance:', result.remainingBalance);
+    return result.text;
+  } catch (err: any) {
+    if (err.code === 'INSUFFICIENT_CREDITS') {
+      console.warn('User needs to top up credits');
+      throw new Error('Please purchase more credits to continue.');
+    }
+    throw err;
+  }
+}
+```
+
+---
+
+## 4. React UI Components (`@ai-credits/react`)
+
+### `<AICreditsModal />`
+A drop-in credit top-up and purchase modal with Stripe Checkout integration.
+
+```tsx
+import React, { useState } from 'react';
+import { AICreditsModal } from '@ai-credits/react';
+
+export const PricingTrigger = ({ userId }: { userId: string }) => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <button 
+        onClick={() => setOpen(true)}
+        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 font-semibold"
+      >
+        Top Up Credits
+      </button>
+
+      <AICreditsModal
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        initialBalance={45}
+        onCreditPurchased={(credits, price) => {
+          console.log(`User purchased ${credits} credits for $${price}`);
+          setOpen(false);
+        }}
+      />
+    </>
+  );
+};
+```
+
+---
+
+## 5. Error Code Reference
+
+| Error Code | HTTP Status | Description | Recommended Action |
+|---|---|---|---|
+| `INSUFFICIENT_CREDITS` | 402 | User wallet balance is less than required credits. | Open `<AICreditsModal />` or redirect to credit top-up checkout. |
+| `INVALID_API_KEY` | 401 | Provided `apiKey` is missing or invalid. | Check project settings in developer console. |
+| `MARGIN_GUARD_EXCEEDED` | 400 | Provider token cost exceeded developer margin threshold. | Lower max_tokens or optimize prompt length. |
+| `ACTION_RATE_LIMITED` | 429 | User exceeded rate limit per minute. | Implement exponential backoff retry. |
+| `PROVIDER_UNAVAILABLE` | 503 | Upstream LLM provider (OpenAI/Anthropic) experienced an outage. | Retry with fallback model. |
+
+---
+
+## 6. Rules for AI Code Generators
+1. Always wrap calls to `aiPay.charge()` in `try/catch` and specifically handle `err.code === 'INSUFFICIENT_CREDITS'`.
+2. Do not import OpenAI or Anthropic SDKs on the client when using `@ai-credits/sdk` — the gateway handles token authentication securely.
+3. Use `@ai-credits/react` for any UI credit balances, top-up modals, and credit counters.

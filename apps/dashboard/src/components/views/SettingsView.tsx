@@ -226,6 +226,90 @@ export const SettingsView: React.FC = () => {
         </div>
       </div>
 
+      {/* Wallet Architecture & Credit Sharing Mode */}
+      <div className="glass-panel p-6">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-purple-400" />
+            Wallet Architecture &amp; Credit Sharing
+          </h3>
+          <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20">
+            {activeProject.walletMode === "universal" ? "Universal AI Wallet" : "Isolated Project Wallet"}
+          </span>
+        </div>
+        <p className="text-xs text-zinc-400 mb-5">
+          Control whether user credit wallets are globally shared across the AI Payment network or isolated strictly to this application.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Universal Wallet Option */}
+          <div
+            onClick={() => useDashboard().updateWalletMode("universal")}
+            className={`p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
+              activeProject.walletMode === "universal"
+                ? "bg-blue-950/30 border-blue-500/60 shadow-lg shadow-blue-950/50"
+                : "bg-zinc-900/40 border-zinc-800 hover:border-zinc-700"
+            }`}
+          >
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-white flex items-center gap-1.5">
+                  <Globe className="w-3.5 h-3.5 text-blue-400" />
+                  Universal AI Wallet (Recommended)
+                </span>
+                <span className="text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 font-mono">
+                  High Conversion
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-400 leading-relaxed">
+                Users can spend their universal credit balance in your app immediately. You earn full developer margin when your AI features are invoked.
+              </p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-zinc-800/80 flex items-center justify-between text-[11px] text-zinc-400">
+              <span>Frictionless 1-Click usage</span>
+              <span className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
+                activeProject.walletMode === "universal" ? "border-blue-400 bg-blue-500" : "border-zinc-600"
+              }`}>
+                {activeProject.walletMode === "universal" && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+              </span>
+            </div>
+          </div>
+
+          {/* Isolated Wallet Option */}
+          <div
+            onClick={() => useDashboard().updateWalletMode("isolated")}
+            className={`p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
+              activeProject.walletMode === "isolated"
+                ? "bg-purple-950/30 border-purple-500/60 shadow-lg shadow-purple-950/50"
+                : "bg-zinc-900/40 border-zinc-800 hover:border-zinc-700"
+            }`}
+          >
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-white flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-purple-400" />
+                  Isolated Project Wallet (White-label)
+                </span>
+                <span className="text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono">
+                  Private
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-400 leading-relaxed">
+                Credits purchased in this project are strictly isolated to this application ID (<code className="text-zinc-300">{activeProject.projectId}</code>).
+              </p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-zinc-800/80 flex items-center justify-between text-[11px] text-zinc-400">
+              <span>B2B / Custom SaaS mode</span>
+              <span className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
+                activeProject.walletMode === "isolated" ? "border-purple-400 bg-purple-500" : "border-zinc-600"
+              }`}>
+                {activeProject.walletMode === "isolated" && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* One-time Secret Key Modal */}
       {newSecretKey && (
         <SecretKeyModal
