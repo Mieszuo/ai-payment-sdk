@@ -61,29 +61,35 @@ export const CreditPacksGrid: React.FC<CreditPacksGridProps> = ({
   className = "",
 }) => {
   return (
-    <div className={`space-y-5 ${className}`}>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-4">
+    <div className={`space-y-6 ${className}`}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {packs.map((pack) => (
           <div
             key={pack.id}
-            className={`group relative rounded-[26px] p-7 flex flex-col justify-between transition-all duration-300 ease-[cubic-bezier(0.2,1,0.3,1)] hover:-translate-y-1.5 backdrop-blur-2xl backdrop-saturate-150 border ${
+            className={`rounded-[26px] p-7 flex flex-col justify-between transition-all duration-300 ease-[cubic-bezier(0.2,1,0.3,1)] hover:-translate-y-1.5 backdrop-blur-2xl backdrop-saturate-150 border ${
               pack.popular
                 ? "bg-white/[0.09] border-white/[0.3] shadow-[0_24px_70px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.35)] ring-1 ring-white/20"
                 : "bg-white/[0.05] border-white/[0.12] hover:border-white/[0.22] hover:bg-white/[0.08] shadow-[0_16px_48px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.18)]"
             }`}
           >
-            {/* Clean top badge with zero text collision */}
-            {pack.popular && (
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-white text-[#07060d] shadow-[0_8px_24px_rgba(255,255,255,0.35)] flex items-center gap-1.5 z-20 whitespace-nowrap">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#4b2fd6] animate-pulse" />
-                <span>Polecany Wybór</span>
-              </div>
-            )}
-
             <div>
-              {/* Header row */}
-              <div className="flex items-center justify-between gap-2 mb-3 pt-1">
-                <h4 className="text-sm font-bold tracking-wide text-white">
+              {/* Dedicated Top Badge Row: Fixed height, zero collisions */}
+              <div className="h-6 mb-3 flex items-center">
+                {pack.popular ? (
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-white text-[#07060d] shadow-[0_4px_16px_rgba(255,255,255,0.3)]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#4b2fd6] animate-pulse" />
+                    <span>Polecany Wybór</span>
+                  </div>
+                ) : (
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-white/30">
+                    Plan
+                  </span>
+                )}
+              </div>
+
+              {/* Title & Price-per-credit */}
+              <div className="flex items-center justify-between gap-2 mb-4">
+                <h4 className="text-base font-bold text-white tracking-tight">
                   {pack.name}
                 </h4>
                 <span className="text-[11px] font-mono text-white/50 font-medium shrink-0">
@@ -91,12 +97,12 @@ export const CreditPacksGrid: React.FC<CreditPacksGridProps> = ({
                 </span>
               </div>
 
-              {/* Credits big number & label */}
-              <div className="my-5 flex items-baseline gap-2">
+              {/* Credits Number & Unit */}
+              <div className="my-4 flex items-baseline gap-2">
                 <span className="text-4xl font-extrabold font-mono text-white tracking-tight">
                   {pack.credits.toLocaleString()}
                 </span>
-                <span className="text-[11px] text-white/50 font-semibold uppercase tracking-widest font-mono">
+                <span className="text-xs text-white/50 font-semibold uppercase tracking-wider font-mono">
                   kredytów
                 </span>
               </div>
@@ -115,7 +121,7 @@ export const CreditPacksGrid: React.FC<CreditPacksGridProps> = ({
                 </span>
               </div>
 
-              {/* Action button */}
+              {/* Checkout Button */}
               <button
                 onClick={() => onSelectPack?.(pack)}
                 style={{

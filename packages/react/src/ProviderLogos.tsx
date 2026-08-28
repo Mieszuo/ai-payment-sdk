@@ -23,7 +23,7 @@ export const OpenAILogo: React.FC<LogoProps> = ({ size = 20, className = "" }) =
 );
 
 /**
- * Authentic Google Gemini official vector sparkle emblem with multitone gradients
+ * Authentic Google Gemini official vector sparkle emblem
  */
 export const GeminiLogo: React.FC<LogoProps> = ({ size = 20, className = "" }) => (
   <svg
@@ -66,7 +66,7 @@ export const GeminiLogo: React.FC<LogoProps> = ({ size = 20, className = "" }) =
 );
 
 /**
- * Authentic DeepSeek official blue whale mascot vector emblem
+ * Authentic DeepSeek official emblem
  */
 export const DeepSeekLogo: React.FC<LogoProps> = ({ size = 20, className = "" }) => (
   <svg
@@ -81,7 +81,7 @@ export const DeepSeekLogo: React.FC<LogoProps> = ({ size = 20, className = "" })
 );
 
 /**
- * Authentic Anthropic Claude official 14-point starburst vector emblem
+ * Authentic Anthropic Claude emblem
  */
 export const ClaudeLogo: React.FC<LogoProps> = ({ size = 20, className = "" }) => (
   <svg
@@ -97,7 +97,7 @@ export const ClaudeLogo: React.FC<LogoProps> = ({ size = 20, className = "" }) =
 );
 
 /**
- * Stripe Authentic S-Logo
+ * Authentic Stripe S-Logo
  */
 export const StripeLogo: React.FC<LogoProps> = ({ size = 16, className = "" }) => (
   <svg
@@ -112,53 +112,52 @@ export const StripeLogo: React.FC<LogoProps> = ({ size = 16, className = "" }) =
 );
 
 /**
- * Apple Pay Official Vector Logo
+ * Official Apple Pay Logo
  */
-export const ApplePayLogo: React.FC<LogoProps> = ({ size = 28, className = "" }) => (
-  <svg width={size} height={size * 0.42} viewBox="0 0 56 24" fill="currentColor" className={className}>
-    <path d="M7.74 11.23c-.02-1.39.73-2.43 1.91-3.14-.65-.95-1.65-1.5-2.73-1.52-1.16-.09-2.3.71-2.88.71-.6 0-1.53-.7-2.5-.68-1.28.02-2.46.75-3.12 1.9-1.34 2.34-.34 5.8 1 7.7.63.92 1.4 1.96 2.38 1.92.97-.04 1.34-.63 2.5-.63 1.15 0 1.49.63 2.5.61 1.04-.02 1.7-.93 2.32-1.85.74-1.07 1.04-2.1 1.05-2.16-.02-.01-2.02-.78-2.04-3.08l-.39.22zM6.16 5.46c.53-.65.88-1.55.78-2.46-.77.03-1.69.52-2.22 1.15-.47.54-.87 1.46-.77 2.34.85.07 1.7-.41 2.21-1.03zM16.92 18V6.44h4.42c2.6 0 4.29 1.63 4.29 4.09 0 2.47-1.68 4.1-4.29 4.1h-2.39V18h-2.03zm2.03-5.36h2.24c1.47 0 2.39-.81 2.39-2.09 0-1.28-.92-2.09-2.39-2.09h-2.24v4.18zM28.4 18l-.33-1.6h-.07c-.77 1.13-1.95 1.77-3.3 1.77-2.01 0-3.35-1.37-3.35-3.23 0-2.09 1.75-3.3 4.67-3.3h1.92v-.71c0-1.16-.76-1.84-2.13-1.84-1.14 0-2.15.42-2.8 1.03l-.9-1.29c.92-.85 2.29-1.34 3.97-1.34 2.48 0 3.86 1.25 3.86 3.48V18H28.4zm-.26-4.66h-1.69c-1.74 0-2.65.62-2.65 1.77 0 .97.77 1.6 1.94 1.6 1.4 0 2.4-.95 2.4-2.32v-1.05zM33.72 21.65l2.45-7.39-3.41-7.82h2.22l2.25 5.62h.06l2.24-5.62h2.18l-5.69 13.21h-2.3z" />
+export const ApplePayLogo: React.FC<{ className?: string }> = ({ className = "" }) => (
+  <svg className={`h-5 w-auto ${className}`} viewBox="0 0 165 68" fill="currentColor">
+    <path d="M51.8 33.7c0-6.7 5.5-9.9 5.7-10.1-3.2-4.6-8.1-5.3-9.8-5.3-4.2-.4-8.1 2.4-10.2 2.4-2.1 0-5.4-2.4-8.8-2.3-4.5.1-8.7 2.6-11 6.7-4.7 8.2-1.2 20.3 3.4 26.9 2.2 3.2 4.9 6.8 8.4 6.7 3.4-.1 4.7-2.2 8.8-2.2 4.1 0 5.2 2.2 8.8 2.1 3.6-.1 5.9-3.3 8.1-6.5 2.6-3.7 3.6-7.3 3.7-7.5-.1-.1-7.1-2.7-7.1-10.9zM43.9 13.5c1.9-2.3 3.1-5.4 2.8-8.6-2.7.1-6 1.8-7.9 4.1-1.7 1.9-3.2 5.1-2.8 8.2 3 .2 6-1.4 7.9-3.7zM79.2 49.3V25.7h10.4c5.9 0 9.8 4 9.8 9.7s-3.9 9.7-9.8 9.7H83.9v4.2H79.2zm4.7-8.3h5.7c3.4 0 5.2-1.9 5.2-5.4s-1.8-5.4-5.2-5.4h-5.7v10.8zM105.7 49.6c-4.6 0-7.7-3.1-7.7-7.4 0-4.4 3.3-7.5 8.1-7.5 2.6 0 4.7.9 6.1 2.6v-2.8c0-3.3-2.1-5.1-5.7-5.1-2.5 0-4.8.8-6.4 2.3l-2.1-3.1c2.3-2 5.5-3.1 9-3.1 6.5 0 9.9 3.5 9.9 9.6v14.2h-4.3l-.3-2.5c-1.4 1.7-3.7 2.8-6.6 2.8zm1.2-3.8c3.2 0 5.3-2.2 5.3-5.3 0-3.1-2.1-5.3-5.3-5.3-3.2 0-5.3 2.2-5.3 5.3 0 3.1 2.1 5.3 5.3 5.3zM128.7 57.6l5.7-17-7.9-18.4h5.2l5.2 13.2 5.2-13.2h5.1l-13.2 29.8h-5.3z" />
   </svg>
 );
 
 /**
- * Google Pay Official Vector Logo
+ * Official Google Pay Logo
  */
-export const GooglePayLogo: React.FC<LogoProps> = ({ size = 28, className = "" }) => (
-  <svg width={size} height={size * 0.42} viewBox="0 0 56 24" fill="currentColor" className={className}>
-    <path d="M12.44 11.23c0-.62-.05-1.21-.16-1.78H4.63v3.38h4.39c-.19 1.02-.76 1.89-1.61 2.47v2.05h2.6c1.52-1.4 2.43-3.46 2.43-6.12z" fill="#4285F4"/>
-    <path d="M4.63 19.16c2.18 0 4.01-.72 5.34-1.96l-2.6-2.05c-.72.48-1.64.77-2.74.77-2.1 0-3.89-1.42-4.53-3.34H-.01v2.12c1.33 2.65 4.07 4.46 7.15 4.46z" fill="#34A853"/>
-    <path d="M.1 12.58c-.16-.48-.25-1-.25-1.53s.09-1.05.25-1.53V7.4H-.01C-.56 8.5-.87 9.74-.87 11.05s.31 2.55.86 3.65l2.62-2.12z" fill="#FBBC05"/>
-    <path d="M4.63 4.95c1.19 0 2.25.41 3.09 1.21l2.32-2.32C8.64 2.54 6.81 1.95 4.63 1.95 1.55 1.95-1.19 3.76-2.52 6.41l2.62 2.12c.64-1.92 2.43-3.58 4.53-3.58z" fill="#EA4335"/>
-    <path d="M21.2 18V6.44h4.42c2.6 0 4.29 1.63 4.29 4.09 0 2.47-1.68 4.1-4.29 4.1h-2.39V18H21.2zm2.03-5.36h2.24c1.47 0 2.39-.81 2.39-2.09 0-1.28-.92-2.09-2.39-2.09h-2.24v4.18zM32.68 18l-.33-1.6h-.07c-.77 1.13-1.95 1.77-3.3 1.77-2.01 0-3.35-1.37-3.35-3.23 0-2.09 1.75-3.3 4.67-3.3h1.92v-.71c0-1.16-.76-1.84-2.13-1.84-1.14 0-2.15.42-2.8 1.03l-.9-1.29c.92-.85 2.29-1.34 3.97-1.34 2.48 0 3.86 1.25 3.86 3.48V18h-1.56zm-.26-4.66h-1.69c-1.74 0-2.65.62-2.65 1.77 0 .97.77 1.6 1.94 1.6 1.4 0 2.4-.95 2.4-2.32v-1.05zM38 21.65l2.45-7.39-3.41-7.82h2.22l2.25 5.62h.06l2.24-5.62h2.18L38 21.65z" fill="currentColor"/>
+export const GooglePayLogo: React.FC<{ className?: string }> = ({ className = "" }) => (
+  <svg className={`h-5 w-auto ${className}`} viewBox="0 0 140 56" fill="currentColor">
+    <path d="M47.2 28.5c0-1.4-.1-2.7-.4-4H24.5v7.6h12.8c-.6 3-2.2 5.5-4.8 7.2v6h7.7c4.5-4.1 7.2-10.2 7.2-16.8z" fill="#4285F4"/>
+    <path d="M24.5 51.5c6.5 0 11.9-2.1 15.9-5.8l-7.7-6c-2.2 1.4-4.9 2.3-8.2 2.3-6.3 0-11.6-4.2-13.5-10H3v6.2C7 46.1 15.2 51.5 24.5 51.5z" fill="#34A853"/>
+    <path d="M11 32c-.5-1.4-.8-3-.8-4.5s.3-3.1.8-4.5V16.8H3C1.1 20.6 0 24.7 0 28s1.1 7.4 3 11.2l8-6.2z" fill="#FBBC05"/>
+    <path d="M24.5 12.5c3.5 0 6.7 1.2 9.2 3.6l6.9-6.9C36.4 5.3 31 3 24.5 3 15.2 3 7 8.4 3 16.8l8 6.2c1.9-5.8 7.2-10 13.5-10z" fill="#EA4335"/>
+    <path d="M66.4 44.5V17.8h9.6c4.6 0 8.3 1.5 10.9 4.1 2.6 2.6 4 6 4 10.1 0 4.1-1.3 7.5-4 10.1-2.6 2.6-6.3 4.1-10.9 4.1h-9.6v-1.7zm4.2-4.1h5.4c3.4 0 6.1-1 8-3 1.9-2 2.9-4.7 2.9-7.9 0-3.3-1-5.9-2.9-7.9-1.9-2-4.6-3-8-3h-5.4v21.8zM101.4 44.5l-.8-3.7h-.2c-1.8 2.6-4.5 4.1-7.6 4.1-4.7 0-7.8-3.2-7.8-7.5 0-4.9 4.1-7.6 10.8-7.6h4.5v-1.6c0-2.6-1.8-4.2-5-4.2-2.6 0-5 .9-6.6 2.4l-2.1-3c2.2-2 5.3-3.1 9.2-3.1 5.8 0 9 2.9 9 8.1v16.1h-3.4zm-.6-10.8h-3.9c-4 0-6.1 1.4-6.1 4.1 0 2.2 1.8 3.7 4.5 3.7 3.2 0 5.5-2.2 5.5-5.3v-2.5zM113.8 53.5l5.7-16.7-7.9-18.7h4.8l5.2 13.4 5.2-13.4h4.7l-13 29.5h-4.7z" fill="currentColor"/>
   </svg>
 );
 
 /**
- * Visa Official Vector Logo
+ * Official Visa Logo
  */
-export const VisaLogo: React.FC<LogoProps> = ({ size = 28, className = "" }) => (
-  <svg width={size} height={size * 0.35} viewBox="0 0 48 16" fill="currentColor" className={className}>
-    <path d="M19.38 1.27L13.1 15.19H8.97L5.47 4.19C5.26 3.37 5.09 3.07 4.46 2.73C3.43 2.17 1.6 1.65 0 1.31L.09.89H6.97c.9 0 1.7.59 1.9 1.63l1.83 9.7 4.45-10.95h4.23zm17.65 9.38c.02-3.69-5.1-3.89-5.06-5.54.01-.5.49-1.03 1.54-1.16.52-.07 1.96-.12 3.6.63l.64-3c-.88-.32-2.02-.63-3.46-.63-3.66 0-6.24 1.94-6.26 4.73-.02 2.06 1.84 3.21 3.24 3.89 1.44.7 1.93 1.15 1.92 1.78-.01.96-1.16 1.4-2.23 1.41-1.87.02-2.96-.28-4.55-.98l-.64 3.01c.9.41 2.57.77 4.3.79 4.07 0 6.72-2.01 6.76-5.13l.2-4.8zM47.78 15.19h3.7L48.24 1.27h-3.43c-.77 0-1.42.45-1.7 1.12L37.1 15.19h4.34l.87-2.39h5.3l.17 2.39zm-4.47-5.53l2.17-5.96 1.25 5.96h-3.42zM28.09 1.27l-3.26 13.92h-4.14L23.95 1.27h4.14z"/>
+export const VisaLogo: React.FC<{ className?: string }> = ({ className = "" }) => (
+  <svg className={`h-4 w-auto ${className}`} viewBox="0 0 100 32" fill="currentColor">
+    <path d="M40.2 1.5L27.2 30.5h-8.6L11.4 7.6c-.4-1.7-.8-2.3-2.1-3C6.9 3.3 3.3 2.2 0 1.5L.2.6h14.5c1.9 0 3.5 1.2 3.9 3.4l3.8 20.2L31.6 1.5h8.6zm36.7 19.5c0-7.7-10.6-8.1-10.5-11.5 0-1 1-2.1 3.2-2.4 1.1-.1 4.1-.2 7.5 1.3l1.3-6.2c-1.8-.7-4.2-1.3-7.2-1.3-7.6 0-13 4-13 9.8 0 4.3 3.8 6.7 6.7 8.1 3 1.5 4 2.4 4 3.7 0 2-2.4 2.9-4.6 2.9-3.9 0-6.2-.6-9.5-2l-1.3 6.3c1.9.9 5.3 1.6 8.9 1.6 8.5 0 14-4.2 14-10.7l.5-.9zm23.1 9.5H108L101 1.5h-7.1c-1.6 0-3 .9-3.5 2.3L77.3 30.5h9l1.8-5h11l1 5zm-9.3-11.5l4.5-12.4 2.6 12.4h-7.1zM58.5 1.5L51.7 30.5h-8.6L49.9 1.5h8.6z"/>
   </svg>
 );
 
 /**
- * Mastercard Official Vector Logo
+ * Official Mastercard Logo (Two intersecting solid circles)
  */
-export const MastercardLogo: React.FC<LogoProps> = ({ size = 26, className = "" }) => (
-  <svg width={size} height={size * 0.62} viewBox="0 0 32 20" fill="none" className={className}>
-    <circle cx="10" cy="10" r="10" fill="#EB001B"/>
-    <circle cx="22" cy="10" r="10" fill="#F79E1B"/>
-    <path d="M16 2.82A9.97 9.97 0 0 1 19.88 10 9.97 9.97 0 0 1 16 17.18 9.97 9.97 0 0 1 12.12 10 9.97 9.97 0 0 1 16 2.82z" fill="#FF5F00"/>
+export const MastercardLogo: React.FC<{ className?: string }> = ({ className = "" }) => (
+  <svg className={`h-5 w-auto ${className}`} viewBox="0 0 38 24" fill="none">
+    <circle cx="12" cy="12" r="12" fill="#EB001B"/>
+    <circle cx="26" cy="12" r="12" fill="#F79E1B"/>
+    <path d="M19 3.38A11.97 11.97 0 0 1 23.65 12 11.97 11.97 0 0 1 19 20.62 11.97 11.97 0 0 1 14.35 12 11.97 11.97 0 0 1 19 3.38z" fill="#FF5F00"/>
   </svg>
 );
 
 /**
- * Klarna Official Vector Logo
+ * Official Klarna Logo
  */
-export const KlarnaLogo: React.FC<LogoProps> = ({ size = 28, className = "" }) => (
-  <svg width={size} height={size * 0.3} viewBox="0 0 54 16" fill="currentColor" className={className}>
-    <path d="M7.74 0H4.37v15.8h3.37V0zm7.84 0h-3.48v15.8h3.48V9.32l5.08 6.48h4.29l-6.32-7.85 5.92-7.95h-4.22l-4.75 6.4V0zm13.12 4.22c-3.14 0-5.32 2.37-5.32 5.92 0 3.55 2.18 5.92 5.32 5.92 1.94 0 3.4-.92 4.24-2.28v2.02h3.29V4.48h-3.29v2.02c-.84-1.36-2.3-2.28-4.24-2.28zm.53 9.04c-1.85 0-3.07-1.36-3.07-3.12s1.22-3.12 3.07-3.12 3.07 1.36 3.07 3.12-1.22 3.12-3.07 3.12zm13.43-9.04h-3.37v11.58h3.37V8.58c0-1.85 1.03-2.73 2.62-2.73h.49V2.48c-.92 0-2.02.41-2.73 1.47l-.38.27zm6.75 11.58c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
+export const KlarnaLogo: React.FC<{ className?: string }> = ({ className = "" }) => (
+  <svg className={`h-4 w-auto ${className}`} viewBox="0 0 80 20" fill="currentColor">
+    <path d="M10 0H5.6v20H10V0zm10.1 0h-4.5v20h4.5v-8.2l6.5 8.2h5.5l-8.1-10 7.6-10h-5.4l-6.1 8.2V0zm17 5.3c-4 0-6.8 3-6.8 7.5s2.8 7.5 6.8 7.5c2.5 0 4.4-1.2 5.4-2.9v2.6h4.2V5.7h-4.2v2.6c-1-1.8-2.9-3-5.4-3zm.7 11.4c-2.4 0-3.9-1.7-3.9-4s1.6-4 3.9-4 3.9 1.7 3.9 4-1.5 4-3.9 4zm17.2-11.4h-4.3v14.7h4.3V10.9c0-2.3 1.3-3.5 3.3-3.5h.6V3.2c-1.2 0-2.6.5-3.5 1.9l-.4.2zm8.6 14.7c1.4 0 2.5-1.1 2.5-2.5s-1.1-2.5-2.5-2.5-2.5 1.1-2.5 2.5 1.1 2.5 2.5 2.5z"/>
   </svg>
 );
-

@@ -505,13 +505,13 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
             {/* Legal terms & Supported Payment Methods */}
             <div style={{ display: "flex", flexDirection: "column", gap: "10px", paddingTop: "14px", borderTop: "1px solid rgba(255, 255, 255, 0.1)" }}>
               {/* Payment Methods Badges Row */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", flexWrap: "wrap", opacity: 0.85 }}>
-                <ApplePayLogo size={32} className="text-white hover:opacity-100 transition-opacity" />
-                <GooglePayLogo size={34} className="text-white hover:opacity-100 transition-opacity" />
-                <VisaLogo size={30} className="text-white hover:opacity-100 transition-opacity" />
-                <MastercardLogo size={22} className="hover:opacity-100 transition-opacity" />
-                <KlarnaLogo size={32} className="text-white hover:opacity-100 transition-opacity" />
-                <StripeLogo size={15} className="text-white hover:opacity-100 transition-opacity" />
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", flexWrap: "wrap" }}>
+                <ApplePayLogo className="text-white opacity-85 hover:opacity-100 transition-opacity" />
+                <GooglePayLogo className="text-white opacity-85 hover:opacity-100 transition-opacity" />
+                <VisaLogo className="text-white opacity-85 hover:opacity-100 transition-opacity" />
+                <MastercardLogo className="opacity-90 hover:opacity-100 transition-opacity" />
+                <KlarnaLogo className="text-white opacity-85 hover:opacity-100 transition-opacity" />
+                <StripeLogo size={16} className="text-white opacity-85 hover:opacity-100 transition-opacity" />
               </div>
 
               <div style={{ fontSize: "10px", color: "rgba(243, 241, 255, 0.5)", textAlign: "center", lineHeight: 1.4 }}>
