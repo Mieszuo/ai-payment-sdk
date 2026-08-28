@@ -7,6 +7,12 @@ import {
   CreditCounter,
   CreditPacksGrid,
   PaywallGuard,
+  ApplePayLogo,
+  GooglePayLogo,
+  VisaLogo,
+  MastercardLogo,
+  KlarnaLogo,
+  StripeLogo,
 } from "@ai-credits/react";
 import {
   Sparkles,
@@ -14,7 +20,6 @@ import {
   Check,
   Zap,
   CheckCircle2,
-  ShieldCheck,
   CreditCard
 } from "lucide-react";
 
@@ -387,9 +392,19 @@ export function MyApp() {
               ))}
             </div>
 
-            <div className="pt-2 text-[10px] text-white/40 text-center flex items-center justify-center gap-1 font-mono">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#5effa8]" />
-              <span>Universal AI Wallet · Stripe Connect</span>
+            {/* Payment Methods Badges Row & Legal */}
+            <div className="pt-3 border-t border-white/[0.1] space-y-2.5">
+              <div className="flex items-center justify-center gap-3 flex-wrap opacity-80">
+                <ApplePayLogo size={30} className="text-white hover:opacity-100 transition-opacity" />
+                <GooglePayLogo size={32} className="text-white hover:opacity-100 transition-opacity" />
+                <VisaLogo size={28} className="text-white hover:opacity-100 transition-opacity" />
+                <MastercardLogo size={20} className="hover:opacity-100 transition-opacity" />
+                <KlarnaLogo size={30} className="text-white hover:opacity-100 transition-opacity" />
+                <StripeLogo size={14} className="text-white hover:opacity-100 transition-opacity" />
+              </div>
+              <div className="text-[10px] text-white/50 text-center leading-tight">
+                Przechodząc dalej, akceptujesz <a href="#terms" className="text-white/80 underline">Regulamin</a> oraz <a href="#privacy" className="text-white/80 underline">Politykę Prywatności</a>.
+              </div>
             </div>
           </div>
         )}

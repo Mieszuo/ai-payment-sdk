@@ -1,5 +1,16 @@
 import React, { useState } from "react";
-import { OpenAILogo, GeminiLogo, DeepSeekLogo, ClaudeLogo, StripeLogo } from "./ProviderLogos";
+import {
+  OpenAILogo,
+  GeminiLogo,
+  DeepSeekLogo,
+  ClaudeLogo,
+  StripeLogo,
+  ApplePayLogo,
+  GooglePayLogo,
+  VisaLogo,
+  MastercardLogo,
+  KlarnaLogo
+} from "./ProviderLogos";
 
 export interface AICreditsModalProps {
   isOpen: boolean;
@@ -491,24 +502,20 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
               </div>
             </div>
 
-            {/* Legal terms & Stripe */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px", paddingTop: "12px", borderTop: "1px solid rgba(255, 255, 255, 0.1)" }}>
-              <div style={{ fontSize: "10px", color: "rgba(243, 241, 255, 0.5)", textAlign: "center", lineHeight: 1.4 }}>
-                Przechodząc dalej, akceptujesz <a href="#terms" style={{ color: "rgba(255,255,255,0.8)", textDecoration: "underline" }}>Regulamin</a> oraz <a href="#privacy" style={{ color: "rgba(255,255,255,0.8)", textDecoration: "underline" }}>Politykę Prywatności</a>.
+            {/* Legal terms & Supported Payment Methods */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px", paddingTop: "14px", borderTop: "1px solid rgba(255, 255, 255, 0.1)" }}>
+              {/* Payment Methods Badges Row */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", flexWrap: "wrap", opacity: 0.85 }}>
+                <ApplePayLogo size={32} className="text-white hover:opacity-100 transition-opacity" />
+                <GooglePayLogo size={34} className="text-white hover:opacity-100 transition-opacity" />
+                <VisaLogo size={30} className="text-white hover:opacity-100 transition-opacity" />
+                <MastercardLogo size={22} className="hover:opacity-100 transition-opacity" />
+                <KlarnaLogo size={32} className="text-white hover:opacity-100 transition-opacity" />
+                <StripeLogo size={15} className="text-white hover:opacity-100 transition-opacity" />
               </div>
 
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "8px",
-                  fontSize: "11px",
-                  color: "rgba(243, 241, 255, 0.5)"
-                }}
-              >
-                <StripeLogo size={13} className="opacity-80" />
-                <span>Bezpieczne rozliczenia Stripe</span>
+              <div style={{ fontSize: "10px", color: "rgba(243, 241, 255, 0.5)", textAlign: "center", lineHeight: 1.4 }}>
+                Przechodząc dalej, akceptujesz <a href="#terms" style={{ color: "rgba(255,255,255,0.8)", textDecoration: "underline" }}>Regulamin</a> oraz <a href="#privacy" style={{ color: "rgba(255,255,255,0.8)", textDecoration: "underline" }}>Politykę Prywatności</a>.
               </div>
             </div>
           </div>
