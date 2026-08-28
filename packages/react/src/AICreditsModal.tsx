@@ -31,7 +31,7 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
   checkoutUrl,
   title = "Use AI",
   tagline = "Log in to continue and unlock AI features",
-  accentColor = "#6d28d9"
+  accentColor = "#6e44ff"
 }) => {
   const [balance, setBalance] = useState(initialBalance);
   const [selectedProvider, setSelectedProvider] = useState("openai");
@@ -85,14 +85,14 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
       style={{
         position: "fixed",
         inset: 0,
-        backgroundColor: "rgba(3, 4, 8, 0.78)",
-        backdropFilter: "blur(24px) saturate(1.4)",
-        WebkitBackdropFilter: "blur(24px) saturate(1.4)",
+        backgroundColor: "rgba(5, 7, 13, 0.82)",
+        backdropFilter: "blur(28px) saturate(1.5)",
+        WebkitBackdropFilter: "blur(28px) saturate(1.5)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         zIndex: 999999,
-        padding: "20px",
+        padding: "16px",
         fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
         colorScheme: "dark"
       }}
@@ -102,13 +102,14 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
     >
       <div
         style={{
-          backgroundColor: "#161922",
-          background: "linear-gradient(145deg, rgba(28, 32, 45, 0.96) 0%, rgba(18, 20, 29, 0.98) 100%)",
-          border: "1px solid rgba(255, 255, 255, 0.1)",
-          boxShadow: "0 30px 80px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.15)",
+          backgroundColor: "rgba(20, 24, 35, 0.95)",
+          backdropFilter: "blur(40px) saturate(1.8)",
+          WebkitBackdropFilter: "blur(40px) saturate(1.8)",
+          border: "1px solid rgba(255, 255, 255, 0.09)",
+          boxShadow: "0 32px 90px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.15)",
           borderRadius: "24px",
           width: "100%",
-          maxWidth: "880px",
+          maxWidth: "890px",
           color: "#ffffff",
           position: "relative",
           overflow: "hidden"
@@ -118,11 +119,11 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
         <div
           style={{
             position: "absolute",
-            top: "-120px",
-            left: "-120px",
-            width: "350px",
-            height: "350px",
-            background: "radial-gradient(circle, rgba(124, 58, 237, 0.18) 0%, rgba(124, 58, 237, 0) 70%)",
+            top: "-100px",
+            left: "-100px",
+            width: "320px",
+            height: "320px",
+            background: "radial-gradient(circle, rgba(124, 58, 237, 0.22) 0%, rgba(124, 58, 237, 0) 70%)",
             pointerEvents: "none"
           }}
         />
@@ -142,7 +143,7 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
               padding: "6px 16px",
               borderRadius: "100px",
               boxShadow: "0 8px 24px rgba(0, 0, 0, 0.5)",
-              zIndex: 40
+              zIndex: 50
             }}
           >
             {toastMessage}
@@ -154,8 +155,8 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
           onClick={onClose}
           style={{
             position: "absolute",
-            top: "20px",
-            right: "20px",
+            top: "22px",
+            right: "22px",
             background: "transparent",
             border: "none",
             color: "rgba(255, 255, 255, 0.4)",
@@ -166,13 +167,13 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
             alignItems: "center",
             justifyContent: "center",
             transition: "color 0.15s ease",
-            zIndex: 10
+            zIndex: 20
           }}
           onMouseEnter={(e) => (e.currentTarget.style.color = "#ffffff")}
           onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255, 255, 255, 0.4)")}
           aria-label="Close"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
@@ -182,38 +183,39 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(350px, 1fr))",
+            gridTemplateColumns: "1fr 1fr",
             gap: "36px",
-            padding: "36px 40px"
+            padding: "36px 40px 24px"
           }}
         >
           {/* ==================== LEFT COLUMN ==================== */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-            {/* Header: Icon + Use AI */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            {/* Header: Sparkle Icon + Use AI */}
             <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
               <div
                 style={{
                   width: "42px",
                   height: "42px",
                   borderRadius: "12px",
-                  background: "linear-gradient(135deg, #432889 0%, #291a56 100%)",
+                  background: "linear-gradient(135deg, #3b1d77 0%, #201344 100%)",
                   border: "1px solid rgba(139, 92, 246, 0.4)",
-                  boxShadow: "0 0 16px rgba(124, 58, 237, 0.35)",
+                  boxShadow: "0 0 20px rgba(124, 58, 237, 0.35)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "#d8b4fe"
+                  color: "#d8b4fe",
+                  flexShrink: 0
                 }}
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
                   <path d="m12 2 2.4 7.2 7.2 2.4-7.2 2.4L12 21.2l-2.4-7.2L2.4 11.6l7.2-2.4L12 2Z" />
                 </svg>
               </div>
               <div>
-                <h2 style={{ fontSize: "21px", fontWeight: 700, color: "#ffffff", letterSpacing: "-0.01em", margin: 0 }}>
+                <h2 style={{ fontSize: "22px", fontWeight: 700, color: "#ffffff", letterSpacing: "-0.02em", margin: 0, lineHeight: 1.2 }}>
                   {title}
                 </h2>
-                <p style={{ fontSize: "12px", color: "rgba(255, 255, 255, 0.5)", marginTop: "2px", margin: 0 }}>
+                <p style={{ fontSize: "12px", color: "rgba(255, 255, 255, 0.45)", margin: "3px 0 0" }}>
                   {tagline}
                 </p>
               </div>
@@ -224,8 +226,8 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
               <div
                 style={{
                   padding: "12px 16px",
-                  borderRadius: "14px",
-                  background: "rgba(94, 255, 168, 0.06)",
+                  borderRadius: "12px",
+                  background: "rgba(94, 255, 168, 0.08)",
                   border: "1px solid rgba(94, 255, 168, 0.25)",
                   display: "flex",
                   alignItems: "center",
@@ -255,7 +257,7 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
                 </button>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "9px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 {/* 1. Continue with Google */}
                 <button
                   onClick={() => handleLogin("google")}
@@ -271,9 +273,9 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
                     fontWeight: 600,
                     cursor: "pointer",
                     background: "#ffffff",
-                    color: "#111827",
+                    color: "#0f172a",
                     border: "none",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
                     transition: "opacity 0.15s"
                   }}
                   onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.95")}
@@ -302,13 +304,13 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
                     fontSize: "13px",
                     fontWeight: 600,
                     cursor: "pointer",
-                    background: "#1e2230",
+                    background: "#181b26",
                     color: "#ffffff",
                     border: "1px solid rgba(255, 255, 255, 0.08)",
                     transition: "background 0.15s"
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "#262b3d")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "#1e2230")}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#202534")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "#181b26")}
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
                     <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
@@ -317,7 +319,7 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
                 </button>
 
                 {/* Divider: or */}
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "3px 0" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "2px 0" }}>
                   <div style={{ flex: 1, height: "1px", background: "rgba(255, 255, 255, 0.08)" }} />
                   <span style={{ fontSize: "11px", color: "rgba(255, 255, 255, 0.35)" }}>or</span>
                   <div style={{ flex: 1, height: "1px", background: "rgba(255, 255, 255, 0.08)" }} />
@@ -335,8 +337,8 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
                       width: "100%",
                       padding: "10px 14px",
                       borderRadius: "10px",
-                      background: "#11131a",
-                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      background: "rgba(255, 255, 255, 0.04)",
+                      border: "1px solid rgba(255, 255, 255, 0.09)",
                       color: "#ffffff",
                       fontSize: "13px",
                       outline: "none",
@@ -355,7 +357,7 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
                       background: accentColor,
                       color: "#ffffff",
                       border: "none",
-                      boxShadow: `0 4px 14px ${accentColor}66`,
+                      boxShadow: `0 4px 16px ${accentColor}66`,
                       transition: "opacity 0.15s"
                     }}
                     onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.92")}
@@ -371,8 +373,8 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
             <div
               style={{
                 padding: "12px 16px",
-                borderRadius: "14px",
-                background: "#1a1d29",
+                borderRadius: "12px",
+                background: "rgba(255, 255, 255, 0.04)",
                 border: "1px solid rgba(255, 255, 255, 0.08)",
                 display: "flex",
                 alignItems: "center",
@@ -385,12 +387,12 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
                     width: "34px",
                     height: "34px",
                     borderRadius: "10px",
-                    background: "rgba(110, 68, 255, 0.15)",
-                    border: "1px solid rgba(110, 68, 255, 0.3)",
+                    background: "rgba(124, 58, 237, 0.18)",
+                    border: "1px solid rgba(124, 58, 237, 0.3)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    color: "#a78bfa"
+                    color: "#c4b5fd"
                   }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -398,7 +400,7 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
                   </svg>
                 </div>
                 <div>
-                  <div style={{ fontSize: "11px", color: "rgba(255, 255, 255, 0.45)" }}>Your balance</div>
+                  <div style={{ fontSize: "10px", color: "rgba(255, 255, 255, 0.45)" }}>Your balance</div>
                   <div style={{ fontSize: "16px", fontWeight: 700, color: "#ffffff", marginTop: "1px" }}>
                     {balance}{" "}
                     <span style={{ fontSize: "12px", color: "rgba(255, 255, 255, 0.6)", fontWeight: 500 }}>
@@ -419,15 +421,15 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
             {/* Add AI credits Box */}
             <div
               style={{
-                padding: "16px",
-                borderRadius: "16px",
-                background: "#191c28",
+                padding: "14px",
+                borderRadius: "14px",
+                background: "rgba(255, 255, 255, 0.03)",
                 border: "1px solid rgba(255, 255, 255, 0.08)"
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "14px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "12px" }}>
                 <span style={{ fontSize: "13px", fontWeight: 700, color: "#ffffff" }}>Add AI credits</span>
-                <span style={{ fontSize: "11px", color: "#8b5cf6", fontWeight: 500 }}>More credits, more possibilities.</span>
+                <span style={{ fontSize: "11px", color: "#a78bfa", fontWeight: 500 }}>More credits, more possibilities.</span>
               </div>
 
               {/* 4 Packs Grid */}
@@ -445,11 +447,11 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
                       onClick={() => handlePurchase(pack.credits, pack.price, pack.id)}
                       style={{
                         position: "relative",
-                        padding: "14px 6px 10px",
+                        padding: "12px 4px 10px",
                         borderRadius: "12px",
-                        background: isPop ? "#211c3d" : "#13151f",
+                        background: isPop ? "rgba(124, 58, 237, 0.15)" : "rgba(255, 255, 255, 0.03)",
                         border: isPop ? "1.5px solid #8b5cf6" : "1px solid rgba(255, 255, 255, 0.07)",
-                        boxShadow: isPop ? "0 0 16px rgba(139, 92, 246, 0.35), inset 0 0 12px rgba(139, 92, 246, 0.15)" : "none",
+                        boxShadow: isPop ? "0 0 16px rgba(139, 92, 246, 0.35)" : "none",
                         display: "flex",
                         flexDirection: "column",
                         alignItems: "center",
@@ -464,7 +466,7 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
                         <div
                           style={{
                             position: "absolute",
-                            top: "-9px",
+                            top: "-8px",
                             background: "#8b5cf6",
                             color: "#ffffff",
                             fontSize: "8px",
@@ -477,10 +479,10 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
                           Popular
                         </div>
                       )}
-                      <span style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff" }}>
+                      <span style={{ fontSize: "13px", fontWeight: 700, color: "#ffffff" }}>
                         ${pack.price}
                       </span>
-                      <span style={{ fontSize: "13px", fontWeight: 700, color: isPop ? "#ffffff" : "#e2e8f0" }}>
+                      <span style={{ fontSize: "14px", fontWeight: 700, color: isPop ? "#ffffff" : "#e2e8f0" }}>
                         {pack.credits.toLocaleString()}
                       </span>
                       <span style={{ fontSize: "9px", color: "rgba(255, 255, 255, 0.4)" }}>
@@ -489,13 +491,13 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
                       {pack.bonus && (
                         <span
                           style={{
-                            marginTop: "4px",
+                            marginTop: "3px",
                             fontSize: "9px",
                             fontWeight: 600,
                             color: isPop ? "#c4b5fd" : "rgba(255, 255, 255, 0.5)",
-                            background: isPop ? "rgba(139, 92, 246, 0.25)" : "rgba(255, 255, 255, 0.06)",
+                            background: isPop ? "rgba(139, 92, 246, 0.3)" : "rgba(255, 255, 255, 0.06)",
                             padding: "1px 6px",
-                            borderRadius: "100px"
+                            borderRadius: "4px"
                           }}
                         >
                           {pack.bonus}
@@ -515,7 +517,7 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
                   justifyContent: "center",
                   gap: "6px",
                   fontSize: "10px",
-                  color: "rgba(255, 255, 255, 0.4)"
+                  color: "rgba(255, 255, 255, 0.35)"
                 }}
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -528,12 +530,12 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
           </div>
 
           {/* ==================== RIGHT COLUMN ==================== */}
-          <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", gap: "20px" }}>
+          <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", gap: "16px" }}>
             <div>
               <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#ffffff", margin: "0 0 3px" }}>
                 Choose AI provider
               </h3>
-              <p style={{ fontSize: "12px", color: "rgba(255, 255, 255, 0.5)", margin: "0 0 16px" }}>
+              <p style={{ fontSize: "12px", color: "rgba(255, 255, 255, 0.45)", margin: "0 0 14px" }}>
                 Select which AI model you want to use.
               </p>
 
@@ -571,8 +573,9 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
                       style={{
                         padding: "13px 16px",
                         borderRadius: "14px",
-                        background: isSelected ? "#1e1d33" : "#1a1d28",
+                        background: isSelected ? "rgba(124, 58, 237, 0.12)" : "rgba(255, 255, 255, 0.03)",
                         border: isSelected ? "1.5px solid #8b5cf6" : "1px solid rgba(255, 255, 255, 0.08)",
+                        boxShadow: isSelected ? "0 0 16px rgba(124, 58, 237, 0.2)" : "none",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
@@ -585,7 +588,7 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
                           style={{
                             width: "36px",
                             height: "36px",
-                            borderRadius: "10px",
+                            borderRadius: "8px",
                             background: p.bg,
                             display: "flex",
                             alignItems: "center",
@@ -604,7 +607,8 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
                                 style={{
                                   fontSize: "9px",
                                   fontWeight: 600,
-                                  background: "#2e2154",
+                                  background: "rgba(124, 58, 237, 0.25)",
+                                  border: "1px solid rgba(124, 58, 237, 0.4)",
                                   color: "#c4b5fd",
                                   padding: "2px 6px",
                                   borderRadius: "4px"
@@ -644,7 +648,7 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
               </div>
 
               {/* Supported Payment Methods (Apple Pay, GPay, Visa, Mastercard) */}
-              <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+              <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
                 <span style={{ fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255, 255, 255, 0.35)", fontWeight: 600 }}>
                   OBSŁUGIWANE METODY PŁATNOŚCI
                 </span>
@@ -661,7 +665,7 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px", paddingTop: "14px", borderTop: "1px solid rgba(255, 255, 255, 0.08)" }}>
               {/* Feature 1 */}
               <div>
-                <div style={{ display: "flex", alignItems: "center", gap: "5px", color: "#818cf8", fontSize: "11px", fontWeight: 700 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "5px", color: "#a78bfa", fontSize: "11px", fontWeight: 700 }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                   </svg>
@@ -674,7 +678,7 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
 
               {/* Feature 2 */}
               <div>
-                <div style={{ display: "flex", alignItems: "center", gap: "5px", color: "#818cf8", fontSize: "11px", fontWeight: 700 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "5px", color: "#a78bfa", fontSize: "11px", fontWeight: 700 }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
                   </svg>
@@ -687,7 +691,7 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
 
               {/* Feature 3 */}
               <div>
-                <div style={{ display: "flex", alignItems: "center", gap: "5px", color: "#818cf8", fontSize: "11px", fontWeight: 700 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "5px", color: "#a78bfa", fontSize: "11px", fontWeight: 700 }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
                   </svg>
@@ -704,14 +708,14 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
         {/* Modal Footer */}
         <div
           style={{
-            padding: "14px",
+            padding: "12px 20px",
             borderTop: "1px solid rgba(255, 255, 255, 0.08)",
             textAlign: "center",
             fontSize: "11px",
             color: "rgba(255, 255, 255, 0.4)"
           }}
         >
-          By continuing, you agree to our <a href="#terms" style={{ color: "rgba(255, 255, 255, 0.7)", textDecoration: "underline" }}>Terms of Service</a> and <a href="#privacy" style={{ color: "rgba(255, 255, 255, 0.7)", textDecoration: "underline" }}>Privacy Policy</a>.
+          By continuing, you agree to our <a href="#terms" style={{ color: "#a78bfa", textDecoration: "none" }}>Terms of Service</a> and <a href="#privacy" style={{ color: "#a78bfa", textDecoration: "none" }}>Privacy Policy</a>.
         </div>
       </div>
     </div>
