@@ -69,8 +69,8 @@ curl http://localhost:3000/
 ## 3. Building the container image locally
 
 ```bash
-docker build -t ai-payment-gateway .
-docker run --rm -p 3000:3000 --env-file .env ai-payment-gateway
+docker build -t ai-credits-gateway .
+docker run --rm -p 3000:3000 --env-file .env ai-credits-gateway
 curl http://localhost:3000/
 ```
 
@@ -99,7 +99,7 @@ Notes on the image:
 Prerequisites: `flyctl` installed and authenticated (`fly auth login`).
 
 ```bash
-# 1) Create the app (fly.toml already exists — app name ai-payment-gateway,
+# 1) Create the app (fly.toml already exists — app name ai-credits-gateway,
 #    region waw, http_service on port 3000 with GET / health check).
 #    `--no-deploy` creates the app + config without deploying yet.
 fly launch --no-deploy
@@ -124,7 +124,7 @@ fly ssh console -- 'bun run db:migrate:prod'
 # 5) Verify
 fly status
 fly logs
-curl https://ai-payment-gateway.fly.dev/
+curl https://ai-credits-gateway.fly.dev/
 #    expect: {"status":"ok",...,"database":"postgres"}
 ```
 
@@ -174,7 +174,7 @@ const ai = createAI({
 Then build the demo with the production URL:
 
 ```bash
-VITE_GATEWAY_URL=https://ai-payment-gateway.fly.dev bun run demo
+VITE_GATEWAY_URL=https://ai-credits-gateway.fly.dev bun run demo
 ```
 
 > CORS: the gateway validates the browser `Origin` against the project's

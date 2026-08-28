@@ -20,7 +20,7 @@ describe("Docs Core Interactive Components", () => {
     expect(cursorContext).toContain("INSUFFICIENT_CREDITS");
 
     const claudeContext = generateAgentContext("claude", "pk_live_demo123");
-    expect(claudeContext).toContain("claude mcp add");
+    expect(claudeContext).toContain("@ai-credits/sdk");
   });
 
   it("renders CodeSnippet and PackageManagerSwitcher without emojis", () => {

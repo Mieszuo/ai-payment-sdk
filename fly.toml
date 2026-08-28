@@ -11,7 +11,7 @@
 # JWT_SECRET must be at least 32 characters. DATABASE_URL points at a
 # Supabase Postgres instance (cloud or self-hosted).
 
-app = "ai-payment-gateway"
+app = "ai-credits-gateway"
 primary_region = "waw"
 
 [build]

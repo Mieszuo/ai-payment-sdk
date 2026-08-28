@@ -28,10 +28,7 @@ Rules:
 4. Never expose secret keys (sk_live_*) on the client side.`;
 
     case "claude":
-      return `# Claude Code Tool Registration
-claude mcp add ai-payment-gateway http://localhost:3000/v1/mcp
-
-# Or prompt instruction for Claude:
+      return `# Claude Code Prompt Instruction
 "Use @ai-credits/sdk to invoke managed AI actions for project '${projectKey}'. Verify credit balance before execution and handle rate limit 429 retries."`;
 
     case "chatgpt":
@@ -60,14 +57,7 @@ claude mcp add ai-payment-gateway http://localhost:3000/v1/mcp
 - Component: <ai-credits-widget project="${projectKey}"></ai-credits-widget>`;
 
     case "mcp":
-      return `{
-  "mcpServers": {
-    "ai-payment": {
-      "command": "bunx",
-      "args": ["@ai-credits/server", "--project", "${projectKey}"]
-    }
-  }
-}`;
+      return `MCP server integration is coming soon.`;
   }
 }
 
