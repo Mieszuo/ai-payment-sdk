@@ -21,12 +21,14 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
   onCreditPurchased,
   onAuthRequested,
   checkoutUrl,
-  title = "Use AI",
-  tagline = "Log in to continue and unlock AI features",
+  title = "Doładuj Kredyty AI",
+  tagline = "Zaloguj się, aby odblokować generowanie modeli AI",
   accentColor = "#4b2fd6"
 }) => {
   const [balance, setBalance] = useState(initialBalance);
   const [selectedProvider, setSelectedProvider] = useState("openai");
+  const [emailInput, setEmailInput] = useState("");
+  const [showEmailField, setShowEmailField] = useState(false);
   const [authenticatedUser, setAuthenticatedUser] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -44,21 +46,21 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
         window.location.href = url;
         return;
       } catch (err: any) {
-        showToast(`Checkout error: ${err.message || "try again"}`);
+        showToast(`Błąd płatności: ${err.message || "spróbuj ponownie"}`);
         return;
       }
     }
     setBalance((prev) => prev + credits);
-    showToast(`+${credits.toLocaleString()} credits added to your wallet ($${price}.00)`);
+    showToast(`+${credits.toLocaleString()} kredytów dodane do Twojego konta ($${price}.00)`);
     if (onCreditPurchased) {
       onCreditPurchased(credits, price);
     }
   };
 
   const handleLogin = (provider: "google" | "github" | "email", customEmail?: string) => {
-    const user = provider === "email" ? (customEmail || "developer@example.com") : `user_${provider}@example.com`;
+    const user = provider === "email" ? (customEmail || "developer@example.com") : `user_${provider}@gmail.com`;
     setAuthenticatedUser(user);
-    showToast(`Signed in with ${provider.charAt(0).toUpperCase() + provider.slice(1)} (+20 bonus credits)`);
+    showToast(`Zalogowano pomyślnie (${user})`);
     if (!authenticatedUser) {
       setBalance((b) => b + 20);
     }
@@ -67,14 +69,22 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
     }
   };
 
+  const handleEmailSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (emailInput.trim()) {
+      handleLogin("email", emailInput.trim());
+      setShowEmailField(false);
+    }
+  };
+
   return (
     <div
       style={{
         position: "fixed",
         inset: 0,
-        backgroundColor: "rgba(7, 6, 13, 0.75)",
-        backdropFilter: "blur(18px)",
-        WebkitBackdropFilter: "blur(18px)",
+        backgroundColor: "rgba(7, 6, 13, 0.78)",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -89,11 +99,11 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
     >
       <div
         style={{
-          backgroundColor: "rgba(18, 16, 28, 0.88)",
+          backgroundColor: "rgba(18, 16, 28, 0.9)",
           backdropFilter: "blur(28px) saturate(1.5)",
           WebkitBackdropFilter: "blur(28px) saturate(1.5)",
           border: "1px solid rgba(255, 255, 255, 0.16)",
-          boxShadow: "0 32px 90px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.25)",
+          boxShadow: "0 32px 90px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.25)",
           borderRadius: "28px",
           width: "100%",
           maxWidth: "840px",
@@ -102,7 +112,7 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
           overflow: "hidden"
         }}
       >
-        {/* Toast Notification Banner */}
+        {/* Toast Notification */}
         {toastMessage && (
           <div
             style={{
@@ -161,7 +171,7 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
           }}
         >
           {/* Left Column: Auth & Packs */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "22px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
               <div
                 style={{
@@ -191,7 +201,7 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
               </div>
             </div>
 
-            {/* Social Auth */}
+            {/* Social Auth & Login Options */}
             {authenticatedUser ? (
               <div
                 style={{
@@ -206,7 +216,7 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
               >
                 <div>
                   <span style={{ fontSize: "10px", color: "#5effa8", textTransform: "uppercase", fontWeight: 700, fontFamily: "monospace" }}>
-                    ✓ Logged In
+                    ✓ Zalogowano
                   </span>
                   <div style={{ fontSize: "12px", color: "#f3f1ff", fontWeight: 600, fontFamily: "monospace", marginTop: "2px" }}>
                     {authenticatedUser}
@@ -223,11 +233,12 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
                     textDecoration: "underline"
                   }}
                 >
-                  Switch
+                  Wyloguj
                 </button>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "9px" }}>
+                {/* 1. Google Button */}
                 <button
                   onClick={() => handleLogin("google")}
                   style={{
@@ -236,7 +247,7 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
                     justifyContent: "center",
                     gap: "10px",
                     width: "100%",
-                    padding: "12px 16px",
+                    padding: "11px 16px",
                     borderRadius: "14px",
                     fontSize: "13px",
                     fontWeight: 600,
@@ -244,7 +255,7 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
                     background: "rgba(255, 255, 255, 0.95)",
                     color: "#07060d",
                     border: "none",
-                    boxShadow: "0 6px 20px rgba(255, 255, 255, 0.2)",
+                    boxShadow: "0 4px 16px rgba(255, 255, 255, 0.2)",
                     transition: "transform 0.2s"
                   }}
                 >
@@ -254,29 +265,94 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
                     <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
                   </svg>
-                  Continue with Google
+                  Kontynuuj przez Google
                 </button>
 
+                {/* 2. Email Option */}
+                {showEmailField ? (
+                  <form onSubmit={handleEmailSubmit} style={{ display: "flex", gap: "8px" }}>
+                    <input
+                      type="email"
+                      required
+                      placeholder="twoj@email.com"
+                      value={emailInput}
+                      onChange={(e) => setEmailInput(e.target.value)}
+                      style={{
+                        flex: 1,
+                        padding: "10px 14px",
+                        borderRadius: "12px",
+                        background: "rgba(255, 255, 255, 0.08)",
+                        border: "1px solid rgba(255, 255, 255, 0.2)",
+                        color: "#ffffff",
+                        fontSize: "12px",
+                        outline: "none",
+                        fontFamily: "monospace"
+                      }}
+                    />
+                    <button
+                      type="submit"
+                      style={{
+                        padding: "10px 16px",
+                        borderRadius: "12px",
+                        background: accentColor,
+                        color: "#ffffff",
+                        border: "none",
+                        fontSize: "12px",
+                        fontWeight: 600,
+                        cursor: "pointer"
+                      }}
+                    >
+                      Dalej
+                    </button>
+                  </form>
+                ) : (
+                  <button
+                    onClick={() => setShowEmailField(true)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "8px",
+                      width: "100%",
+                      padding: "11px 16px",
+                      borderRadius: "14px",
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      background: "rgba(255, 255, 255, 0.08)",
+                      color: "#f3f1ff",
+                      border: "1px solid rgba(255, 255, 255, 0.16)",
+                      backdropFilter: "blur(12px)"
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect width="20" height="16" x="2" y="4" rx="2"/>
+                      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                    </svg>
+                    Kontynuuj z adresem e-mail
+                  </button>
+                )}
+
+                {/* 3. GitHub Option */}
                 <button
                   onClick={() => handleLogin("github")}
                   style={{
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    gap: "10px",
+                    gap: "8px",
                     width: "100%",
-                    padding: "12px 16px",
+                    padding: "10px 16px",
                     borderRadius: "14px",
-                    fontSize: "13px",
-                    fontWeight: 600,
+                    fontSize: "12px",
+                    fontWeight: 500,
                     cursor: "pointer",
-                    background: "rgba(255, 255, 255, 0.08)",
-                    color: "#f3f1ff",
-                    border: "1px solid rgba(255, 255, 255, 0.16)",
-                    backdropFilter: "blur(12px)"
+                    background: "rgba(255, 255, 255, 0.04)",
+                    color: "rgba(243, 241, 255, 0.8)",
+                    border: "1px solid rgba(255, 255, 255, 0.1)"
                   }}
                 >
-                  <span>gh</span> Continue with GitHub
+                  <span>gh</span> Kontynuuj przez GitHub
                 </button>
               </div>
             )}
@@ -284,7 +360,7 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
             {/* Balance Badge */}
             <div
               style={{
-                padding: "14px 18px",
+                padding: "12px 16px",
                 borderRadius: "16px",
                 background: "rgba(255, 255, 255, 0.06)",
                 border: "1px solid rgba(255, 255, 255, 0.14)",
@@ -295,10 +371,10 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
             >
               <div>
                 <span style={{ fontSize: "10px", color: "rgba(243, 241, 255, 0.5)", textTransform: "uppercase", fontFamily: "monospace", letterSpacing: "0.08em" }}>
-                  Available Balance
+                  Dostępne Saldo
                 </span>
-                <div style={{ fontSize: "16px", fontWeight: 700, color: "#ffffff", fontFamily: "'JetBrains Mono', monospace", marginTop: "2px" }}>
-                  {balance.toLocaleString()} credits
+                <div style={{ fontSize: "15px", fontWeight: 700, color: "#ffffff", fontFamily: "'JetBrains Mono', monospace", marginTop: "2px" }}>
+                  {balance.toLocaleString()} kredytów
                 </div>
               </div>
               <div
@@ -319,8 +395,8 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
 
             {/* Credit Packs */}
             <div>
-              <div style={{ fontSize: "11px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(243, 241, 255, 0.5)", marginBottom: "10px", letterSpacing: "0.08em" }}>
-                Top-up Credit Packs
+              <div style={{ fontSize: "11px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(243, 241, 255, 0.5)", marginBottom: "8px", letterSpacing: "0.08em" }}>
+                Wybierz pakiet doładowania
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px" }}>
                 {[
@@ -356,19 +432,19 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
             </div>
           </div>
 
-          {/* Right Column: AI Providers & Stripe */}
-          <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", gap: "20px" }}>
+          {/* Right Column: AI Providers & Stripe & Legal */}
+          <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", gap: "18px" }}>
             <div>
-              <div style={{ fontSize: "11px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(243, 241, 255, 0.5)", marginBottom: "12px", letterSpacing: "0.08em" }}>
-                Supported AI Providers
+              <div style={{ fontSize: "11px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(243, 241, 255, 0.5)", marginBottom: "10px", letterSpacing: "0.08em" }}>
+                Wspierane Modele AI
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 {[
-                  { id: "openai", name: "OpenAI GPT-4o", desc: "Fast & multimodal reasoning", logo: <OpenAILogo size={14} />, bg: "#10a37f" },
-                  { id: "gemini", name: "Google Gemini 2.0", desc: "Ultra-fast contextual speed", logo: <GeminiLogo size={16} />, bg: "#18181b" },
-                  { id: "deepseek", name: "DeepSeek V3/R1", desc: "Economical coding intelligence", logo: <DeepSeekLogo size={14} />, bg: "#0284c7" },
-                  { id: "claude", name: "Anthropic Claude 3.5", desc: "Elite coding & architecture", logo: <ClaudeLogo size={14} />, bg: "#d97757" },
+                  { id: "openai", name: "OpenAI GPT-4o", desc: "Szybki reasoning i multimodalność", logo: <OpenAILogo size={14} />, bg: "#10a37f" },
+                  { id: "gemini", name: "Google Gemini 2.0", desc: "Błyskawiczne konteksty i prędkość", logo: <GeminiLogo size={16} />, bg: "#18181b" },
+                  { id: "deepseek", name: "DeepSeek V3/R1", desc: "Optymalne kodowanie i niska cena", logo: <DeepSeekLogo size={14} />, bg: "#0284c7" },
+                  { id: "claude", name: "Anthropic Claude 3.5", desc: "Elitarna inżynieria kodu i logika", logo: <ClaudeLogo size={14} />, bg: "#d97757" },
                 ].map((provider) => (
                   <div
                     key={provider.id}
@@ -407,7 +483,7 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
                     </div>
                     {selectedProvider === provider.id && (
                       <span style={{ fontSize: "10px", color: "#5effa8", fontFamily: "monospace", fontWeight: 700 }}>
-                        Active
+                        Aktywny
                       </span>
                     )}
                   </div>
@@ -415,20 +491,25 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
               </div>
             </div>
 
-            <div
-              style={{
-                paddingTop: "14px",
-                borderTop: "1px solid rgba(255, 255, 255, 0.1)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px",
-                fontSize: "11px",
-                color: "rgba(243, 241, 255, 0.5)"
-              }}
-            >
-              <StripeLogo size={14} className="opacity-80" />
-              <span>Double-entry ledger with instant Stripe settlement</span>
+            {/* Legal terms & Stripe */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", paddingTop: "12px", borderTop: "1px solid rgba(255, 255, 255, 0.1)" }}>
+              <div style={{ fontSize: "10px", color: "rgba(243, 241, 255, 0.5)", textAlign: "center", lineHeight: 1.4 }}>
+                Przechodząc dalej, akceptujesz <a href="#terms" style={{ color: "rgba(255,255,255,0.8)", textDecoration: "underline" }}>Regulamin</a> oraz <a href="#privacy" style={{ color: "rgba(255,255,255,0.8)", textDecoration: "underline" }}>Politykę Prywatności</a>.
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                  fontSize: "11px",
+                  color: "rgba(243, 241, 255, 0.5)"
+                }}
+              >
+                <StripeLogo size={13} className="opacity-80" />
+                <span>Bezpieczne rozliczenia Stripe</span>
+              </div>
             </div>
           </div>
         </div>
