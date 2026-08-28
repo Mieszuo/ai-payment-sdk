@@ -12,7 +12,6 @@ import {
   GooglePayLogo,
   VisaLogo,
   MastercardLogo,
-  KlarnaLogo,
   StripeLogo,
 } from "@ai-credits/react";
 import {
@@ -517,13 +516,15 @@ export function MyApp() {
 
                 {/* Official Vector Payment Badges & Legal Terms */}
                 <div className="pt-4 border-t border-white/[0.1] space-y-3">
-                  <div className="flex items-center justify-center gap-4 flex-wrap">
-                    <ApplePayLogo className="text-white opacity-85 hover:opacity-100 transition-opacity" />
-                    <GooglePayLogo className="text-white opacity-85 hover:opacity-100 transition-opacity" />
-                    <VisaLogo className="text-white opacity-85 hover:opacity-100 transition-opacity" />
-                    <MastercardLogo className="opacity-90 hover:opacity-100 transition-opacity" />
-                    <KlarnaLogo className="text-white opacity-85 hover:opacity-100 transition-opacity" />
-                    <StripeLogo size={16} className="text-white opacity-85 hover:opacity-100 transition-opacity" />
+                  <div className="flex items-center justify-center gap-3 flex-wrap">
+                    <ApplePayLogo className="hover:opacity-90 transition-opacity" />
+                    <GooglePayLogo className="hover:opacity-90 transition-opacity" />
+                    <VisaLogo className="hover:opacity-90 transition-opacity" />
+                    <MastercardLogo className="hover:opacity-90 transition-opacity" />
+                    <div className="flex items-center gap-1 px-2.5 py-1 rounded bg-white text-[#635bff] shadow-sm">
+                      <StripeLogo size={14} />
+                      <span className="text-[11px] font-bold font-sans">stripe</span>
+                    </div>
                   </div>
 
                   <div className="text-[10px] text-white/50 text-center leading-tight">

@@ -8,8 +8,7 @@ import {
   ApplePayLogo,
   GooglePayLogo,
   VisaLogo,
-  MastercardLogo,
-  KlarnaLogo
+  MastercardLogo
 } from "./ProviderLogos";
 
 export interface AICreditsModalProps {
@@ -505,13 +504,15 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
             {/* Legal terms & Supported Payment Methods */}
             <div style={{ display: "flex", flexDirection: "column", gap: "10px", paddingTop: "14px", borderTop: "1px solid rgba(255, 255, 255, 0.1)" }}>
               {/* Payment Methods Badges Row */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", flexWrap: "wrap" }}>
-                <ApplePayLogo className="text-white opacity-85 hover:opacity-100 transition-opacity" />
-                <GooglePayLogo className="text-white opacity-85 hover:opacity-100 transition-opacity" />
-                <VisaLogo className="text-white opacity-85 hover:opacity-100 transition-opacity" />
-                <MastercardLogo className="opacity-90 hover:opacity-100 transition-opacity" />
-                <KlarnaLogo className="text-white opacity-85 hover:opacity-100 transition-opacity" />
-                <StripeLogo size={16} className="text-white opacity-85 hover:opacity-100 transition-opacity" />
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", flexWrap: "wrap" }}>
+                <ApplePayLogo className="hover:opacity-90 transition-opacity" />
+                <GooglePayLogo className="hover:opacity-90 transition-opacity" />
+                <VisaLogo className="hover:opacity-90 transition-opacity" />
+                <MastercardLogo className="hover:opacity-90 transition-opacity" />
+                <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "4px 10px", borderRadius: "6px", background: "white", color: "#635bff" }}>
+                  <StripeLogo size={14} />
+                  <span style={{ fontSize: "11px", fontWeight: 700, fontFamily: "sans-serif" }}>stripe</span>
+                </div>
               </div>
 
               <div style={{ fontSize: "10px", color: "rgba(243, 241, 255, 0.5)", textAlign: "center", lineHeight: 1.4 }}>
