@@ -6,12 +6,10 @@ import {
   AICreditsModal,
 } from "@ai-credits/react";
 import {
-  Sparkles,
   Copy,
   Check,
   CheckCircle2,
   CreditCard,
-  Maximize2
 } from "lucide-react";
 
 export type Accent = {
@@ -168,7 +166,11 @@ export function MyApp() {
       </div>
 
       {/* Main Glass Stage Container */}
-      <div className="relative z-10 w-full max-w-4xl min-h-[480px] rounded-[32px] bg-white/[0.04] backdrop-blur-2xl backdrop-saturate-150 border border-white/[0.12] shadow-[0_32px_90px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.18)] p-6 sm:p-10 flex flex-col items-center justify-center transition-all duration-300">
+      <div className={`relative z-10 w-full max-w-4xl flex flex-col items-center justify-center transition-all duration-300 ${
+        activeTab === "modal"
+          ? "p-0 bg-transparent border-none shadow-none"
+          : "min-h-[480px] rounded-[32px] bg-white/[0.04] backdrop-blur-2xl backdrop-saturate-150 border border-white/[0.12] shadow-[0_32px_90px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.18)] p-6 sm:p-10"
+      }`}>
         
         {/* VIEW 1: FULL APP SHOWCASE */}
         {activeTab === "overview" && (
@@ -182,41 +184,35 @@ export function MyApp() {
                 >
                   AI
                 </div>
-                <span className="text-xs font-semibold text-white tracking-wide">VideoSummarizer App</span>
+                <div>
+                  <h3 className="text-sm font-bold text-white tracking-tight">AI Content Studio</h3>
+                  <p className="text-[11px] text-white/50">NextGen Text & Image Generator</p>
+                </div>
               </div>
 
-              {/* CreditCounter Component */}
+              {/* Header Balance Widget */}
               <CreditCounter
                 balance={balance}
                 onTopUpClick={() => setIsModalOpen(true)}
               />
             </div>
 
-            {/* Paywall Protected AI Feature */}
-            <div className="p-6 sm:p-8 rounded-[26px] bg-white/[0.05] backdrop-blur-xl border border-white/[0.12] shadow-[0_16px_48px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.16)] space-y-4">
+            {/* Main Interactive Action Box */}
+            <div className="p-6 rounded-[24px] bg-white/[0.05] backdrop-blur-xl border border-white/[0.12] shadow-lg space-y-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[#5effa8]" />
-                  <span className="text-xs font-semibold text-white">AI Deep Summary Generator</span>
-                </div>
-                <span className="text-[11px] font-mono text-white/60 px-2.5 py-0.5 rounded-full bg-white/[0.08] border border-white/[0.14]">
-                  15 kredytów
-                </span>
+                <span className="text-xs font-mono text-white/60">Operacja: Generowanie Wideo HD</span>
+                <span className="text-xs font-mono text-indigo-400 font-semibold">Koszt: 15 kredytów</span>
               </div>
 
               <PaywallGuard
                 requiredCredits={15}
                 balance={balance}
-                featureName="Deep Summary"
+                featureName="Generowanie Wideo HD"
                 onTopUpClick={() => setIsModalOpen(true)}
               >
-                <div className="p-5 rounded-[20px] bg-white/[0.04] border border-white/[0.12] text-xs space-y-3.5">
-                  <div className="flex items-center gap-2 text-[#5effa8] font-medium font-mono text-[11px]">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Saldo zweryfikowane w ledgerze podwójnego zapisu.</span>
-                  </div>
-                  <p className="text-white/80 font-mono text-[11px] leading-relaxed">
-                    &quot;Precyzyjne podsumowanie wygenerowane z routingiem GPT-4o i automatyczną marżą dewelopera.&quot;
+                <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.08] flex items-center justify-between">
+                  <p className="text-xs text-white/80">
+                    Silnik AI gotowy do wykonania kolejnego zadania.
                   </p>
                   <button
                     onClick={() => {
@@ -270,14 +266,18 @@ export function MyApp() {
           </div>
         )}
 
-        {/* VIEW 3: PRICING GRID */}
+        {/* VIEW 3: PRICING PACKS GRID */}
         {activeTab === "pricing" && (
-          <div className="w-full max-w-3xl animate-in fade-in duration-300">
+          <div className="w-full max-w-3xl space-y-6 animate-in fade-in duration-300">
+            <div className="text-center space-y-1">
+              <h3 className="text-xl font-bold text-white">Doładuj Saldo Kredytów</h3>
+              <p className="text-xs text-white/50">Wybierz pakiet kredytów dopasowany do Twoich potrzeb</p>
+            </div>
+
             <CreditPacksGrid
-              accentColor={accent.hex}
               onSelectPack={(pack) => {
                 setBalance((b) => b + pack.credits);
-                showToast(`Wybrano ${pack.name} (+${pack.credits} kredytów)!`);
+                showToast(`Dodano ${pack.credits} kredytów do portfela!`);
               }}
             />
           </div>
@@ -308,21 +308,12 @@ export function MyApp() {
 
         {/* VIEW 5: FULL 2-COLUMN CHECKOUT MODAL WITH AUTH & PAYMENT METHODS */}
         {activeTab === "modal" && (
-          <div className="w-full flex flex-col items-center animate-in fade-in duration-300">
-            <div className="w-full max-w-[880px] flex items-center justify-end mb-3">
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.08] hover:bg-white/[0.15] border border-white/[0.14] text-xs font-mono text-white transition-all cursor-pointer"
-                title="Otwórz pełnoekranowy modal"
-              >
-                <Maximize2 className="w-3.5 h-3.5" />
-                <span>Otwórz Overlay</span>
-              </button>
-            </div>
+          <div className="w-full flex justify-center animate-in fade-in duration-300">
             <AICreditsModal
               isOpen={true}
               isInline={true}
               initialBalance={balance}
+              onClose={() => showToast("Zamknij")}
               onCreditPurchased={(credits) => {
                 setBalance((b) => b + credits);
                 showToast(`+${credits} kredytów dodane!`);
