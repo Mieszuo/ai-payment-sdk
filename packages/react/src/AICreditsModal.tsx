@@ -2,11 +2,7 @@ import React, { useState } from "react";
 import {
   OpenAILogo,
   GeminiLogo,
-  DeepSeekLogo,
-  ApplePayLogo,
-  GooglePayLogo,
-  VisaLogo,
-  MastercardLogo
+  DeepSeekLogo
 } from "./ProviderLogos";
 
 export interface AICreditsModalProps {
@@ -630,19 +626,6 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
                   </div>
                 );
               })}
-            </div>
-
-            {/* Supported Payment Logos */}
-            <div style={{ marginTop: "14px", display: "flex", flexDirection: "column", alignItems: "center", gap: "5px" }}>
-              <span style={{ fontSize: "8.5px", textTransform: "uppercase", letterSpacing: "0.06em", color: "rgba(255, 255, 255, 0.35)", fontWeight: 600 }}>
-                OBSŁUGIWANE METODY PŁATNOŚCI
-              </span>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "7px" }}>
-                <ApplePayLogo className="hover:opacity-90 transition-opacity" />
-                <GooglePayLogo className="hover:opacity-90 transition-opacity" />
-                <VisaLogo className="hover:opacity-90 transition-opacity" />
-                <MastercardLogo className="hover:opacity-90 transition-opacity" />
-              </div>
             </div>
           </div>
 
