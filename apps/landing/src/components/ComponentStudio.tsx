@@ -575,12 +575,12 @@ export function MyApp() {
                     })}
                   </div>
 
-                  {/* Payment Badges Placed Under Providers (As Requested) */}
-                  <div className="mt-4 p-3 rounded-2xl bg-white/[0.03] border border-white/[0.07] space-y-2">
-                    <div className="text-[9px] uppercase tracking-wider text-white/40 text-center font-mono">
+                  {/* Supported Payment Methods */}
+                  <div className="mt-3.5 flex flex-col items-center gap-2">
+                    <span className="text-[9px] uppercase tracking-wider text-white/35 font-medium font-sans">
                       Obsługiwane Metody Płatności
-                    </div>
-                    <div className="flex items-center justify-center gap-2.5 flex-wrap">
+                    </span>
+                    <div className="flex items-center justify-center gap-2.5">
                       <ApplePayLogo className="hover:opacity-90 transition-opacity" />
                       <GooglePayLogo className="hover:opacity-90 transition-opacity" />
                       <VisaLogo className="hover:opacity-90 transition-opacity" />
@@ -589,25 +589,34 @@ export function MyApp() {
                   </div>
                 </div>
 
-                {/* 3 Trust Features Under Providers */}
-                <div className="grid grid-cols-3 gap-2 pt-3 border-t border-white/[0.08]">
+                {/* 3 Trust Features Under Providers (Vector outline icons matching reference) */}
+                <div className="grid grid-cols-3 gap-2.5 pt-3.5 border-t border-white/[0.08]">
                   <div>
-                    <div className="text-[10px] font-bold text-indigo-400 flex items-center gap-1">
-                      <span>🛡️</span> Secure & private
+                    <div className="text-[11px] font-bold text-indigo-400 flex items-center gap-1.5">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                      </svg>
+                      <span>Secure & private</span>
                     </div>
-                    <p className="text-[8px] text-white/40 mt-0.5 leading-tight">Your data is encrypted and never shared.</p>
+                    <p className="text-[9px] text-white/40 mt-0.5 leading-snug">Your data is encrypted and never shared.</p>
                   </div>
                   <div>
-                    <div className="text-[10px] font-bold text-indigo-400 flex items-center gap-1">
-                      <span>⚡</span> Pay as you go
+                    <div className="text-[11px] font-bold text-indigo-400 flex items-center gap-1.5">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                      </svg>
+                      <span>Pay as you go</span>
                     </div>
-                    <p className="text-[8px] text-white/40 mt-0.5 leading-tight">Only pay for what you use.</p>
+                    <p className="text-[9px] text-white/40 mt-0.5 leading-snug">Only pay for what you use.</p>
                   </div>
                   <div>
-                    <div className="text-[10px] font-bold text-indigo-400 flex items-center gap-1">
-                      <span>🔄</span> Works anywhere
+                    <div className="text-[11px] font-bold text-indigo-400 flex items-center gap-1.5">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                      </svg>
+                      <span>Works anywhere</span>
                     </div>
-                    <p className="text-[8px] text-white/40 mt-0.5 leading-tight">Use in any project with our SDK.</p>
+                    <p className="text-[9px] text-white/40 mt-0.5 leading-snug">Use in any project with our SDK.</p>
                   </div>
                 </div>
               </div>
