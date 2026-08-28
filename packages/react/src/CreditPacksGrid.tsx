@@ -1,5 +1,4 @@
 import React from "react";
-import { StripeLogo } from "./ProviderLogos";
 
 export interface CreditPack {
   id: string;
@@ -129,8 +128,7 @@ export const CreditPacksGrid: React.FC<CreditPacksGridProps> = ({
                 }}
                 className="w-full py-3 px-4 rounded-xl text-xs font-mono font-bold uppercase tracking-wider text-white flex items-center justify-center gap-2 transition-all duration-200 ease-[cubic-bezier(0.2,1,0.3,1)] active:scale-95 hover:brightness-110 cursor-pointer shadow-lg border border-white/10 hover:border-white/20"
               >
-                <StripeLogo size={14} className="opacity-90" />
-                <span>Kup przez Stripe</span>
+                <span>Wybierz pakiet</span>
               </button>
             </div>
           </div>

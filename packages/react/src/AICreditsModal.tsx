@@ -4,7 +4,6 @@ import {
   GeminiLogo,
   DeepSeekLogo,
   ClaudeLogo,
-  StripeLogo,
   ApplePayLogo,
   GooglePayLogo,
   VisaLogo,
@@ -509,10 +508,6 @@ export const AICreditsModal: React.FC<AICreditsModalProps> = ({
                 <GooglePayLogo className="hover:opacity-90 transition-opacity" />
                 <VisaLogo className="hover:opacity-90 transition-opacity" />
                 <MastercardLogo className="hover:opacity-90 transition-opacity" />
-                <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "4px 10px", borderRadius: "6px", background: "white", color: "#635bff" }}>
-                  <StripeLogo size={14} />
-                  <span style={{ fontSize: "11px", fontWeight: 700, fontFamily: "sans-serif" }}>stripe</span>
-                </div>
               </div>
 
               <div style={{ fontSize: "10px", color: "rgba(243, 241, 255, 0.5)", textAlign: "center", lineHeight: 1.4 }}>
